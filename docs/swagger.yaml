@@ -1,0 +1,82 @@
+basePath: /api/v1
+host: localhost:8000
+info:
+  contact: {}
+  description: This is a sample Gin API
+  title: My API
+  version: "1.0"
+paths:
+  /auth/google:
+    get:
+      consumes:
+      - application/json
+      description: Redirects user to Google OAuth consent screen for authentication
+      parameters:
+      - description: Authorization code from Google OAuth
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authentication successful
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Initiate Google OAuth authentication
+      tags:
+      - Authentication
+  /file-upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a file to the specified MinIO bucket and returns file info
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload a file to MinIO
+      tags:
+      - Files
+  /health:
+    get:
+      description: Returns OK if the API is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check API health
+      tags:
+      - health
+schemes:
+- http
+swagger: "2.0"

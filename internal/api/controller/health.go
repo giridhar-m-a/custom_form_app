@@ -20,4 +20,3 @@ func RegisterHealth(rg *gin.RouterGroup) {
 		})
 	})
 }
-

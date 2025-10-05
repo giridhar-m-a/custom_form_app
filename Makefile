@@ -27,6 +27,15 @@ migrate-up:
 
 migrate-down:
 	migrate -path internal/db/migrations -database "$(DB_URL)" -verbose down
+
+migrate-force:
+	migrate -path internal/db/migrations -database "$(DB_URL)" force $(v)
+
+migrate-steps:
+	migrate -path internal/db/migrations -database "$(DB_URL)" down $(s)
+
+migrate-version:
+	migrate -path internal/db/migrations -database "$(DB_URL)" goto $(v)
   
 sqlc:
 	sqlc generate
