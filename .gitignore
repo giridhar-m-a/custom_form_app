@@ -17,3 +17,6 @@ vendor/
 # IDE
 .vscode/
 .idea/
+
+#redis
+redis.acl

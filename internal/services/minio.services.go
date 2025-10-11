@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -16,7 +17,11 @@ import (
 var MinioClient *minio.Client
 
 // InitMinio initializes the MinIO client
-func InitMinio(endpoint, accessKey, secretKey string, useSSL bool) {
+func InitMinio() {
+	endpoint := utils.GetEnv("MINIO_SERVER", "")
+	accessKey := utils.GetEnv("MINIO_USER", "")
+	secretKey:= utils.GetEnv("MINIO_PASSWORD", "")
+	useSSL:= utils.GetEnvAsBool("MINIO_USE_SSL", false)
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,

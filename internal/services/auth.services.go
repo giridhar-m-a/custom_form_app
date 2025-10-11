@@ -2,18 +2,24 @@ package services
 
 import (
 	"context"
-	"log"
 
-	"github.com/giridhar-m-a/custom_form_app/configs"
-	"golang.org/x/oauth2"
+	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 )
 
-func GoogleAuthService(code string) (*oauth2.Token, error) {
-    token, err := configs.GoogleOauthConfig.Exchange(context.Background(), code)
-    if err != nil {
-        log.Printf("Error exchanging code for token: %v", err)
-        return nil, err
-    }
-    return token, nil
+type AuthService interface {
+	AuthenticateWithGoogle(ctxt context.Context, code string) (sqlc.GetUserByGoogleIdRow, error)
 }
 
+type authService struct {
+	googleAuth GoogleAuthService
+}
+
+func NewAuthService(googleAuth GoogleAuthService) AuthService {
+	return &authService{
+		googleAuth: googleAuth,
+	}
+}
+
+func (a *authService) AuthenticateWithGoogle(ctxt context.Context, code string) (sqlc.GetUserByGoogleIdRow, error) {
+	return a.googleAuth.Authenticate(ctxt, code)
+}

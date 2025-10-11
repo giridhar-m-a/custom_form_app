@@ -20,6 +20,9 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    volumes:
+      - ./redis.acl:/usr/local/etc/redis/redis.acl:ro
+    command: redis-server --aclfile /usr/local/etc/redis/redis.acl
 
   minio:
     image: minio/minio:latest

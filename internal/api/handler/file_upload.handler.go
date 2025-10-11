@@ -46,7 +46,7 @@ func FileUploadHandler(c *gin.Context) {
 		"bucket":     bucketName,
 		"objectName": objectName,
 		"signedUrl":  signedUrl.String(),
-		"signed": signedUrl,
+		"signed":     signedUrl,
 		"status":     http.StatusOK,
 	})
 }
