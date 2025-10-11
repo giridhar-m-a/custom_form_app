@@ -9,7 +9,11 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "API Support",
+            "url": "http://giridhar.dev/",
+            "email": "m.a.giridhar08@gmail.com"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -42,7 +46,93 @@ const docTemplate = `{
                         "description": "Authentication successful",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accessToken": {
+                                            "type": "string"
+                                        },
+                                        "refreshToken": {
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "createdAt": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "fullName": {
+                                                    "type": "string"
+                                                },
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "profilePic": {
+                                                    "type": "string"
+                                                },
+                                                "profilePicId": {
+                                                    "type": "string"
+                                                },
+                                                "updatedAt": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
                         }
                     }
                 }
@@ -122,17 +212,25 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "JWT Authorization header using the Bearer scheme.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8000",
-	BasePath:         "/api/v1",
-	Schemes:          []string{"http"},
+	Host:             "localhost:8000 api.custom-form.giridhar.dev",
+	BasePath:         "",
+	Schemes:          []string{"https", "http"},
 	Title:            "My API",
-	Description:      "This is a sample Gin API",
+	Description:      "Backend API for Custom Form Application",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

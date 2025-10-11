@@ -24,9 +24,16 @@ import (
 
 // @title My API
 // @version 1.0
-// @description This is a sample Gin API
-// @host localhost:8000
-// @schemes http
+// @description Backend API for Custom Form Application
+// @contact.name API Support
+// @contact.url http://giridhar.dev/
+// @contact.email m.a.giridhar08@gmail.com
+// @host localhost:8000 api.custom-form.giridhar.dev
+// @schemes https http
+// @securityDefinitions.apikey BearerAuth
+// @description JWT Authorization header using the Bearer scheme.
+// @in header
+// @name Authorization
 // @BasePath /api/v1
 func main() {
 	// Get configuration from environment

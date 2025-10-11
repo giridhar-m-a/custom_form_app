@@ -1,8 +1,10 @@
-basePath: /api/v1
-host: localhost:8000
+host: localhost:8000 api.custom-form.giridhar.dev
 info:
-  contact: {}
-  description: This is a sample Gin API
+  contact:
+    email: m.a.giridhar08@gmail.com
+    name: API Support
+    url: http://giridhar.dev/
+  description: Backend API for Custom Form Application
   title: My API
   version: "1.0"
 paths:
@@ -23,7 +25,62 @@ paths:
         "200":
           description: Authentication successful
           schema:
-            additionalProperties: true
+            properties:
+              data:
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    properties:
+                      createdAt:
+                        type: string
+                      email:
+                        type: string
+                      fullName:
+                        type: string
+                      id:
+                        type: string
+                      profilePic:
+                        type: string
+                      profilePicId:
+                        type: string
+                      updatedAt:
+                        type: string
+                    type: object
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
             type: object
       summary: Initiate Google OAuth authentication
       tags:
@@ -78,5 +135,12 @@ paths:
       tags:
       - health
 schemes:
+- https
 - http
+securityDefinitions:
+  BearerAuth:
+    description: JWT Authorization header using the Bearer scheme.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

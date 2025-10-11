@@ -12,9 +12,12 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param        code  query  string  true  "Authorization code from Google OAuth"
-// @Success      200   {object}  map[string]interface{}  "Authentication successful"
+// @Success      200    {object}  object{status=int,message=string,data=object{accessToken=string,refreshToken=string,user=object{id=string,email=string,fullName=string,profilePic=string,profilePicId=string,createdAt=string,updatedAt=string}}}  "Authentication successful"
+// @Failure      400    {object}  object{status=int,message=string}  "Bad request"
+// @Failure      401    {object}  object{status=int,message=string}  "Unauthorized"
+// @Failure      500    {object}  object{status=int,message=string}  "Internal server error"
 // @Router       /auth/google [get]
-// @Schemes http
+// @Schemes      https
 func GoogleAuth(rg *gin.RouterGroup) {
 	rg.GET("/auth/google", handler.GoogleAuthHandler)
 }
