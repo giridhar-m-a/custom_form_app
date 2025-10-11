@@ -1,4 +1,5 @@
-host: localhost:8000 api.custom-form.giridhar.dev
+basePath: /api/v1
+host: localhost:8000
 info:
   contact:
     email: m.a.giridhar08@gmail.com

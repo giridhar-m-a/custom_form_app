@@ -28,13 +28,13 @@ import (
 // @contact.name API Support
 // @contact.url http://giridhar.dev/
 // @contact.email m.a.giridhar08@gmail.com
-// @host localhost:8000 api.custom-form.giridhar.dev
+// @host localhost:8000
+// @BasePath /api/v1
 // @schemes https http
 // @securityDefinitions.apikey BearerAuth
 // @description JWT Authorization header using the Bearer scheme.
 // @in header
 // @name Authorization
-// @BasePath /api/v1
 func main() {
 	// Get configuration from environment
 	port := utils.GetEnv("APP_PORT", "8080")
