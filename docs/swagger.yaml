@@ -117,9 +117,66 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
       summary: Upload a file to MinIO
       tags:
       - Files
+  /forms/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a form with the specified ID
+      parameters:
+      - description: Form ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Form retrieved successfully
+          schema:
+            properties:
+              formID:
+                type: string
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a form by ID
+      tags:
+      - Forms
   /health:
     get:
       description: Returns OK if the API is running

@@ -45,6 +45,17 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE user_id = $1
+RETURNING user_id, user_full_name, user_email, user_profile_pic_id, user_created_at, user_updated_at
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, userID)
+	return err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT 
     u.user_id, 
@@ -159,6 +170,51 @@ func (q *Queries) GetUserByID(ctx context.Context, userID uuid.UUID) (GetUserByI
 		&i.UserEmail,
 		&i.UserProfilePicID,
 		&i.UserProfilePicName,
+		&i.UserCreatedAt,
+		&i.UserUpdatedAt,
+	)
+	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+SET
+  user_full_name = COALESCE($1, user_full_name),
+  user_email = COALESCE($2, user_email),
+  user_profile_pic_id = COALESCE($3, user_profile_pic_id)
+WHERE user_id = $4
+RETURNING user_id, user_full_name, user_email, user_profile_pic_id, user_created_at, user_updated_at
+`
+
+type UpdateUserParams struct {
+	UserFullName     sql.NullString
+	UserEmail        sql.NullString
+	UserProfilePicID uuid.NullUUID
+	UserID           uuid.UUID
+}
+
+type UpdateUserRow struct {
+	UserID           uuid.UUID
+	UserFullName     string
+	UserEmail        string
+	UserProfilePicID uuid.NullUUID
+	UserCreatedAt    sql.NullTime
+	UserUpdatedAt    sql.NullTime
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.UserFullName,
+		arg.UserEmail,
+		arg.UserProfilePicID,
+		arg.UserID,
+	)
+	var i UpdateUserRow
+	err := row.Scan(
+		&i.UserID,
+		&i.UserFullName,
+		&i.UserEmail,
+		&i.UserProfilePicID,
 		&i.UserCreatedAt,
 		&i.UserUpdatedAt,
 	)

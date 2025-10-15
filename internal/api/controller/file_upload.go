@@ -16,7 +16,9 @@ import (
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /file-upload [post]
-// @Schemes http
+// @Security BearerAuth
+// @type http
+// @scheme bearer
 func FileUploadController(rg *gin.RouterGroup) {
 	rg.POST("/file-upload", handler.FileUploadHandler)
 }

@@ -1,7 +1,9 @@
 package services
 
 import (
+	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -48,18 +50,33 @@ func (j *jwtService) GenerateToken(userID string, expiresIn time.Duration, audie
 }
 
 func (j *jwtService) ValidateToken(tokenString string) (string, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	// Expect "Bearer <token>"
+	parts := strings.Split(tokenString, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", fmt.Errorf("invalid token format")
+	}
+	rawToken := strings.TrimSpace(parts[1])
+
+	token, err := jwt.Parse(rawToken, func(token *jwt.Token) (interface{}, error) {
+		// Validate signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, jwt.ErrTokenMalformed
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(j.secretKey), nil
 	})
 	if err != nil {
 		return "", err
 	}
+
+	// Extract claims
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := claims["sub"].(string)
-		return userID, nil
+		if sub, ok := claims["sub"].(string); ok {
+			return sub, nil
+		}
+		return "", fmt.Errorf("invalid subject claim")
 	}
-	return "", jwt.ErrTokenInvalidClaims
+
+	return "", fmt.Errorf("invalid token claims")
 }
+
+
