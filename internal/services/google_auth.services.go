@@ -45,9 +45,9 @@ func (s *googleAuthService) Authenticate(ctx context.Context, code string) (sqlc
 		return sqlc.GetUserByGoogleIdRow{}, err
 	}
 	return sqlc.GetUserByGoogleIdRow{
-		UserID: 	  newUser.UserID,
-		UserEmail:    newUser.UserEmail,
-		UserFullName: newUser.UserFullName,
+		UserID:        newUser.UserID,
+		UserEmail:     newUser.UserEmail,
+		UserFullName:  newUser.UserFullName,
 		UserCreatedAt: newUser.UserCreatedAt,
 		UserUpdatedAt: newUser.UserUpdatedAt,
 	}, nil

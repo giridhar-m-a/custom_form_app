@@ -21,13 +21,13 @@ type User struct {
 // Map sqlc.User to API response
 func MapUser(u sqlc.User) User {
 	return User{
-		UserID:        u.UserID.String(),
-		UserEmail:     u.UserEmail,
-		UserFullName:  u.UserFullName,
+		UserID:           u.UserID.String(),
+		UserEmail:        u.UserEmail,
+		UserFullName:     u.UserFullName,
 		UserProfilePic:   nil,
 		UserProfilePicID: nil,
-		UserCreatedAt: u.UserCreatedAt.Time,
-		UserUpdatedAt: u.UserUpdatedAt.Time,
+		UserCreatedAt:    u.UserCreatedAt.Time,
+		UserUpdatedAt:    u.UserUpdatedAt.Time,
 	}
 }
 

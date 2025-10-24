@@ -1,4 +1,33 @@
 basePath: /api/v1
+definitions:
+  github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse:
+    properties:
+      access:
+        type: string
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
 host: localhost:8000
 info:
   contact:
@@ -122,6 +151,64 @@ paths:
       summary: Upload a file to MinIO
       tags:
       - Files
+  /forms:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new form for the authenticated user
+      parameters:
+      - description: Form data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Form created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse'
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new form
+      tags:
+      - Forms
   /forms/{id}:
     get:
       consumes:

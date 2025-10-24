@@ -78,5 +78,3 @@ func (j *jwtService) ValidateToken(tokenString string) (string, error) {
 
 	return "", fmt.Errorf("invalid token claims")
 }
-
-

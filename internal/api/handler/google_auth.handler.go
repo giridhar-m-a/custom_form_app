@@ -71,6 +71,6 @@ func GoogleAuthHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": dto.AuthResponse{
 		AccessToken:  token,
 		RefreshToken: refreshToken,
-		User:        serializedUser,
+		User:         serializedUser,
 	}, "status": http.StatusOK, "message": "Authentication successful"})
 }

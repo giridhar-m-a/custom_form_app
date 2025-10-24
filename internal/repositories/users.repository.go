@@ -15,7 +15,6 @@ type UserRepository interface {
 	Create(ctx context.Context, params sqlc.CreateUserParams) (sqlc.User, error)
 }
 
-
 // SQLCUserRepository implements UserRepository using sqlc.
 type SQLCUserRepository struct {
 	q *sqlc.Queries
@@ -40,4 +39,3 @@ func (r *SQLCUserRepository) GetByID(ctx context.Context, userID uuid.UUID) (sql
 func (r *SQLCUserRepository) Create(ctx context.Context, params sqlc.CreateUserParams) (sqlc.User, error) {
 	return r.q.CreateUser(ctx, params)
 }
-

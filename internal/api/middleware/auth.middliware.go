@@ -7,7 +7,6 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
 )
 
-
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		jwtSvc := services.NewJWTService()

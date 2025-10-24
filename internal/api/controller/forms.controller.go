@@ -1,16 +1,22 @@
 package controller
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/giridhar-m-a/custom_form_app/internal/api/handler"
+)
 
+// RegisterFormsController sets up form routes
 func RegisterFormsController(rg *gin.RouterGroup) {
 	forms := rg.Group("/forms")
+
+	// Create a handler instance
+	formHandler := handler.NewFormsHandler()
+
 	{
 		forms.GET("/:id", getFormByID)
+		forms.POST("/", formHandler.CreateForm) // ✅ Use the handler method here
 	}
 }
-
-
-
 
 // GetFormByID retrieves a form by its ID
 // @Summary      Get a form by ID
@@ -33,5 +39,5 @@ func getFormByID(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Form retrieved successfully",
 		"formID":  formID,
-		})
+	})
 }

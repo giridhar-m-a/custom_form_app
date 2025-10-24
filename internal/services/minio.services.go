@@ -20,8 +20,8 @@ var MinioClient *minio.Client
 func InitMinio() {
 	endpoint := utils.GetEnv("MINIO_SERVER", "")
 	accessKey := utils.GetEnv("MINIO_USER", "")
-	secretKey:= utils.GetEnv("MINIO_PASSWORD", "")
-	useSSL:= utils.GetEnvAsBool("MINIO_USE_SSL", false)
+	secretKey := utils.GetEnv("MINIO_PASSWORD", "")
+	useSSL := utils.GetEnvAsBool("MINIO_USE_SSL", false)
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,

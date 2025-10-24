@@ -67,7 +67,7 @@ func Close() {
 // Package-level helper methods
 // ----------------------------
 
-func Get(ctx context.Context, key string) (string, error) {	
+func Get(ctx context.Context, key string) (string, error) {
 	return instance.client.Get(ctx, key).Result()
 }
 
