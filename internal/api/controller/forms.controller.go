@@ -5,7 +5,8 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/api/handler"
 )
 
-// RegisterFormsController sets up form routes
+// RegisterFormsController registers routes under the /forms path on the provided router group.
+// It attaches GET /forms/:id to retrieve a form by ID and POST /forms/ to create a new form.
 func RegisterFormsController(rg *gin.RouterGroup) {
 	forms := rg.Group("/forms")
 
@@ -33,7 +34,9 @@ func RegisterFormsController(rg *gin.RouterGroup) {
 // @Router       /forms/{id} [get]
 // @Security BearerAuth
 // @type http
-// @scheme bearer
+// getFormByID writes a 200 JSON response containing a success message and the requested form ID from the path parameter `id`.
+//
+// The response JSON contains the keys "message" and "formID". The form ID is taken directly from the request path parameter "id".
 func getFormByID(c *gin.Context) {
 	formID := c.Param("id")
 	c.JSON(200, gin.H{

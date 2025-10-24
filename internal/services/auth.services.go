@@ -14,6 +14,8 @@ type authService struct {
 	googleAuth GoogleAuthService
 }
 
+// NewAuthService creates an AuthService that delegates Google authentication to the provided GoogleAuthService.
+// The returned service uses the given googleAuth to perform AuthenticateWithGoogle calls.
 func NewAuthService(googleAuth GoogleAuthService) AuthService {
 	return &authService{
 		googleAuth: googleAuth,

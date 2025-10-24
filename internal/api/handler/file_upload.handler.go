@@ -8,6 +8,7 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
 )
 
+// and "status".
 func FileUploadHandler(c *gin.Context) {
 	// Parse the multipart form, with a max memory of 10MB
 	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {

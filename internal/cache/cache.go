@@ -16,7 +16,11 @@ type RedisCache struct {
 
 var instance *RedisCache
 
-// Init initializes the Redis cache
+// Init initializes the package-level RedisCache singleton from environment variables and verifies connectivity.
+// It returns immediately if the cache is already initialized. Reads configuration from these environment
+// variables: REDIS_ADDR, REDIS_MAX_TIME_TO_KEEP_DATA, REDIS_USER, REDIS_PASSWORD, REDIS_DB, REDIS_POOL_SIZE,
+// REDIS_MIN_IDLE_CONNS, and REDIS_DIAL_TIMEOUT. If REDIS_ADDR is empty or the initial Redis ping fails,
+// Init logs a fatal error; on success it sets the client's default TTL and logs that Redis was initialized successfully.
 func Init() {
 	if instance != nil {
 		return
@@ -54,7 +58,9 @@ func Init() {
 	log.Println("Redis initialized successfully")
 }
 
-// Close closes the redis client
+// Close closes the Redis client associated with the package singleton.
+// If the cache has not been initialized, Close does nothing.
+// Any error encountered while closing the client is logged.
 func Close() {
 	if instance != nil {
 		if err := instance.client.Close(); err != nil {
@@ -65,16 +71,22 @@ func Close() {
 
 // ----------------------------
 // Package-level helper methods
-// ----------------------------
+// Get retrieves the value associated with the given key from the Redis cache.
+// It returns the value as a string. If the key does not exist, the returned error
+// will be redis.Nil; other errors indicate Redis or connection failures.
 
 func Get(ctx context.Context, key string) (string, error) {
 	return instance.client.Get(ctx, key).Result()
 }
 
+// Set stores the given value under the specified key in the package Redis cache using the configured default TTL.
+// It returns an error if the Redis SET operation fails.
 func Set(ctx context.Context, key string, value interface{}) error {
 	return instance.client.Set(ctx, key, value, instance.defaultTTL).Err()
 }
 
+// Del deletes the given key from the Redis-backed cache.
+// It returns an error if the deletion fails.
 func Del(ctx context.Context, key string) error {
 	return instance.client.Del(ctx, key).Err()
 }

@@ -18,7 +18,7 @@ import (
 // @Router /file-upload [post]
 // @Security BearerAuth
 // @type http
-// @scheme bearer
+// The route expects multipart/form-data, produces JSON responses, and is secured with Bearer authentication.
 func FileUploadController(rg *gin.RouterGroup) {
 	rg.POST("/file-upload", handler.FileUploadHandler)
 }

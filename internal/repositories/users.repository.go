@@ -20,6 +20,7 @@ type SQLCUserRepository struct {
 	q *sqlc.Queries
 }
 
+// NewSQLCUserRepository creates a new SQLCUserRepository that uses the provided sqlc.Queries for database operations.
 func NewSQLCUserRepository(q *sqlc.Queries) *SQLCUserRepository {
 	return &SQLCUserRepository{q: q}
 }

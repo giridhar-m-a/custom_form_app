@@ -22,6 +22,7 @@ type userService struct {
 	repo repositories.UserRepository
 }
 
+// UserServiceProvider returns a UserService backed by the provided UserRepository.
 func UserServiceProvider(repo repositories.UserRepository) UserService {
 	return &userService{repo: repo}
 }

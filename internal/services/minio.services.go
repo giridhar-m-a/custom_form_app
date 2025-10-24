@@ -16,7 +16,9 @@ import (
 // MinioClient is the shared MinIO client
 var MinioClient *minio.Client
 
-// InitMinio initializes the MinIO client
+// InitMinio initializes the package-level MinioClient using MinIO configuration from environment variables.
+// It reads MINIO_SERVER, MINIO_USER, MINIO_PASSWORD and MINIO_USE_SSL, attempts to create a MinIO client and assigns it to MinioClient.
+// If client creation fails the error is logged and MinioClient will be nil.
 func InitMinio() {
 	endpoint := utils.GetEnv("MINIO_SERVER", "")
 	accessKey := utils.GetEnv("MINIO_USER", "")

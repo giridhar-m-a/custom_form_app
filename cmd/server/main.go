@@ -34,7 +34,8 @@ import (
 // @securityDefinitions.apikey BearerAuth
 // @description JWT Authorization header using the Bearer scheme.
 // @in header
-// @name Authorization
+// main initializes application services, configures the Gin router (CORS, health check, and Swagger endpoints),
+// registers API routes, starts the HTTP server on the configured port, and performs a graceful shutdown on SIGINT/SIGTERM.
 func main() {
 	// Get configuration from environment
 	port := utils.GetEnv("APP_PORT", "8080")

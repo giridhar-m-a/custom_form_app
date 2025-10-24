@@ -19,6 +19,8 @@ type jwtService struct {
 	issuer    string
 }
 
+// NewJWTService creates a JWTService configured with secret and issuer from environment variables.
+// It reads JWT_SECRET and JWT_ISSUER and falls back to "default_secret_key" and "my_app" when values are empty.
 func NewJWTService() JWTService {
 	secretKey := os.Getenv("JWT_SECRET")
 	issuer := os.Getenv("JWT_ISSUER")

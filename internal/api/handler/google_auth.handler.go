@@ -15,6 +15,15 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
 )
 
+// GoogleAuthHandler handles Google OAuth authentication by exchanging the provided
+// authorization code for a user identity, issuing an access token and a refresh
+// token, and returning a JSON payload containing the tokens and the serialized user.
+//
+// It reads token expiration values from the environment (JWT_EXPIRATION_HOURS and
+// JWT_REFRESH_EXPIRATION_HOURS) with sensible defaults, and determines the token
+// audience from the request Origin header or falls back to the request Host.
+// On error it responds with appropriate HTTP status codes: 400 for invalid query
+// parameters, 401 for authentication failure, and 500 for token generation errors.
 func GoogleAuthHandler(c *gin.Context) {
 	var query dto.GoogleAuthRequest
 	// domain := os.Getenv("APP_DOMAIN")

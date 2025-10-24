@@ -18,6 +18,8 @@ type formService struct {
 	formRepo repositories.FormsRepository
 }
 
+// NewFormService creates a FormService backed by the provided FormsRepository.
+// The returned service uses formRepo to persist and retrieve form data.
 func NewFormService(formRepo repositories.FormsRepository) FormService {
 	return &formService{formRepo: formRepo}
 }

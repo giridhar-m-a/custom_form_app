@@ -16,6 +16,7 @@ type formHandler struct {
 	formService services.FormService
 }
 
+// NewFormsHandler creates a FormsHandler configured with a FormService that uses the default forms repository.
 func NewFormsHandler() FormsHandler {
 	return &formHandler{formService: services.NewFormService(repositories.NewFormsRepository(db.Queries))}
 }

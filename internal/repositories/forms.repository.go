@@ -20,6 +20,8 @@ type formsRepository struct {
 	q *sqlc.Queries
 }
 
+// NewFormsRepository creates a FormsRepository backed by the given *sqlc.Queries.
+// The returned repository delegates form persistence operations to the provided Queries instance.
 func NewFormsRepository(q *sqlc.Queries) FormsRepository {
 	return &formsRepository{
 		q: q,

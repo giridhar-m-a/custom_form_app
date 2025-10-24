@@ -17,7 +17,8 @@ import (
 // @Failure      401    {object}  object{status=int,message=string}  "Unauthorized"
 // @Failure      500    {object}  object{status=int,message=string}  "Internal server error"
 // @Router       /auth/google [get]
-// @Schemes      https
+// GoogleAuth registers the GET /auth/google endpoint on rg to initiate Google OAuth authentication.
+// rg is the gin router group used to register the route.
 func GoogleAuth(rg *gin.RouterGroup) {
 	rg.GET("/auth/google", handler.GoogleAuthHandler)
 }

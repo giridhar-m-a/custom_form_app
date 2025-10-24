@@ -13,6 +13,8 @@ import (
 
 var Queries *sqlc.Queries
 
+// InitDB initializes the package-level database connection and the exported Queries object.
+// It reads the DB_URL environment variable, opens and configures a PostgreSQL connection pool, verifies connectivity (5s timeout), assigns sqlc.New(dbConn) to Queries, and logs a fatal error if the environment variable is missing or the database cannot be reached.
 func InitDB() {
 	dsn := os.Getenv("DB_URL")
 	if dsn == "" {

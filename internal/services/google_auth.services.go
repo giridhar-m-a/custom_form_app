@@ -17,6 +17,7 @@ type googleAuthService struct {
 	repo UserService
 }
 
+// NewGoogleAuthService creates a GoogleAuthService backed by the provided UserService repository.
 func NewGoogleAuthService(repo UserService) GoogleAuthService {
 	return &googleAuthService{repo: repo}
 }
