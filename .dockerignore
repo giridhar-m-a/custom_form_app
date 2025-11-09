@@ -1,0 +1,25 @@
+# Binaries
+tmp
+*.out
+*.exe
+*.log
+
+# Dependencies
+vendor
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+
+# Go build
+bin
+dist
+
+#env
+.env
+.env.*.local
+.env.*

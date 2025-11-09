@@ -1,0 +1,96 @@
+services:
+  db:
+    image: postgres:15
+    container_name: custom_form_app_db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: custom_form_app_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis.acl:/usr/local/etc/redis/redis.acl:ro
+    command: redis-server --aclfile /usr/local/etc/redis/redis.acl
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000" # MinIO API
+      - "9001:9001" # MinIO Console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+
+  custom_form_server:
+    build:
+      context: ./apps/server
+      dockerfile: Dockerfile.dev
+    container_name: custom_form_app_server
+    command: air -c .air.toml
+    working_dir: /app
+    environment:
+      - AIR_WATCHER_FORCE_POLLING=true
+    env_file:
+      - .env
+    volumes:
+      - ./apps/server:/app:delegated
+      - air_tmp:/app/tmp
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    depends_on:
+      - db
+      - redis
+      - minio
+
+  custom_form_client:
+    build:
+      context: ./apps/client
+      dockerfile: Dockerfile.dev
+    container_name: custom_form_app_client
+    working_dir: /app
+    command: sh -c "pnpm install && pnpm dev"
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://custom_form_app_server:${APP_PORT}
+    ports:
+      - "3000:3000"
+    volumes:
+      # Bind mount source code
+      - ./apps/client:/app
+      # Use named volumes for node_modules and cache (prevents permission issues)
+      - client_node_modules:/app/node_modules
+      - client_next:/app/.next
+      - client_turbo:/app/.turbo
+    depends_on:
+      - custom_form_server
+
+volumes:
+  postgres_data:
+  air_tmp:
+  minio_data:
+  client_node_modules:  # Add this
+  client_next:          # Add this
+  client_turbo:         # Add this
