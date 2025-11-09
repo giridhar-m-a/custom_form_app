@@ -1,8 +1,5 @@
-// app/page.tsx or src/app/page.tsx
-'use client'
-
 import AuthFormLogin from '@/components/home/AuthFormLogin'
-import { FeatureBlock } from '@/components/home/FeatuerBlock'
+import { FeatureBlock } from '@/components/home/FeatureBlock'
 import { Check, Rocket, Zap } from 'lucide-react'
 
 const App = () => {
