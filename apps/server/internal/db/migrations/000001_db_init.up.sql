@@ -8,10 +8,11 @@ CREATE TABLE IF NOT EXISTS users (
     user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_full_name VARCHAR(255) NOT NULL,
     user_email VARCHAR(255) UNIQUE NOT NULL,
-    user_google_id VARCHAR(255) UNIQUE NOT NULL,
+    user_google_id VARCHAR(255) UNIQUE,
     user_profile_pic_id UUID,
     user_created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    user_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    user_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    user_password VARCHAR(255)
 );
 
 -- Trigger to update user_updated_at

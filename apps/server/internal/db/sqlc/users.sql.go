@@ -13,26 +13,38 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (user_full_name, user_email, user_google_id, user_profile_pic_id)
-VALUES ($1, $2, $3, $4)
+INSERT INTO users (user_full_name, user_email, user_google_id, user_profile_pic_id, user_password)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING user_id, user_full_name, user_email, user_google_id, user_profile_pic_id, user_created_at, user_updated_at
 `
 
 type CreateUserParams struct {
 	UserFullName     string
 	UserEmail        string
-	UserGoogleID     string
+	UserGoogleID     sql.NullString
 	UserProfilePicID uuid.NullUUID
+	UserPassword     sql.NullString
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+type CreateUserRow struct {
+	UserID           uuid.UUID
+	UserFullName     string
+	UserEmail        string
+	UserGoogleID     sql.NullString
+	UserProfilePicID uuid.NullUUID
+	UserCreatedAt    sql.NullTime
+	UserUpdatedAt    sql.NullTime
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.UserFullName,
 		arg.UserEmail,
 		arg.UserGoogleID,
 		arg.UserProfilePicID,
+		arg.UserPassword,
 	)
-	var i User
+	var i CreateUserRow
 	err := row.Scan(
 		&i.UserID,
 		&i.UserFullName,
@@ -64,7 +76,8 @@ SELECT
     u.user_profile_pic_id, 
     i.file_name AS user_profile_pic_name,
     u.user_created_at, 
-    u.user_updated_at
+    u.user_updated_at,
+    u.user_password
 FROM users u
 LEFT JOIN user_images i
     ON u.user_profile_pic_id = i.file_id
@@ -79,6 +92,7 @@ type GetUserByEmailRow struct {
 	UserProfilePicName sql.NullString
 	UserCreatedAt      sql.NullTime
 	UserUpdatedAt      sql.NullTime
+	UserPassword       sql.NullString
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, userEmail string) (GetUserByEmailRow, error) {
@@ -92,6 +106,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, userEmail string) (GetUser
 		&i.UserProfilePicName,
 		&i.UserCreatedAt,
 		&i.UserUpdatedAt,
+		&i.UserPassword,
 	)
 	return i, err
 }
@@ -121,7 +136,7 @@ type GetUserByGoogleIdRow struct {
 	UserUpdatedAt      sql.NullTime
 }
 
-func (q *Queries) GetUserByGoogleId(ctx context.Context, userGoogleID string) (GetUserByGoogleIdRow, error) {
+func (q *Queries) GetUserByGoogleId(ctx context.Context, userGoogleID sql.NullString) (GetUserByGoogleIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserByGoogleId, userGoogleID)
 	var i GetUserByGoogleIdRow
 	err := row.Scan(

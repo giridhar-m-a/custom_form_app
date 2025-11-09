@@ -8,6 +8,7 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/cache"
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
 )
 
@@ -30,7 +31,8 @@ func (s *userService) CreateUser(ctx context.Context, data map[string]any) (sqlc
 	newUser, err := s.repo.Create(ctx, sqlc.CreateUserParams{
 		UserFullName: data["name"].(string),
 		UserEmail:    data["email"].(string),
-		UserGoogleID: data["id"].(string),
+		UserGoogleID: utils.ConvertStringToNullString(data["id"].(string)),
+		UserPassword: utils.ConvertStringToNullString(data["password"].(string)),
 	})
 	return newUser, err
 }

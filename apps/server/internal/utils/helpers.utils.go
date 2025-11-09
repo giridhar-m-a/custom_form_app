@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"strconv"
@@ -33,4 +34,11 @@ func GetEnvAsBool(key string, defaultValue bool) bool {
 			key, value, defaultValue)
 	}
 	return defaultValue
+}
+
+func ConvertStringToNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{String: "", Valid: false}
+	}
+	return sql.NullString{String: s, Valid: true}
 }

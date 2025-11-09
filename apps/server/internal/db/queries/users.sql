@@ -1,6 +1,6 @@
 -- name: CreateUser :one
-INSERT INTO users (user_full_name, user_email, user_google_id, user_profile_pic_id)
-VALUES ($1, $2, $3, $4)
+INSERT INTO users (user_full_name, user_email, user_google_id, user_profile_pic_id, user_password)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING user_id, user_full_name, user_email, user_google_id, user_profile_pic_id, user_created_at, user_updated_at;
 
 -- name: GetUserByID :one
@@ -39,7 +39,8 @@ SELECT
     u.user_profile_pic_id, 
     i.file_name AS user_profile_pic_name,
     u.user_created_at, 
-    u.user_updated_at
+    u.user_updated_at,
+    u.user_password
 FROM users u
 LEFT JOIN user_images i
     ON u.user_profile_pic_id = i.file_id

@@ -206,10 +206,11 @@ type User struct {
 	UserID           uuid.UUID
 	UserFullName     string
 	UserEmail        string
-	UserGoogleID     string
+	UserGoogleID     sql.NullString
 	UserProfilePicID uuid.NullUUID
 	UserCreatedAt    sql.NullTime
 	UserUpdatedAt    sql.NullTime
+	UserPassword     sql.NullString
 }
 
 type UserImage struct {

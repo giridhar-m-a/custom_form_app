@@ -9,6 +9,32 @@ definitions:
     required:
     - title
     type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        minLength: 2
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse:
     properties:
       access:
@@ -113,6 +139,162 @@ paths:
                 type: integer
             type: object
       summary: Initiate Google OAuth authentication
+      tags:
+      - Authentication
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns access & refresh tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            properties:
+              data:
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    properties:
+                      createdAt:
+                        type: string
+                      email:
+                        type: string
+                      fullName:
+                        type: string
+                      id:
+                        type: string
+                      profilePic:
+                        type: string
+                      profilePicId:
+                        type: string
+                      updatedAt:
+                        type: string
+                    type: object
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid credentials
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Login with email and password
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a user with name, email, and password
+      parameters:
+      - description: User registration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authentication successful
+          schema:
+            properties:
+              data:
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    properties:
+                      createdAt:
+                        type: string
+                      email:
+                        type: string
+                      fullName:
+                        type: string
+                      id:
+                        type: string
+                      profilePic:
+                        type: string
+                      profilePicId:
+                        type: string
+                      updatedAt:
+                        type: string
+                    type: object
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "409":
+          description: Email already exists
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Register a new user
       tags:
       - Authentication
   /file-upload:
