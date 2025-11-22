@@ -51,7 +51,9 @@ UPDATE users
 SET
   user_full_name = COALESCE(sqlc.narg('user_full_name'), user_full_name),
   user_email = COALESCE(sqlc.narg('user_email'), user_email),
-  user_profile_pic_id = COALESCE(sqlc.narg('user_profile_pic_id'), user_profile_pic_id)
+  user_profile_pic_id = COALESCE(sqlc.narg('user_profile_pic_id'), user_profile_pic_id),
+  user_password = COALESCE(sqlc.narg('user_password'), user_password),  
+  user_google_id = COALESCE(sqlc.narg('user_google_id'), user_google_id)
 WHERE user_id = sqlc.arg('user_id')
 RETURNING user_id, user_full_name, user_email, user_profile_pic_id, user_created_at, user_updated_at;
 

@@ -17,6 +17,7 @@ type UserService interface {
 	GetUserDetailsByEmail(ctx context.Context, email string) (sqlc.GetUserByEmailRow, error)
 	GetUserDetailsByGoogleId(ctx context.Context, googleID string) (sqlc.GetUserByGoogleIdRow, error)
 	CreateUser(ctx context.Context, data map[string]any) (sqlc.User, error)
+	UpdateUser(ctx context.Context, data sqlc.UpdateUserParams) (sqlc.User, error)
 }
 
 type userService struct {
@@ -28,11 +29,16 @@ func UserServiceProvider(repo repositories.UserRepository) UserService {
 }
 
 func (s *userService) CreateUser(ctx context.Context, data map[string]any) (sqlc.User, error) {
+	password := ""
+	if data["password"] != nil {
+		password = data["password"].(string)
+	}
+
 	newUser, err := s.repo.Create(ctx, sqlc.CreateUserParams{
 		UserFullName: data["name"].(string),
 		UserEmail:    data["email"].(string),
 		UserGoogleID: utils.ConvertStringToNullString(data["id"].(string)),
-		UserPassword: utils.ConvertStringToNullString(data["password"].(string)),
+		UserPassword: utils.ConvertStringToNullString(password),
 	})
 	return newUser, err
 }
@@ -73,4 +79,8 @@ func (s *userService) GetUserDetailsByGoogleId(ctx context.Context, googleID str
 	_ = cache.Set(ctx, key, string(userJSON))
 
 	return user, nil
+}
+
+func (s *userService) UpdateUser(ctx context.Context, data sqlc.UpdateUserParams) (sqlc.User, error) {
+	return s.repo.UpdateUser(ctx, data)
 }

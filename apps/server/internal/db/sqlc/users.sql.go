@@ -196,8 +196,10 @@ UPDATE users
 SET
   user_full_name = COALESCE($1, user_full_name),
   user_email = COALESCE($2, user_email),
-  user_profile_pic_id = COALESCE($3, user_profile_pic_id)
-WHERE user_id = $4
+  user_profile_pic_id = COALESCE($3, user_profile_pic_id),
+  user_password = COALESCE($4, user_password),  
+  user_google_id = COALESCE($5, user_google_id)
+WHERE user_id = $6
 RETURNING user_id, user_full_name, user_email, user_profile_pic_id, user_created_at, user_updated_at
 `
 
@@ -205,6 +207,8 @@ type UpdateUserParams struct {
 	UserFullName     sql.NullString
 	UserEmail        sql.NullString
 	UserProfilePicID uuid.NullUUID
+	UserPassword     sql.NullString
+	UserGoogleID     sql.NullString
 	UserID           uuid.UUID
 }
 
@@ -222,6 +226,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateU
 		arg.UserFullName,
 		arg.UserEmail,
 		arg.UserProfilePicID,
+		arg.UserPassword,
+		arg.UserGoogleID,
 		arg.UserID,
 	)
 	var i UpdateUserRow

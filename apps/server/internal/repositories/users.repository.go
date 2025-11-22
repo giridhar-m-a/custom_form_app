@@ -14,6 +14,7 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (sqlc.GetUserByEmailRow, error)
 	GetByID(ctx context.Context, userID uuid.UUID) (sqlc.GetUserByIDRow, error)
 	Create(ctx context.Context, params sqlc.CreateUserParams) (sqlc.User, error)
+	UpdateUser(ctx context.Context, data sqlc.UpdateUserParams) (sqlc.User, error)
 }
 
 // SQLCUserRepository implements UserRepository using sqlc.
@@ -47,6 +48,21 @@ func (r *SQLCUserRepository) Create(ctx context.Context, params sqlc.CreateUserP
 		UserFullName:     user.UserFullName,
 		UserEmail:        user.UserEmail,
 		UserGoogleID:     user.UserGoogleID,
+		UserProfilePicID: user.UserProfilePicID,
+		UserCreatedAt:    user.UserCreatedAt,
+		UserUpdatedAt:    user.UserUpdatedAt,
+	}, nil
+}
+
+func (r *SQLCUserRepository) UpdateUser(ctx context.Context, data sqlc.UpdateUserParams) (sqlc.User, error) {
+	user, err := r.q.UpdateUser(ctx, data)
+	if err != nil {
+		return sqlc.User{}, err
+	}
+	return sqlc.User{
+		UserID:           user.UserID,
+		UserFullName:     user.UserFullName,
+		UserEmail:        user.UserEmail,
 		UserProfilePicID: user.UserProfilePicID,
 		UserCreatedAt:    user.UserCreatedAt,
 		UserUpdatedAt:    user.UserUpdatedAt,
