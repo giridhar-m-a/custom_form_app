@@ -16,7 +16,7 @@ export const loginWithCredentials = async (data: SignInSchemaType) => {
     return response
   } catch (e) {
     console.error(e)
-    return errorHandler(e)
+    return errorHandler<AuthResponse>(e)
   }
 }
 
@@ -25,7 +25,7 @@ export const loginWithGoogle = async (code: string) => {
     const response = await GET<AuthResponse>(`${AUTH_ROUTES.login.google}?code=${code}`)
     return response
   } catch (e) {
-    return errorHandler(e)
+    return errorHandler<AuthResponse>(e)
   }
 }
 
@@ -38,6 +38,6 @@ export const register = async (data: SignUpSchemaType) => {
     const response = await POST<AuthResponse>(AUTH_ROUTES.register, parsed.data)
     return response
   } catch (e) {
-    return errorHandler(e)
+    return errorHandler<AuthResponse>(e)
   }
 }

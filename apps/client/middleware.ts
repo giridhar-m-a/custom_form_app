@@ -12,6 +12,10 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
+  if (token && unAuthorizedPages.has(req.nextUrl.pathname)) {
+    return NextResponse.redirect(new URL('/dashboard', req.url))
+  }
+
   // Otherwise allow request through
   return NextResponse.next()
 }

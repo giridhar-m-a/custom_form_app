@@ -1,12 +1,15 @@
 import { SignInSchemaType, SignUpSchemaType } from '@/app/schemas/auth.schemas'
 import { LOGIN_KEYS } from '@/lib/constants/queryKeys/login.keys'
 import { loginWithCredentials, loginWithGoogle, register } from '@/services/api/login/route'
+import { setTokens } from '@/store/slices/auth.slice'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { useDispatch } from 'react-redux'
 
 export const useCredentialAuth = () => {
   const router = useRouter()
+  const dispatch = useDispatch()
   return useMutation({
     mutationKey: LOGIN_KEYS.loginWithCredential,
     mutationFn: async (data: SignInSchemaType) => {
@@ -16,7 +19,10 @@ export const useCredentialAuth = () => {
       }
       throw new Error(res.message)
     },
-    onSuccess: ({ message }) => {
+    onSuccess: ({ message, data }) => {
+      if (data) {
+        dispatch(setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken }))
+      }
       toast.success(message)
       router.push('/dashboard')
     },
@@ -28,6 +34,7 @@ export const useCredentialAuth = () => {
 
 export const useGoogleAuth = () => {
   const router = useRouter()
+  const dispatch = useDispatch()
   return useMutation({
     mutationKey: LOGIN_KEYS.loginWithGoogle,
     mutationFn: async (code: string) => {
@@ -37,7 +44,10 @@ export const useGoogleAuth = () => {
       }
       throw new Error(res.message)
     },
-    onSuccess: ({ message }) => {
+    onSuccess: ({ message, data }) => {
+      if (data) {
+        dispatch(setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken }))
+      }
       toast.success(message)
       router.push('/dashboard')
     },
@@ -49,6 +59,7 @@ export const useGoogleAuth = () => {
 
 export const useRegister = () => {
   const router = useRouter()
+  const dispatch = useDispatch()
   return useMutation({
     mutationKey: LOGIN_KEYS.register,
     mutationFn: async (data: SignUpSchemaType) => {
@@ -58,7 +69,10 @@ export const useRegister = () => {
       }
       throw new Error(res.message)
     },
-    onSuccess: ({ message }) => {
+    onSuccess: ({ message, data }) => {
+      if (data) {
+        dispatch(setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken }))
+      }
       toast.success(message)
       router.push('/dashboard')
     },

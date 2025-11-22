@@ -1,6 +1,13 @@
 import { ApiResponse } from '@/types/api.types'
-import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
 import { errorHandler } from './errorHandler'
+import { getStore } from '../store/store'
+import Cookies from 'js-cookie'
+
+// Extend InternalAxiosRequestConfig to support explicit token
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  token?: string
+}
 
 class ApiConfig {
   private axiosInstance: AxiosInstance
@@ -17,10 +24,63 @@ class ApiConfig {
 
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
-      config => {
-        // Add auth token if available
-        const token = ''
-        config.headers.Authorization = `Bearer ${token}`
+      async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
+        try {
+          let token: string | null | undefined = null
+          const customConfig = config as CustomAxiosRequestConfig
+
+          // Priority 1: Explicit token in config (for server-side calls)
+          if (customConfig.token) {
+            token = customConfig.token
+          }
+          // Priority 2: Check if we're on client-side
+          else if (typeof window !== 'undefined') {
+            // Client-side: Try Redux store first
+            try {
+              const store = getStore()
+              token = store?.getState().auth.accessToken
+            } catch (error) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('[API Config] Failed to get token from Redux store:', error)
+              }
+            }
+
+            // Client-side fallback: Direct cookie access
+            if (!token) {
+              try {
+                token = Cookies.get('accessToken')
+              } catch (error) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.warn('[API Config] Failed to get token from cookies:', error)
+                }
+              }
+            }
+          }
+          // Priority 3: Server-side - use Next.js cookies()
+          else {
+            try {
+              const { cookies } = await import('next/headers')
+              const cookieStore = await cookies()
+              token = cookieStore.get('accessToken')?.value
+            } catch (error) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('[API Config] Failed to get token from Next.js cookies:', error)
+              }
+            }
+          }
+
+          // Set Authorization header if token is available
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+          }
+        } catch (error) {
+          // Catch any unexpected errors and log them in development
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[API Config] Unexpected error in request interceptor:', error)
+          }
+          // Don't fail the request - proceed without token
+        }
+
         return config
       },
       error => {
