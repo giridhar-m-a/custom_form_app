@@ -5,3 +5,12 @@ export interface AuthResponse {
   refreshToken: string
   user: User
 }
+
+export interface VerifyTokenResponse {
+  userID: string
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string
+  refreshToken: string
+}

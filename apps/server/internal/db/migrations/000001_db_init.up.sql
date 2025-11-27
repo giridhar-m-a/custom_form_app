@@ -110,7 +110,8 @@ CREATE TABLE IF NOT EXISTS form_field_options (
     option_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     option_label TEXT NOT NULL,
     field_id UUID REFERENCES form_fields(field_id) ON DELETE CASCADE,
-    ordering INT NOT NULL
+    ordering INT NOT NULL,
+    is_answer BOOLEAN DEFAULT FALSE
 );
 
 CREATE INDEX IF NOT EXISTS idx_form_field_options_field_id ON form_field_options(field_id);

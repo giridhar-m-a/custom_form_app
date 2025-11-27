@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ type FormsRepository interface {
 	GetFormByID(id string, ctx context.Context) (sqlc.Form, error)
 	GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.Form, error)
 	DeleteForm(id string, ctx context.Context) (sqlc.DeleteFormRow, error)
+	FormRepoWithTx(tx *sql.Tx) FormsRepository
 }
 
 type formsRepository struct {
@@ -52,4 +54,10 @@ func (r *formsRepository) DeleteForm(id string, ctx context.Context) (sqlc.Delet
 		return sqlc.DeleteFormRow{}, err
 	}
 	return r.q.DeleteForm(ctx, uid)
+}
+
+func (r *formsRepository) FormRepoWithTx(tx *sql.Tx) FormsRepository {
+	return &formsRepository{
+		q: r.q.WithTx(tx),
+	}
 }

@@ -18,6 +18,8 @@ type AuthHandler interface {
 	GoogleAuthHandler(c *gin.Context)
 	UserRegisterHandler(c *gin.Context)
 	EmailPasswordAuthHandler(c *gin.Context)
+	VerifyTokenHandler(c *gin.Context)
+	RefreshTokenHandler(c *gin.Context)
 }
 
 type authHandler struct {
@@ -145,7 +147,7 @@ func (a *authHandler) EmailPasswordAuthHandler(c *gin.Context) {
 // @Tags         Authentication
 // @Accept       json
 // @Produce      json
-// @Param        request  body  dto.EmailPasswordRegisterRequest  true  "User registration payload"
+// @Param        request  query  dto.EmailPasswordRegisterRequest  true  "User registration payload"
 // @Success      200  {object}  object{status=int,message=string,data=object{accessToken=string,refreshToken=string,user=object{id=string,email=string,fullName=string,profilePic=string,profilePicId=string,createdAt=string,updatedAt=string}}}  "Authentication successful"
 // @Failure      400  {object}  object{status=int,message=string}  "Invalid request"
 // @Failure      409  {object}  object{status=int,message=string}  "Email already exists"
@@ -181,4 +183,75 @@ func (a *authHandler) UserRegisterHandler(c *gin.Context) {
 	serializedUser := serializers.MapUser(user)
 
 	c.JSON(http.StatusOK, gin.H{"data": dto.AuthResponse{User: serializedUser, AccessToken: token, RefreshToken: refreshToken}, "status": http.StatusOK, "message": "User registered successfully"})
+}
+
+// @Summary      Verify Access Token
+// @Description  Verifies the access token and returns the user ID
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        token  query  string  true  "Access token"
+// @Success      200  {object}  object{status=int,message=string,data=object{userID=string}}  "Token verification successful"
+// @Failure      400  {object}  object{status=int,message=string}  "Invalid request"
+// @Failure      401  {object}  object{status=int,message=string}  "Unauthorized"
+// @Failure      500  {object}  object{status=int,message=string}  "Internal server error"
+// @Router       /auth/verify [get]
+// @Schemes      https
+func (a *authHandler) VerifyTokenHandler(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Token is required", "status": http.StatusBadRequest})
+		return
+	}
+
+	userID, err := a.authService.VerifyToken(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error(), "status": http.StatusUnauthorized})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"userID": userID}, "status": http.StatusOK, "message": "Token verified successfully"})
+}
+
+// @Summary      Verify Access Token
+// @Description  Verifies the access token and returns the user ID
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        token  query  string  true  "Refresh token"
+// @Success      200  {object}  object{status=int,message=string,data=object{accessToken=string,refreshToken=string}}  "Token verification successful"
+// @Failure      400  {object}  object{status=int,message=string}  "Invalid request"
+// @Failure      401  {object}  object{status=int,message=string}  "Unauthorized"
+// @Failure      500  {object}  object{status=int,message=string}  "Internal server error"
+// @Router       /auth/verify-refresh-token [get]
+// @Schemes      https
+func (a *authHandler) RefreshTokenHandler(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Token is required", "status": http.StatusBadRequest})
+		return
+	}
+
+	userID, err := a.authService.VerifyToken(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error(), "status": http.StatusUnauthorized})
+		return
+	}	
+
+	user, err := a.userService.GetUserDetailsById(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error(), "status": http.StatusUnauthorized})
+		return
+	}
+	if user.UserID != uuid.Nil{
+		token, refreshToken, err := a.authService.GenerateTokens(user.UserID.String(), c.Request.Host)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to generate tokens", "status": http.StatusInternalServerError})
+			log.Printf("Error generating tokens: %v", err)
+			return
+		}
+		if token != "" && refreshToken != "" {
+			c.JSON(http.StatusOK, gin.H{"data": gin.H{"accessToken": token, "refreshToken": refreshToken}, "status": http.StatusOK, "message": "Token refreshed successfully"})
+		}
+	}
 }

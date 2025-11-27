@@ -8,9 +8,15 @@ import (
 func Auth(rg *gin.RouterGroup) {
 	authHandler := handler.NewAuthHandler()
 
-	rg.GET("/auth/google", authHandler.GoogleAuthHandler)
+	auth:= rg.Group("/auth")
 
-	rg.POST("/auth/register", authHandler.UserRegisterHandler)
+	auth.GET("/google", authHandler.GoogleAuthHandler)
 
-	rg.POST("/auth/login", authHandler.EmailPasswordAuthHandler)
+	auth.POST("/register", authHandler.UserRegisterHandler)
+
+	auth.POST("/login", authHandler.EmailPasswordAuthHandler)
+
+	auth.GET("/verify", authHandler.VerifyTokenHandler)
+
+	auth.GET("/refresh-token", authHandler.RefreshTokenHandler)
 }

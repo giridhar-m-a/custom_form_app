@@ -167,6 +167,7 @@ type FormFieldOption struct {
 	OptionLabel string
 	FieldID     uuid.NullUUID
 	Ordering    int32
+	IsAnswer    sql.NullBool
 }
 
 type FormResponse struct {

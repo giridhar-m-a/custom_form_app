@@ -13,4 +13,5 @@ func RegisterRoutes(r *gin.Engine) {
 	api.Use(middleware.AuthMiddleware())
 	controller.FileUploadController(api)
 	controller.RegisterFormsController(api)
+	controller.Users(api)
 }

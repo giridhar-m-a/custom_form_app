@@ -12,6 +12,45 @@ import (
 	"github.com/google/uuid"
 )
 
+const createFieldOption = `-- name: CreateFieldOption :one
+INSERT INTO form_field_options (field_id, option_label, ordering, is_answer)
+VALUES ($1, $2, $3, $4)
+RETURNING option_id, field_id, option_label, ordering, is_answer
+`
+
+type CreateFieldOptionParams struct {
+	FieldID     uuid.NullUUID
+	OptionLabel string
+	Ordering    int32
+	IsAnswer    sql.NullBool
+}
+
+type CreateFieldOptionRow struct {
+	OptionID    uuid.UUID
+	FieldID     uuid.NullUUID
+	OptionLabel string
+	Ordering    int32
+	IsAnswer    sql.NullBool
+}
+
+func (q *Queries) CreateFieldOption(ctx context.Context, arg CreateFieldOptionParams) (CreateFieldOptionRow, error) {
+	row := q.db.QueryRowContext(ctx, createFieldOption,
+		arg.FieldID,
+		arg.OptionLabel,
+		arg.Ordering,
+		arg.IsAnswer,
+	)
+	var i CreateFieldOptionRow
+	err := row.Scan(
+		&i.OptionID,
+		&i.FieldID,
+		&i.OptionLabel,
+		&i.Ordering,
+		&i.IsAnswer,
+	)
+	return i, err
+}
+
 const createForm = `-- name: CreateForm :one
 INSERT INTO forms (form_title, form_description, created_by)
 VALUES ($1, $2, $3)
@@ -51,6 +90,76 @@ func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (CreateF
 	return i, err
 }
 
+const createFormField = `-- name: CreateFormField :one
+INSERT INTO form_fields (form_id, field_label, field_type, is_required, ordering)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING field_id, field_label, field_type, is_required, ordering, form_id
+`
+
+type CreateFormFieldParams struct {
+	FormID     uuid.UUID
+	FieldLabel string
+	FieldType  string
+	IsRequired sql.NullBool
+	Ordering   int32
+}
+
+type CreateFormFieldRow struct {
+	FieldID    uuid.UUID
+	FieldLabel string
+	FieldType  string
+	IsRequired sql.NullBool
+	Ordering   int32
+	FormID     uuid.UUID
+}
+
+func (q *Queries) CreateFormField(ctx context.Context, arg CreateFormFieldParams) (CreateFormFieldRow, error) {
+	row := q.db.QueryRowContext(ctx, createFormField,
+		arg.FormID,
+		arg.FieldLabel,
+		arg.FieldType,
+		arg.IsRequired,
+		arg.Ordering,
+	)
+	var i CreateFormFieldRow
+	err := row.Scan(
+		&i.FieldID,
+		&i.FieldLabel,
+		&i.FieldType,
+		&i.IsRequired,
+		&i.Ordering,
+		&i.FormID,
+	)
+	return i, err
+}
+
+const deleteFieldOption = `-- name: DeleteFieldOption :one
+DELETE FROM form_field_options
+WHERE option_id = $1
+RETURNING option_id, field_id, option_label, ordering, is_answer
+`
+
+type DeleteFieldOptionRow struct {
+	OptionID    uuid.UUID
+	FieldID     uuid.NullUUID
+	OptionLabel string
+	Ordering    int32
+	IsAnswer    sql.NullBool
+}
+
+func (q *Queries) DeleteFieldOption(ctx context.Context, optionID uuid.UUID) (DeleteFieldOptionRow, error) {
+	row := q.db.QueryRowContext(ctx, deleteFieldOption, optionID)
+	var i DeleteFieldOptionRow
+	err := row.Scan(
+		&i.OptionID,
+		&i.FieldID,
+		&i.OptionLabel,
+		&i.Ordering,
+		&i.IsAnswer,
+	)
+	return i, err
+}
+
 const deleteForm = `-- name: DeleteForm :one
 DELETE FROM forms
 WHERE form_id = $1
@@ -84,6 +193,35 @@ func (q *Queries) DeleteForm(ctx context.Context, formID uuid.UUID) (DeleteFormR
 	return i, err
 }
 
+const deleteFormField = `-- name: DeleteFormField :one
+DELETE FROM form_fields
+WHERE field_id = $1
+RETURNING field_id, field_label, field_type, is_required, ordering, form_id
+`
+
+type DeleteFormFieldRow struct {
+	FieldID    uuid.UUID
+	FieldLabel string
+	FieldType  string
+	IsRequired sql.NullBool
+	Ordering   int32
+	FormID     uuid.UUID
+}
+
+func (q *Queries) DeleteFormField(ctx context.Context, fieldID uuid.UUID) (DeleteFormFieldRow, error) {
+	row := q.db.QueryRowContext(ctx, deleteFormField, fieldID)
+	var i DeleteFormFieldRow
+	err := row.Scan(
+		&i.FieldID,
+		&i.FieldLabel,
+		&i.FieldType,
+		&i.IsRequired,
+		&i.Ordering,
+		&i.FormID,
+	)
+	return i, err
+}
+
 const getFormByID = `-- name: GetFormByID :one
 SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by
 FROM forms
@@ -104,6 +242,99 @@ func (q *Queries) GetFormByID(ctx context.Context, formID uuid.UUID) (Form, erro
 		&i.CreatedBy,
 	)
 	return i, err
+}
+
+const getFormFieldOptionsMap = `-- name: GetFormFieldOptionsMap :one
+SELECT COALESCE(
+    JSONB_OBJECT_AGG(
+        fo.option_id::text,
+        JSONB_BUILD_OBJECT(
+            'optionId', fo.option_id,
+            'optionLabel', fo.option_label,
+            'ordering', fo.ordering,
+            'fieldId', fo.field_id
+        )
+    ) FILTER (WHERE fo.option_id IS NOT NULL),
+    '{}'::jsonb
+) AS "fieldOptionsMap"
+FROM form_field_options fo
+JOIN form_fields ff ON ff.field_id = fo.field_id
+WHERE ff.form_id = $1
+`
+
+func (q *Queries) GetFormFieldOptionsMap(ctx context.Context, formID uuid.UUID) (interface{}, error) {
+	row := q.db.QueryRowContext(ctx, getFormFieldOptionsMap, formID)
+	var fieldOptionsMap interface{}
+	err := row.Scan(&fieldOptionsMap)
+	return fieldOptionsMap, err
+}
+
+const getFormFieldsWithOptions = `-- name: GetFormFieldsWithOptions :many
+SELECT 
+    ff.field_id AS "fieldId",
+    ff.field_label AS "fieldLabel",
+    ff.field_type AS "fieldType",
+    ff.is_required AS "isRequired",
+    ff.ordering AS "ordering",
+    ff.form_id AS "formId",
+    COALESCE(
+        JSON_AGG(
+            JSONB_BUILD_OBJECT(
+                'optionId', fo.option_id,
+                'optionLabel', fo.option_label,
+                'ordering', fo.ordering,
+                'isAnswer', fo.is_answer,
+                'fieldId', fo.field_id
+            ) ORDER BY fo.ordering
+        ) FILTER (WHERE fo.option_id IS NOT NULL),
+        '[]'
+    ) AS "options"
+FROM form_fields ff
+LEFT JOIN form_field_options fo ON ff.field_id = fo.field_id
+WHERE ff.form_id = $1
+GROUP BY ff.field_id
+ORDER BY ff.ordering
+`
+
+type GetFormFieldsWithOptionsRow struct {
+	FieldId    uuid.UUID
+	FieldLabel string
+	FieldType  string
+	IsRequired sql.NullBool
+	Ordering   int32
+	FormId     uuid.UUID
+	Options    interface{}
+}
+
+func (q *Queries) GetFormFieldsWithOptions(ctx context.Context, formID uuid.UUID) ([]GetFormFieldsWithOptionsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFormFieldsWithOptions, formID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFormFieldsWithOptionsRow
+	for rows.Next() {
+		var i GetFormFieldsWithOptionsRow
+		if err := rows.Scan(
+			&i.FieldId,
+			&i.FieldLabel,
+			&i.FieldType,
+			&i.IsRequired,
+			&i.Ordering,
+			&i.FormId,
+			&i.Options,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listForms = `-- name: ListForms :many
@@ -181,6 +412,49 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]Form, e
 	return items, nil
 }
 
+const updateFieldOption = `-- name: UpdateFieldOption :one
+UPDATE form_field_options
+SET
+  option_label = COALESCE($2, option_label),
+  ordering = COALESCE($3, ordering),
+  is_answer = COALESCE($4, is_answer)
+WHERE option_id = $1
+RETURNING option_id, field_id, option_label, ordering, is_answer
+`
+
+type UpdateFieldOptionParams struct {
+	OptionID    uuid.UUID
+	OptionLabel string
+	Ordering    int32
+	IsAnswer    sql.NullBool
+}
+
+type UpdateFieldOptionRow struct {
+	OptionID    uuid.UUID
+	FieldID     uuid.NullUUID
+	OptionLabel string
+	Ordering    int32
+	IsAnswer    sql.NullBool
+}
+
+func (q *Queries) UpdateFieldOption(ctx context.Context, arg UpdateFieldOptionParams) (UpdateFieldOptionRow, error) {
+	row := q.db.QueryRowContext(ctx, updateFieldOption,
+		arg.OptionID,
+		arg.OptionLabel,
+		arg.Ordering,
+		arg.IsAnswer,
+	)
+	var i UpdateFieldOptionRow
+	err := row.Scan(
+		&i.OptionID,
+		&i.FieldID,
+		&i.OptionLabel,
+		&i.Ordering,
+		&i.IsAnswer,
+	)
+	return i, err
+}
+
 const updateForm = `-- name: UpdateForm :one
 UPDATE forms
 SET
@@ -232,6 +506,54 @@ func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (UpdateF
 		&i.FormUpdatedAt,
 		&i.FormStatus,
 		&i.FormAccess,
+	)
+	return i, err
+}
+
+const updateFormField = `-- name: UpdateFormField :one
+UPDATE form_fields
+SET
+  field_label = COALESCE($2, field_label),
+  field_type = COALESCE($3, field_type),
+  is_required = COALESCE($4, is_required),
+  ordering = COALESCE($5, ordering)
+WHERE field_id = $1
+RETURNING field_id, field_label, field_type, is_required, ordering, form_id
+`
+
+type UpdateFormFieldParams struct {
+	FieldID    uuid.UUID
+	FieldLabel string
+	FieldType  string
+	IsRequired sql.NullBool
+	Ordering   int32
+}
+
+type UpdateFormFieldRow struct {
+	FieldID    uuid.UUID
+	FieldLabel string
+	FieldType  string
+	IsRequired sql.NullBool
+	Ordering   int32
+	FormID     uuid.UUID
+}
+
+func (q *Queries) UpdateFormField(ctx context.Context, arg UpdateFormFieldParams) (UpdateFormFieldRow, error) {
+	row := q.db.QueryRowContext(ctx, updateFormField,
+		arg.FieldID,
+		arg.FieldLabel,
+		arg.FieldType,
+		arg.IsRequired,
+		arg.Ordering,
+	)
+	var i UpdateFormFieldRow
+	err := row.Scan(
+		&i.FieldID,
+		&i.FieldLabel,
+		&i.FieldType,
+		&i.IsRequired,
+		&i.Ordering,
+		&i.FormID,
 	)
 	return i, err
 }

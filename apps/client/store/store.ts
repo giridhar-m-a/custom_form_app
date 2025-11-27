@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit'
 import authReducer from './slices/auth.slice'
+import meReducer from './slices/me.slice'
 
 // Define AppStore type first, as 'store' will use it.
 // For now, we can define it based on the return type of configureStore directly,
@@ -15,7 +16,8 @@ export const makeStore = () => {
     // Ensure store is only initialized once if makeStore is called multiple times
     store = configureStore({
       reducer: {
-        auth: authReducer
+        auth: authReducer,
+        me: meReducer
       },
       devTools: process.env.NODE_ENV !== 'production'
     })

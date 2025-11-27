@@ -48,3 +48,90 @@ OFFSET COALESCE(sqlc.narg('offset'), 0);
 DELETE FROM forms
 WHERE form_id = $1
 RETURNING form_id, form_title, form_description, created_by, form_created_at, form_updated_at, form_status, form_access;
+
+
+-- name: CreateFormField :one
+INSERT INTO form_fields (form_id, field_label, field_type, is_required, ordering)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING field_id, field_label, field_type, is_required, ordering, form_id;
+
+-- name: UpdateFormField :one
+UPDATE form_fields
+SET
+  field_label = COALESCE($2, field_label),
+  field_type = COALESCE($3, field_type),
+  is_required = COALESCE($4, is_required),
+  ordering = COALESCE($5, ordering)
+WHERE field_id = $1
+RETURNING field_id, field_label, field_type, is_required, ordering, form_id;
+
+-- name: DeleteFormField :one
+DELETE FROM form_fields
+WHERE field_id = $1
+RETURNING field_id, field_label, field_type, is_required, ordering, form_id;
+
+-- name: CreateFieldOption :one
+INSERT INTO form_field_options (field_id, option_label, ordering, is_answer)
+VALUES ($1, $2, $3, $4)
+RETURNING option_id, field_id, option_label, ordering, is_answer;
+
+-- name: UpdateFieldOption :one
+UPDATE form_field_options
+SET
+  option_label = COALESCE($2, option_label),
+  ordering = COALESCE($3, ordering),
+  is_answer = COALESCE($4, is_answer)
+WHERE option_id = $1
+RETURNING option_id, field_id, option_label, ordering, is_answer;
+
+-- name: DeleteFieldOption :one
+DELETE FROM form_field_options
+WHERE option_id = $1
+RETURNING option_id, field_id, option_label, ordering, is_answer;
+
+
+-- name: GetFormFieldsWithOptions :many
+SELECT 
+    ff.field_id AS "fieldId",
+    ff.field_label AS "fieldLabel",
+    ff.field_type AS "fieldType",
+    ff.is_required AS "isRequired",
+    ff.ordering AS "ordering",
+    ff.form_id AS "formId",
+    COALESCE(
+        JSON_AGG(
+            JSONB_BUILD_OBJECT(
+                'optionId', fo.option_id,
+                'optionLabel', fo.option_label,
+                'ordering', fo.ordering,
+                'isAnswer', fo.is_answer,
+                'fieldId', fo.field_id
+            ) ORDER BY fo.ordering
+        ) FILTER (WHERE fo.option_id IS NOT NULL),
+        '[]'
+    ) AS "options"
+FROM form_fields ff
+LEFT JOIN form_field_options fo ON ff.field_id = fo.field_id
+WHERE ff.form_id = $1
+GROUP BY ff.field_id
+ORDER BY ff.ordering;
+
+-- name: GetFormFieldOptionsMap :one
+SELECT COALESCE(
+    JSONB_OBJECT_AGG(
+        fo.option_id::text,
+        JSONB_BUILD_OBJECT(
+            'optionId', fo.option_id,
+            'optionLabel', fo.option_label,
+            'ordering', fo.ordering,
+            'fieldId', fo.field_id
+        )
+    ) FILTER (WHERE fo.option_id IS NOT NULL),
+    '{}'::jsonb
+) AS "fieldOptionsMap"
+FROM form_field_options fo
+JOIN form_fields ff ON ff.field_id = fo.field_id
+WHERE ff.form_id = $1;
+
+
+

@@ -17,6 +17,7 @@ type AuthService interface {
 	AuthenticateWithEmailPassword(ctx context.Context, payload dto.EmailPasswordAuthRequest) (sqlc.GetUserByEmailRow, error)
 	CreateUserWithEmailPassword(ctx context.Context, data dto.EmailPasswordRegisterRequest) (sqlc.User, error)
 	GenerateTokens(userID string, audience string) (string, string, error)
+	VerifyToken(token string) (string, error)
 }
 
 type authService struct {
@@ -98,3 +99,8 @@ func (a *authService) GenerateTokens(userID string, audience string) (string, st
 	}
 	return token, refreshToken, nil
 }
+
+func (a *authService) VerifyToken(token string) (string, error) {
+	return a.jwtService.ValidateToken(token)
+}
+

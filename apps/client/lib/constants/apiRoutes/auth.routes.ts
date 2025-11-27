@@ -6,5 +6,7 @@ export const AUTH_ROUTES = {
     credentials: `${base}/login`,
     google: `${base}/google`
   },
-  register: `${base}/register`
+  register: `${base}/register`,
+  verify: `${base}/verify`,
+  refreshToken: `${base}/refresh-token`
 }

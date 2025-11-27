@@ -4,7 +4,7 @@ import { SignInSchema, SignInSchemaType, SignUpSchema, SignUpSchemaType } from '
 import { GET, POST } from '@/lib/api.config'
 import { AUTH_ROUTES } from '@/lib/constants/apiRoutes/auth.routes'
 import { errorHandler } from '@/lib/errorHandler'
-import { AuthResponse } from '@/types/auth.types'
+import { AuthResponse, RefreshTokenResponse, VerifyTokenResponse } from '@/types/auth.types'
 
 export const loginWithCredentials = async (data: SignInSchemaType) => {
   try {
@@ -39,5 +39,23 @@ export const register = async (data: SignUpSchemaType) => {
     return response
   } catch (e) {
     return errorHandler<AuthResponse>(e)
+  }
+}
+
+export const verifyToken = async (token: string) => {
+  try {
+    const response = await GET<VerifyTokenResponse>(`${AUTH_ROUTES.verify}?token=${token}`)
+    return response
+  } catch (e) {
+    return errorHandler<VerifyTokenResponse>(e)
+  }
+}
+
+export const verifyRefreshToken = async (token: string) => {
+  try {
+    const response = await GET<RefreshTokenResponse>(`${AUTH_ROUTES.refreshToken}?token=${token}`)
+    return response
+  } catch (e) {
+    return errorHandler<RefreshTokenResponse>(e)
   }
 }

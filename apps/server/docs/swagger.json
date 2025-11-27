@@ -272,13 +272,24 @@
                 "summary": "Register a new user",
                 "parameters": [
                     {
-                        "description": "User registration payload",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest"
-                        }
+                        "type": "string",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "minLength": 2,
+                        "type": "string",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "minLength": 6,
+                        "type": "string",
+                        "name": "password",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -349,6 +360,189 @@
                     },
                     "409": {
                         "description": "Email already exists",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify": {
+            "get": {
+                "description": "Verifies the access token and returns the user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify Access Token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Access token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token verification successful",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "userID": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify-refresh-token": {
+            "get": {
+                "description": "Verifies the access token and returns the user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify Access Token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Refresh token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token verification successful",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accessToken": {
+                                            "type": "string"
+                                        },
+                                        "refreshToken": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -526,14 +720,14 @@
                 }
             }
         },
-        "/forms/{id}": {
-            "get": {
+        "/forms/fields": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves a form with the specified ID",
+                "description": "Creates form fields for the authenticated user",
                 "consumes": [
                     "application/json"
                 ],
@@ -543,27 +737,159 @@
                 "tags": [
                     "Forms"
                 ],
-                "summary": "Get a form by ID",
+                "summary": "Create form fields",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Form ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "description": "Form fields data",
+                        "name": "form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldsDTO"
+                        }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Form retrieved successfully",
+                    "201": {
+                        "description": "Form fields created successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
-                                "formID": {
-                                    "type": "string"
+                                "data": {
+                                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO"
                                 },
                                 "message": {
                                     "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Returns OK if the API is running",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Check API health",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves details of the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get current user details",
+                "responses": {
+                    "200": {
+                        "description": "User retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "fullName": {
+                                            "type": "string"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "profilePic": {
+                                            "type": "string"
+                                        },
+                                        "profilePicId": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
                                 }
                             }
                         }
@@ -612,29 +938,6 @@
                     }
                 }
             }
-        },
-        "/health": {
-            "get": {
-                "description": "Returns OK if the API is running",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "health"
-                ],
-                "summary": "Check API health",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -652,6 +955,119 @@
                 }
             }
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldDTO": {
+            "type": "object",
+            "required": [
+                "fieldLabel",
+                "fieldType",
+                "ordering"
+            ],
+            "properties": {
+                "fieldLabel": {
+                    "type": "string"
+                },
+                "fieldType": {
+                    "type": "string"
+                },
+                "isRequired": {
+                    "type": "boolean"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldOptionDTO"
+                    }
+                },
+                "ordering": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldOptionDTO": {
+            "type": "object",
+            "required": [
+                "optionLabel",
+                "ordering"
+            ],
+            "properties": {
+                "isAnswer": {
+                    "type": "boolean"
+                },
+                "optionLabel": {
+                    "type": "string"
+                },
+                "ordering": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldsDTO": {
+            "type": "object",
+            "required": [
+                "formFields",
+                "formId"
+            ],
+            "properties": {
+                "formFields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldDTO"
+                    }
+                },
+                "formId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO": {
+            "type": "object",
+            "properties": {
+                "fieldId": {
+                    "type": "string"
+                },
+                "fieldLabel": {
+                    "type": "string"
+                },
+                "fieldType": {
+                    "type": "string"
+                },
+                "formId": {
+                    "type": "string"
+                },
+                "isRequired": {
+                    "$ref": "#/definitions/sql.NullBool"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldOptionDTO"
+                    }
+                },
+                "ordering": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldOptionDTO": {
+            "type": "object",
+            "properties": {
+                "fieldId": {
+                    "$ref": "#/definitions/uuid.NullUUID"
+                },
+                "isAnswer": {
+                    "$ref": "#/definitions/sql.NullBool"
+                },
+                "optionId": {
+                    "type": "string"
+                },
+                "optionLabel": {
+                    "type": "string"
+                },
+                "ordering": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest": {
             "type": "object",
             "required": [
@@ -661,27 +1077,6 @@
             "properties": {
                 "email": {
                     "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 6
-                }
-            }
-        },
-        "github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "minLength": 2
                 },
                 "password": {
                     "type": "string",
@@ -715,6 +1110,30 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "sql.NullBool": {
+            "type": "object",
+            "properties": {
+                "bool": {
+                    "type": "boolean"
+                },
+                "valid": {
+                    "description": "Valid is true if Bool is not NULL",
+                    "type": "boolean"
+                }
+            }
+        },
+        "uuid.NullUUID": {
+            "type": "object",
+            "properties": {
+                "uuid": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if UUID is not NULL",
+                    "type": "boolean"
                 }
             }
         }
