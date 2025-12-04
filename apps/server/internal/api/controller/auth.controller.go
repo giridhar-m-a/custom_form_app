@@ -8,7 +8,7 @@ import (
 func Auth(rg *gin.RouterGroup) {
 	authHandler := handler.NewAuthHandler()
 
-	auth:= rg.Group("/auth")
+	auth := rg.Group("/auth")
 
 	auth.GET("/google", authHandler.GoogleAuthHandler)
 

@@ -25,21 +25,20 @@ type CreateFormFieldOptionDTO struct {
 	IsAnswer    bool   `json:"isAnswer"`
 }
 
-
 type CreatedFormFieldDTO struct {
-	FormId uuid.UUID `json:"formId"`
-	FieldID uuid.UUID `json:"fieldId"`
-	FieldLabel string `json:"fieldLabel"`
-	FieldType string `json:"fieldType"`
-	IsRequired sql.NullBool `json:"isRequired"`
-	Ordering int32 `json:"ordering"`
-	Options []CreatedFormFieldOptionDTO `json:"options"`
+	FormId     uuid.UUID                   `json:"formId"`
+	FieldID    uuid.UUID                   `json:"fieldId"`
+	FieldLabel string                      `json:"fieldLabel"`
+	FieldType  string                      `json:"fieldType"`
+	IsRequired sql.NullBool                `json:"isRequired"`
+	Ordering   int32                       `json:"ordering"`
+	Options    []CreatedFormFieldOptionDTO `json:"options"`
 }
 
 type CreatedFormFieldOptionDTO struct {
-	OptionID uuid.UUID `json:"optionId"`
-	FieldId uuid.NullUUID `json:"fieldId"`
-	OptionLabel string `json:"optionLabel"`
-	Ordering int32 `json:"ordering"`
-	IsAnswer sql.NullBool `json:"isAnswer"`
+	OptionID    uuid.UUID     `json:"optionId"`
+	FieldId     uuid.NullUUID `json:"fieldId"`
+	OptionLabel string        `json:"optionLabel"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"isAnswer"`
 }

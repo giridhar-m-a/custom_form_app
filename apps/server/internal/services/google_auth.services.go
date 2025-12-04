@@ -39,7 +39,7 @@ func (s *googleAuthService) Authenticate(ctx context.Context, code string) (sqlc
 		return existingUser, nil
 	}
 
-	existingMailUser, err := s.repo.GetUserDetailsByEmail(ctx, userInfo["email"].(string))	
+	existingMailUser, err := s.repo.GetUserDetailsByEmail(ctx, userInfo["email"].(string))
 	if err == nil && existingMailUser.UserID.String() != "" && existingMailUser.UserEmail == userInfo["email"].(string) {
 		updatedUser, err := s.repo.UpdateUser(ctx, sqlc.UpdateUserParams{
 			UserGoogleID: utils.ConvertStringToNullString(userInfo["id"].(string)),
@@ -50,11 +50,11 @@ func (s *googleAuthService) Authenticate(ctx context.Context, code string) (sqlc
 			return sqlc.GetUserByGoogleIdRow{}, err
 		}
 		return sqlc.GetUserByGoogleIdRow{
-			UserID:        updatedUser.UserID,
-			UserEmail:     updatedUser.UserEmail,
-			UserFullName:  updatedUser.UserFullName,
-			UserCreatedAt: updatedUser.UserCreatedAt,
-			UserUpdatedAt: updatedUser.UserUpdatedAt,
+			UserID:           updatedUser.UserID,
+			UserEmail:        updatedUser.UserEmail,
+			UserFullName:     updatedUser.UserFullName,
+			UserCreatedAt:    updatedUser.UserCreatedAt,
+			UserUpdatedAt:    updatedUser.UserUpdatedAt,
 			UserProfilePicID: updatedUser.UserProfilePicID,
 		}, nil
 	}

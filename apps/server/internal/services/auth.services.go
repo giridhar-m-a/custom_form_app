@@ -103,4 +103,3 @@ func (a *authService) GenerateTokens(userID string, audience string) (string, st
 func (a *authService) VerifyToken(token string) (string, error) {
 	return a.jwtService.ValidateToken(token)
 }
-

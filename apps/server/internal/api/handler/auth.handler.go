@@ -236,14 +236,14 @@ func (a *authHandler) RefreshTokenHandler(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error(), "status": http.StatusUnauthorized})
 		return
-	}	
+	}
 
 	user, err := a.userService.GetUserDetailsById(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error(), "status": http.StatusUnauthorized})
 		return
 	}
-	if user.UserID != uuid.Nil{
+	if user.UserID != uuid.Nil {
 		token, refreshToken, err := a.authService.GenerateTokens(user.UserID.String(), c.Request.Host)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to generate tokens", "status": http.StatusInternalServerError})

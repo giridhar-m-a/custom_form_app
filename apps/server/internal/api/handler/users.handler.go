@@ -9,7 +9,6 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 )
 
-
 type UsersHandler interface {
 	GetMe(ctx *gin.Context)
 }

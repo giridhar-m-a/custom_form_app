@@ -96,5 +96,3 @@ func ConvertUUIDToNullUUID(id string) uuid.NullUUID {
 		Valid: true,
 	}
 }
-
-

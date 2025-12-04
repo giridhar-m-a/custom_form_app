@@ -8,7 +8,7 @@ import (
 func Users(rg *gin.RouterGroup) {
 
 	usersHandler := handler.NewUsersHandler()
-	
+
 	rg.GET("/users/me", usersHandler.GetMe)
 
 }
