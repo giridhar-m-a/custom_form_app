@@ -1,4 +1,5 @@
 'use client'
+import Header from '@/components/sidebar/Header'
 import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import {
   Breadcrumb,
@@ -26,25 +27,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b">
-          <div className="flex items-center gap-2 px-3">
-            <SidebarTrigger />
+      <SidebarInset className="w-full">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b w-ful">
+          <div className="flex items-center gap-2 px-3 w-full">
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">Building Your Application</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <Header />
           </div>
         </header>
-        {children}
+        <div className="m-14 rounded-lg p-8 min-h-[calc(100vh-11rem)] max-h-[calc(100vh-11rem)] bg-accent">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

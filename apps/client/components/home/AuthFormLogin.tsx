@@ -32,7 +32,6 @@ const AuthFormLogin = () => {
 
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (codeResponse: any) => {
-      console.log('codeResponse', codeResponse)
       googleLogin(codeResponse.code)
     },
     flow: 'auth-code'
@@ -52,7 +51,7 @@ const AuthFormLogin = () => {
       <CardContent>
         <Button
           onClick={handleGoogleLogin}
-          className="w-full mb-6 text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 transition-all"
+          className="w-full mb-6 text-gray-700 hover:text-gray-700! border! border-gray-300! bg-white! hover:bg-gray-50! transition-all"
           variant="outline"
           size="lg"
           disabled={isGoogleLoading || isFormLoading}>
@@ -90,7 +89,7 @@ const AuthFormLogin = () => {
                             placeholder="you@example.com"
                             {...field}
                             required
-                            className="pl-10"
+                            className="pl-10 text-gray-700 border! border-gray-300! bg-white! hover:bg-gray-50!"
                             disabled={isFormLoading || isGoogleLoading}
                           />
                         </div>
@@ -117,7 +116,7 @@ const AuthFormLogin = () => {
                             placeholder="••••••••"
                             {...field}
                             required
-                            className="pl-10"
+                            className="pl-10 text-gray-700 border! border-gray-300! bg-white! hover:bg-gray-50!"
                             disabled={isFormLoading || isGoogleLoading}
                           />
                         </div>

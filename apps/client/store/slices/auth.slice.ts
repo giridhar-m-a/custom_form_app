@@ -18,8 +18,16 @@ export const authSlice = createSlice({
     setTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken: string }>) => {
       state.accessToken = action.payload.accessToken
       state.refreshToken = action.payload.refreshToken
-      Cookies.set('accessToken', action.payload.accessToken)
-      Cookies.set('refreshToken', action.payload.refreshToken)
+      try {
+        Cookies.set('accessToken', action.payload.accessToken, {
+          expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000)
+        })
+        Cookies.set('refreshToken', action.payload.refreshToken, {
+          expires: new Date(Date.now() + 60 * 60 * 24 * 7 * 1000)
+        })
+      } catch (e) {
+        console.log('error setting cookies', e)
+      }
     },
     clearTokens: state => {
       state.accessToken = null

@@ -42,7 +42,14 @@ const AuthFormSignUp = () => {
                 <FormControl>
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" type="text" placeholder="John Doe" {...field} disabled={isRegisterLoading} />
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="John Doe"
+                      className="text-gray-700 border! border-gray-300! bg-white! hover:bg-gray-50!"
+                      {...field}
+                      disabled={isRegisterLoading}
+                    />
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -64,7 +71,7 @@ const AuthFormSignUp = () => {
                       placeholder="you@example.com"
                       {...field}
                       required
-                      className="pl-10"
+                      className="pl-10 text-gray-700 border! border-gray-300! bg-white! hover:bg-gray-50!"
                       disabled={isRegisterLoading}
                     />
                   </div>
@@ -88,7 +95,7 @@ const AuthFormSignUp = () => {
                       placeholder="••••••••"
                       {...field}
                       required
-                      className="pl-10"
+                      className="pl-10 text-gray-700 border! border-gray-300! bg-white! hover:bg-gray-50!"
                       disabled={isRegisterLoading}
                     />
                   </div>
@@ -112,7 +119,7 @@ const AuthFormSignUp = () => {
                       placeholder="••••••••"
                       {...field}
                       required
-                      className="pl-10"
+                      className="pl-10 text-gray-700 border! border-gray-300! bg-white! hover:bg-gray-50!"
                       disabled={isRegisterLoading}
                     />
                   </div>

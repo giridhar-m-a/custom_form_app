@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 
 import StoreProvider from '@/components/wrapper/StoreProvider'
+import { ThemeProvider } from '@/components/theme/theme-provider'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,10 +32,12 @@ export default function RootLayout({
     <html lang="en">
       <GoogleOAuthProvider clientId="1091902491223-a8e9ga2qdf32a9tuqdf32p5j95jus9tt.apps.googleusercontent.com">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <Toaster position="top-center" reverseOrder={false} />
-          <StoreProvider>
-            <TanstackQueryWrapper>{children}</TanstackQueryWrapper>
-          </StoreProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <Toaster position="top-center" reverseOrder={false} />
+            <StoreProvider>
+              <TanstackQueryWrapper>{children}</TanstackQueryWrapper>
+            </StoreProvider>
+          </ThemeProvider>
         </body>
       </GoogleOAuthProvider>
     </html>

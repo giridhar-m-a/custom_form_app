@@ -10,39 +10,62 @@ export default async function proxy(req: NextRequest) {
   const refreshToken = req.cookies.get('refreshToken')?.value
 
   const isPublic = unAuthorizedPages.has(pathname)
+  const isDashboard = pathname.startsWith('/dashboard')
 
-  // If no token and a protected route → redirect to login/home
+  // ⛔ No token + protected route → send to login
   if (!accessToken && !isPublic) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  // Token exists AND it's a GET request AND page is protected
-  if (accessToken && req.method === 'GET' && !isPublic) {
+  // ✔ Token check only when token exists
+  if (accessToken) {
     try {
       const verifyResp = await verifyToken(accessToken)
 
-      // If token is valid → allow
+      // Token valid
       if (verifyResp.status === 200 && verifyResp.data?.userID) {
+        // ⛔ Do NOT redirect if already on dashboard
+        if (isPublic) {
+          return NextResponse.redirect(new URL('/dashboard', req.url))
+        }
+
         return NextResponse.next()
       }
 
-      // If access token expired but refresh exists
+      // Access token expired → try refresh
       if (verifyResp.status === 401 && refreshToken) {
         const refreshResp = await verifyRefreshToken(refreshToken)
 
         if (refreshResp.status === 200 && refreshResp.data?.accessToken && refreshResp.data?.refreshToken) {
           const res = NextResponse.next()
-          res.cookies.set('accessToken', refreshResp.data.accessToken)
-          res.cookies.set('refreshToken', refreshResp.data.refreshToken)
+
+          res.cookies.set('accessToken', refreshResp.data.accessToken, {
+            httpOnly: true,
+            path: '/',
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          })
+
+          res.cookies.set('refreshToken', refreshResp.data.refreshToken, {
+            httpOnly: true,
+            path: '/',
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          })
+
+          // After refresh, redirect only if on public page
+          if (isPublic) {
+            return NextResponse.redirect(new URL('/dashboard', req.url))
+          }
+
           return res
         }
 
         return NextResponse.redirect(new URL('/', req.url))
       }
 
+      // Anything else → redirect to login
       return NextResponse.redirect(new URL('/', req.url))
     } catch (err) {
-      console.error('Token verification failed', err)
+      console.error('Token verification error:', err)
       return NextResponse.redirect(new URL('/', req.url))
     }
   }
@@ -52,9 +75,7 @@ export default async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
     '/(api|trpc)(.*)'
   ]
 }

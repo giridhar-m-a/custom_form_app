@@ -1,4 +1,4 @@
-const FormsPage = () => {
+const FormsPage = async () => {
   return (
     <div>
       <h1>Forms</h1>

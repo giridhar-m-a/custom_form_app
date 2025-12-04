@@ -52,6 +52,7 @@ export const useGoogleAuth = () => {
       router.push('/dashboard')
     },
     onError: ({ message }) => {
+      console.log('error: ', message)
       toast.error(message)
     }
   })

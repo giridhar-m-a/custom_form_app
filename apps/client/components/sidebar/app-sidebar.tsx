@@ -3,7 +3,14 @@
 import { Bot, FileQuestionMarkIcon, GalleryVerticalEnd, Home } from 'lucide-react'
 import * as React from 'react'
 import { NavMain } from '@/components/sidebar/nav-main'
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/components/ui/sidebar'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+  SidebarTrigger
+} from '@/components/ui/sidebar'
 import { SidebarMenuItemType } from '@/types/sideBar.types'
 import { useSelector } from 'react-redux'
 import { getMe } from '@/store/slices/me.slice'
@@ -66,7 +73,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useSelector(getMe)
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>{/* <TeamSwitcher teams={data.teams} /> */}</SidebarHeader>
+      <SidebarHeader>
+        <SidebarTrigger />
+      </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
