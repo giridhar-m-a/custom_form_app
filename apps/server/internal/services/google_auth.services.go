@@ -39,6 +39,26 @@ func (s *googleAuthService) Authenticate(ctx context.Context, code string) (sqlc
 		return existingUser, nil
 	}
 
+	existingMailUser, err := s.repo.GetUserDetailsByEmail(ctx, userInfo["email"].(string))
+	if err == nil && existingMailUser.UserID.String() != "" && existingMailUser.UserEmail == userInfo["email"].(string) {
+		updatedUser, err := s.repo.UpdateUser(ctx, sqlc.UpdateUserParams{
+			UserGoogleID: utils.ConvertStringToNullString(userInfo["id"].(string)),
+			UserID:       existingMailUser.UserID,
+		})
+		if err != nil {
+			log.Printf("GoogleAuthService: update user error: %v", err)
+			return sqlc.GetUserByGoogleIdRow{}, err
+		}
+		return sqlc.GetUserByGoogleIdRow{
+			UserID:           updatedUser.UserID,
+			UserEmail:        updatedUser.UserEmail,
+			UserFullName:     updatedUser.UserFullName,
+			UserCreatedAt:    updatedUser.UserCreatedAt,
+			UserUpdatedAt:    updatedUser.UserUpdatedAt,
+			UserProfilePicID: updatedUser.UserProfilePicID,
+		}, nil
+	}
+
 	newUser, err := s.repo.CreateUser(ctx, userInfo)
 	if err != nil {
 		log.Printf("GoogleAuthService: create user error: %v", err)

@@ -1,0 +1,9 @@
+const FormsPage = async () => {
+  return (
+    <div>
+      <h1>Forms</h1>
+    </div>
+  )
+}
+
+export default FormsPage

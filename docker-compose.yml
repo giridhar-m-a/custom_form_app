@@ -91,6 +91,6 @@ volumes:
   postgres_data:
   air_tmp:
   minio_data:
-  client_node_modules:  # Add this
-  client_next:          # Add this
-  client_turbo:         # Add this
+  client_node_modules: # Add this
+  client_next: # Add this
+  client_turbo: # Add this

@@ -9,6 +9,92 @@ definitions:
     required:
     - title
     type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldDTO:
+    properties:
+      fieldLabel:
+        type: string
+      fieldType:
+        type: string
+      isRequired:
+        type: boolean
+      options:
+        items:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldOptionDTO'
+        type: array
+      ordering:
+        type: integer
+    required:
+    - fieldLabel
+    - fieldType
+    - ordering
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldOptionDTO:
+    properties:
+      isAnswer:
+        type: boolean
+      optionLabel:
+        type: string
+      ordering:
+        type: integer
+    required:
+    - optionLabel
+    - ordering
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldsDTO:
+    properties:
+      formFields:
+        items:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldDTO'
+        type: array
+      formId:
+        type: string
+    required:
+    - formFields
+    - formId
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO:
+    properties:
+      fieldId:
+        type: string
+      fieldLabel:
+        type: string
+      fieldType:
+        type: string
+      formId:
+        type: string
+      isRequired:
+        $ref: '#/definitions/sql.NullBool'
+      options:
+        items:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldOptionDTO'
+        type: array
+      ordering:
+        type: integer
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldOptionDTO:
+    properties:
+      fieldId:
+        $ref: '#/definitions/uuid.NullUUID'
+      isAnswer:
+        $ref: '#/definitions/sql.NullBool'
+      optionId:
+        type: string
+      optionLabel:
+        type: string
+      ordering:
+        type: integer
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse:
     properties:
       access:
@@ -27,6 +113,22 @@ definitions:
         type: string
       updatedAt:
         type: string
+    type: object
+  sql.NullBool:
+    properties:
+      bool:
+        type: boolean
+      valid:
+        description: Valid is true if Bool is not NULL
+        type: boolean
+    type: object
+  uuid.NullUUID:
+    properties:
+      uuid:
+        type: string
+      valid:
+        description: Valid is true if UUID is not NULL
+        type: boolean
     type: object
 host: localhost:8000
 info:
@@ -113,6 +215,288 @@ paths:
                 type: integer
             type: object
       summary: Initiate Google OAuth authentication
+      tags:
+      - Authentication
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns access & refresh tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            properties:
+              data:
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    properties:
+                      createdAt:
+                        type: string
+                      email:
+                        type: string
+                      fullName:
+                        type: string
+                      id:
+                        type: string
+                      profilePic:
+                        type: string
+                      profilePicId:
+                        type: string
+                      updatedAt:
+                        type: string
+                    type: object
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid credentials
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Login with email and password
+      tags:
+      - Authentication
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a user with name, email, and password
+      parameters:
+      - in: query
+        name: email
+        required: true
+        type: string
+      - in: query
+        minLength: 2
+        name: name
+        required: true
+        type: string
+      - in: query
+        minLength: 6
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authentication successful
+          schema:
+            properties:
+              data:
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    properties:
+                      createdAt:
+                        type: string
+                      email:
+                        type: string
+                      fullName:
+                        type: string
+                      id:
+                        type: string
+                      profilePic:
+                        type: string
+                      profilePicId:
+                        type: string
+                      updatedAt:
+                        type: string
+                    type: object
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "409":
+          description: Email already exists
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Register a new user
+      tags:
+      - Authentication
+  /auth/verify:
+    get:
+      consumes:
+      - application/json
+      description: Verifies the access token and returns the user ID
+      parameters:
+      - description: Access token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token verification successful
+          schema:
+            properties:
+              data:
+                properties:
+                  userID:
+                    type: string
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Verify Access Token
+      tags:
+      - Authentication
+  /auth/verify-refresh-token:
+    get:
+      consumes:
+      - application/json
+      description: Verifies the access token and returns the user ID
+      parameters:
+      - description: Refresh token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token verification successful
+          schema:
+            properties:
+              data:
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Verify Access Token
       tags:
       - Authentication
   /file-upload:
@@ -209,28 +593,112 @@ paths:
       summary: Create a new form
       tags:
       - Forms
-  /forms/{id}:
-    get:
+  /forms/fields:
+    post:
       consumes:
       - application/json
-      description: Retrieves a form with the specified ID
+      description: Creates form fields for the authenticated user
       parameters:
-      - description: Form ID
-        in: path
-        name: id
+      - description: Form fields data
+        in: body
+        name: form
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldsDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Form fields created successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO'
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create form fields
+      tags:
+      - Forms
+  /health:
+    get:
+      description: Returns OK if the API is running
       produces:
       - application/json
       responses:
         "200":
-          description: Form retrieved successfully
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check API health
+      tags:
+      - health
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves details of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User retrieved successfully
           schema:
             properties:
-              formID:
-                type: string
+              data:
+                properties:
+                  createdAt:
+                    type: string
+                  email:
+                    type: string
+                  fullName:
+                    type: string
+                  id:
+                    type: string
+                  profilePic:
+                    type: string
+                  profilePicId:
+                    type: string
+                  updatedAt:
+                    type: string
+                type: object
               message:
                 type: string
+              status:
+                type: integer
             type: object
         "400":
           description: Bad request
@@ -261,24 +729,9 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get a form by ID
+      summary: Get current user details
       tags:
-      - Forms
-  /health:
-    get:
-      description: Returns OK if the API is running
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Check API health
-      tags:
-      - health
+      - Users
 schemes:
 - https
 - http

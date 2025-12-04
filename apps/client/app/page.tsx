@@ -1,8 +1,5 @@
-// app/page.tsx or src/app/page.tsx
-'use client'
-
 import AuthFormLogin from '@/components/home/AuthFormLogin'
-import { FeatureBlock } from '@/components/home/FeatuerBlock'
+import { FeatureBlock } from '@/components/home/FeatureBlock'
 import { Check, Rocket, Zap } from 'lucide-react'
 
 const App = () => {
@@ -25,7 +22,7 @@ const App = () => {
   ]
 
   return (
-    <div className="min-h-screen font-sans bg-gradient-to-br from-indigo-50 to-white">
+    <div className="min-h-screen font-sans bg-linear-to-br from-indigo-50 to-white">
       <div className="grid min-h-screen md:grid-cols-2">
         {/* LEFT PANEL - Marketing */}
         <div className="flex flex-col justify-center p-10 md:p-16 lg:p-24 bg-gray-900 text-white space-y-10 relative overflow-hidden">

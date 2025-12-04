@@ -12,6 +12,7 @@ import (
 )
 
 var Queries *sqlc.Queries
+var Connection *sql.DB
 
 func InitDB() {
 	dsn := os.Getenv("DB_URL")
@@ -38,5 +39,6 @@ func InitDB() {
 	}
 
 	Queries = sqlc.New(dbConn)
+	Connection = dbConn
 	log.Println("Database initialized successfully")
 }

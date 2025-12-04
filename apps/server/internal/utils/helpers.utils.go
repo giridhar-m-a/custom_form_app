@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 func GetEnv(key, defaultValue string) string {
@@ -33,4 +36,63 @@ func GetEnvAsBool(key string, defaultValue bool) bool {
 			key, value, defaultValue)
 	}
 	return defaultValue
+}
+
+func ConvertStringToNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{String: "", Valid: false}
+	}
+	return sql.NullString{String: s, Valid: true}
+}
+
+func ConvertIntToNullInt(i int) sql.NullInt64 {
+	if i == 0 {
+		return sql.NullInt64{Int64: 0, Valid: false}
+	}
+	return sql.NullInt64{Int64: int64(i), Valid: true}
+}
+
+func ConvertBoolToNullBool(b bool) sql.NullBool {
+	if !b {
+		return sql.NullBool{Bool: false, Valid: false}
+	}
+	return sql.NullBool{Bool: true, Valid: true}
+}
+
+func ConvertIntToInt32(i int) int32 {
+	return int32(i)
+}
+
+func ConvertInt32ToInt(i int32) int {
+	return int(i)
+}
+
+func ConvertStringToUUID(id string) (uuid.UUID, error) {
+	if id == "" {
+		return uuid.Nil, nil
+	}
+	return uuid.Parse(id)
+}
+
+func ConvertUUIDToNullUUID(id string) uuid.NullUUID {
+	if id == "" {
+		return uuid.NullUUID{
+			UUID:  uuid.Nil,
+			Valid: false,
+		}
+	}
+
+	parsed, err := ConvertStringToUUID(id)
+	if err != nil {
+		// If parsing fails, return NullUUID invalid
+		return uuid.NullUUID{
+			UUID:  uuid.Nil,
+			Valid: false,
+		}
+	}
+
+	return uuid.NullUUID{
+		UUID:  parsed,
+		Valid: true,
+	}
 }

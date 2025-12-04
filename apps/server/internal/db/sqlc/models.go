@@ -167,6 +167,7 @@ type FormFieldOption struct {
 	OptionLabel string
 	FieldID     uuid.NullUUID
 	Ordering    int32
+	IsAnswer    sql.NullBool
 }
 
 type FormResponse struct {
@@ -206,10 +207,11 @@ type User struct {
 	UserID           uuid.UUID
 	UserFullName     string
 	UserEmail        string
-	UserGoogleID     string
+	UserGoogleID     sql.NullString
 	UserProfilePicID uuid.NullUUID
 	UserCreatedAt    sql.NullTime
 	UserUpdatedAt    sql.NullTime
+	UserPassword     sql.NullString
 }
 
 type UserImage struct {

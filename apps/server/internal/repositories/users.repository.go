@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
 )
 
@@ -13,6 +14,7 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (sqlc.GetUserByEmailRow, error)
 	GetByID(ctx context.Context, userID uuid.UUID) (sqlc.GetUserByIDRow, error)
 	Create(ctx context.Context, params sqlc.CreateUserParams) (sqlc.User, error)
+	UpdateUser(ctx context.Context, data sqlc.UpdateUserParams) (sqlc.User, error)
 }
 
 // SQLCUserRepository implements UserRepository using sqlc.
@@ -25,7 +27,7 @@ func NewSQLCUserRepository(q *sqlc.Queries) *SQLCUserRepository {
 }
 
 func (r *SQLCUserRepository) GetByGoogleID(ctx context.Context, googleID string) (sqlc.GetUserByGoogleIdRow, error) {
-	return r.q.GetUserByGoogleId(ctx, googleID)
+	return r.q.GetUserByGoogleId(ctx, utils.ConvertStringToNullString(googleID))
 }
 
 func (r *SQLCUserRepository) GetByEmail(ctx context.Context, email string) (sqlc.GetUserByEmailRow, error) {
@@ -37,5 +39,32 @@ func (r *SQLCUserRepository) GetByID(ctx context.Context, userID uuid.UUID) (sql
 }
 
 func (r *SQLCUserRepository) Create(ctx context.Context, params sqlc.CreateUserParams) (sqlc.User, error) {
-	return r.q.CreateUser(ctx, params)
+	user, err := r.q.CreateUser(ctx, params)
+	if err != nil {
+		return sqlc.User{}, err
+	}
+	return sqlc.User{
+		UserID:           user.UserID,
+		UserFullName:     user.UserFullName,
+		UserEmail:        user.UserEmail,
+		UserGoogleID:     user.UserGoogleID,
+		UserProfilePicID: user.UserProfilePicID,
+		UserCreatedAt:    user.UserCreatedAt,
+		UserUpdatedAt:    user.UserUpdatedAt,
+	}, nil
+}
+
+func (r *SQLCUserRepository) UpdateUser(ctx context.Context, data sqlc.UpdateUserParams) (sqlc.User, error) {
+	user, err := r.q.UpdateUser(ctx, data)
+	if err != nil {
+		return sqlc.User{}, err
+	}
+	return sqlc.User{
+		UserID:           user.UserID,
+		UserFullName:     user.UserFullName,
+		UserEmail:        user.UserEmail,
+		UserProfilePicID: user.UserProfilePicID,
+		UserCreatedAt:    user.UserCreatedAt,
+		UserUpdatedAt:    user.UserUpdatedAt,
+	}, nil
 }

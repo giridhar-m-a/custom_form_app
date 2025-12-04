@@ -50,14 +50,14 @@ func (j *jwtService) GenerateToken(userID string, expiresIn time.Duration, audie
 }
 
 func (j *jwtService) ValidateToken(tokenString string) (string, error) {
-	// Expect "Bearer <token>"
-	parts := strings.Split(tokenString, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return "", fmt.Errorf("invalid token format")
+	if tokenString == "" {
+		return "", fmt.Errorf("token is empty")
 	}
-	rawToken := strings.TrimSpace(parts[1])
+	// Expect "Bearer <token>"
+	tokenString = strings.ReplaceAll(tokenString, "Bearer", "")
+	tokenString = strings.TrimSpace(tokenString)
 
-	token, err := jwt.Parse(rawToken, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Validate signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

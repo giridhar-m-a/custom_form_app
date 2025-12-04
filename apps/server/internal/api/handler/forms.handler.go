@@ -6,10 +6,12 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 )
 
 type FormsHandler interface {
 	CreateForm(ctx *gin.Context)
+	CreateFormFields(ctx *gin.Context)
 }
 
 type formHandler struct {
@@ -17,7 +19,12 @@ type formHandler struct {
 }
 
 func NewFormsHandler() FormsHandler {
-	return &formHandler{formService: services.NewFormService(repositories.NewFormsRepository(db.Queries))}
+	conn := db.Connection
+	queries := db.Queries
+	formsRepo := repositories.NewFormsRepository(queries)
+	fieldsRepo := repositories.NewFormFieldsRepository(queries)
+	fieldOptionsRepo := repositories.NewFormFieldOptionsRepository(queries)
+	return &formHandler{formService: services.NewFormService(formsRepo, fieldsRepo, fieldOptionsRepo, conn)}
 }
 
 // CreateForm creates a new form
@@ -53,10 +60,7 @@ func (r *formHandler) CreateForm(ctx *gin.Context) {
 	}
 	createdForm, err := r.formService.CreateForm(ctx, form, userID.(string))
 	if err != nil {
-		ctx.JSON(500, gin.H{
-			"status":  "error",
-			"message": "Failed to create form",
-		})
+		utils.HandleError(ctx, err)
 		return
 	}
 
@@ -75,5 +79,48 @@ func (r *formHandler) CreateForm(ctx *gin.Context) {
 		"status":  "success",
 		"message": "Form created successfully",
 		"data":    response,
+	})
+}
+
+// @Summary      Create form fields
+// @Description  Creates form fields for the authenticated user
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Param        form  body      dto.CreateFormFieldsDTO  true  "Form fields data"
+// @Success      201   {object}  object{status=string,message=string,data=dto.CreatedFormFieldDTO}  "Form fields created successfully"
+// @Failure      400   {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401   {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500   {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms/fields [post]
+// @Security     BearerAuth
+func (r *formHandler) CreateFormFields(ctx *gin.Context) {
+	var form dto.CreateFormFieldsDTO
+	if err := ctx.ShouldBind(&form); err != nil {
+		ctx.JSON(400, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{
+			"status":  "error",
+			"message": "Unauthorized: user ID not found in context",
+		})
+		return
+	}
+	createdFormFields, err := r.formService.CreateFormFields(ctx, form, userID.(string))
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(201, gin.H{
+		"status":  "success",
+		"message": "Form fields created successfully",
+		"data":    createdFormFields,
 	})
 }

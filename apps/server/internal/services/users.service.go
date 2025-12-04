@@ -8,6 +8,7 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/cache"
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
 )
 
@@ -16,6 +17,7 @@ type UserService interface {
 	GetUserDetailsByEmail(ctx context.Context, email string) (sqlc.GetUserByEmailRow, error)
 	GetUserDetailsByGoogleId(ctx context.Context, googleID string) (sqlc.GetUserByGoogleIdRow, error)
 	CreateUser(ctx context.Context, data map[string]any) (sqlc.User, error)
+	UpdateUser(ctx context.Context, data sqlc.UpdateUserParams) (sqlc.User, error)
 }
 
 type userService struct {
@@ -27,10 +29,16 @@ func UserServiceProvider(repo repositories.UserRepository) UserService {
 }
 
 func (s *userService) CreateUser(ctx context.Context, data map[string]any) (sqlc.User, error) {
+	password := ""
+	if data["password"] != nil {
+		password = data["password"].(string)
+	}
+
 	newUser, err := s.repo.Create(ctx, sqlc.CreateUserParams{
 		UserFullName: data["name"].(string),
 		UserEmail:    data["email"].(string),
-		UserGoogleID: data["id"].(string),
+		UserGoogleID: utils.ConvertStringToNullString(data["id"].(string)),
+		UserPassword: utils.ConvertStringToNullString(password),
 	})
 	return newUser, err
 }
@@ -71,4 +79,8 @@ func (s *userService) GetUserDetailsByGoogleId(ctx context.Context, googleID str
 	_ = cache.Set(ctx, key, string(userJSON))
 
 	return user, nil
+}
+
+func (s *userService) UpdateUser(ctx context.Context, data sqlc.UpdateUserParams) (sqlc.User, error) {
+	return s.repo.UpdateUser(ctx, data)
 }

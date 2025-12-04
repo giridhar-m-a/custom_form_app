@@ -43,27 +43,5 @@ migrate-steps:
 
 migrate-version:
 	migrate -path apps/server/internal/db/migrations -database "$(DB_URL)" goto $(v)
-  
-sqlc:
-	sqlc generate
 
-print-db-url:
-	@echo $(DB_URL)
-
-format:
-	go fmt ./...
-
-# Swagger documentation
-.PHONY: swagger
-swagger:
-	swag init -g apps/server/cmd/server/main.go -o docs/ --parseDependency --parseInternal
-
-.PHONY: swagger-serve
-swagger-serve: swagger
-	@echo "Swagger UI available at: http://localhost:8080/swagger/index.html"
-	go run apps/server/cmd/server/main.go
-
-.PHONY: swagger-clean
-swagger-clean:
-	rm -rf docs/
-
+migrate-all: migrate-down migrate-up

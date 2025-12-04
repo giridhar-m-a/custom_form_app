@@ -1,29 +1,44 @@
 'use client'
-import { useState } from 'react'
+import { SignInSchema, SignInSchemaType } from '@/app/schemas/auth.schemas'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Globe, Loader2, Lock, Mail } from 'lucide-react'
+import { useCredentialAuth, useGoogleAuth } from '@/hooks/queryHooks/useAuth'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Globe, Loader2, Mail } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
 import AuthFormSignUp from './AuthFormSignUp'
+import { useGoogleLogin } from '@react-oauth/google'
 
 const AuthFormLogin = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const [isFormLoading, setIsFormLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
+  const { mutate: credentialLogin, isPending: isFormLoading } = useCredentialAuth()
+  const { mutate: googleLogin, isPending: isGoogleLoading } = useGoogleAuth()
 
-  const handleGoogleLogin = () => {
-    setIsGoogleLoading(true)
-    setTimeout(() => setIsGoogleLoading(false), 1500)
-  }
+  const isPending = useMemo(() => isFormLoading || isGoogleLoading, [isFormLoading, isGoogleLoading])
 
-  const handleFormLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsFormLoading(true)
-    setTimeout(() => setIsFormLoading(false), 1500)
+  const form = useForm<SignInSchemaType>({
+    resolver: zodResolver(SignInSchema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  })
+
+  const { handleSubmit, control } = form
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse: any) => {
+      googleLogin(codeResponse.code)
+    },
+    flow: 'auth-code'
+  })
+
+  const handleFormLogin = (data: SignInSchemaType) => {
+    credentialLogin(data)
   }
 
   return (
@@ -36,7 +51,7 @@ const AuthFormLogin = () => {
       <CardContent>
         <Button
           onClick={handleGoogleLogin}
-          className="w-full mb-6 text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 transition-all"
+          className="w-full mb-6 text-gray-700 hover:text-gray-700! border! border-gray-300! bg-white! hover:bg-gray-50! transition-all"
           variant="outline"
           size="lg"
           disabled={isGoogleLoading || isFormLoading}>
@@ -56,49 +71,71 @@ const AuthFormLogin = () => {
         </div>
 
         {!isSignUp && (
-          <form onSubmit={handleFormLogin} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  className="pl-10"
-                  disabled={isFormLoading || isGoogleLoading}
+          <Form {...form}>
+            <form onSubmit={handleSubmit(handleFormLogin)} className="space-y-4">
+              <div>
+                <FormField
+                  control={control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="email">Email</FormLabel>
+                      <FormControl>
+                        <div className="relative mt-1">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            {...field}
+                            required
+                            className="pl-10 text-gray-700 border! border-gray-300! bg-white! hover:bg-gray-50!"
+                            disabled={isFormLoading || isGoogleLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  className="pl-10"
-                  disabled={isFormLoading || isGoogleLoading}
+              <div>
+                <FormField
+                  control={control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="password">Password</FormLabel>
+                      <FormControl>
+                        <div className="relative mt-1">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <Input
+                            id="password"
+                            type="password"
+                            placeholder="••••••••"
+                            {...field}
+                            required
+                            className="pl-10 text-gray-700 border! border-gray-300! bg-white! hover:bg-gray-50!"
+                            disabled={isFormLoading || isGoogleLoading}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 transition-all"
-              size="lg"
-              disabled={isFormLoading || isGoogleLoading}>
-              {isFormLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign In'}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 transition-all"
+                size="lg"
+                disabled={isPending}>
+                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign In'}
+              </Button>
+            </form>
+          </Form>
         )}
         {isSignUp && <AuthFormSignUp />}
         <p className="mt-4 text-center text-sm text-gray-500">
