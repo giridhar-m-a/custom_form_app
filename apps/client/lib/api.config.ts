@@ -111,7 +111,8 @@ class ApiConfig {
       return {
         status: response.status,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
+        pagination: response.data.pagination
       }
     } catch (error: any) {
       return errorHandler(error)
@@ -124,7 +125,8 @@ class ApiConfig {
       return {
         status: response.status,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
+        pagination: response.data.pagination
       }
     } catch (error: any) {
       console.log('error in post method')
@@ -138,7 +140,8 @@ class ApiConfig {
       return {
         status: response.status,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
+        pagination: response.data.pagination
       }
     } catch (error: any) {
       return errorHandler(error)
@@ -151,7 +154,8 @@ class ApiConfig {
       return {
         status: response.status,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
+        pagination: response.data.pagination
       }
     } catch (error: any) {
       return errorHandler(error)
@@ -164,7 +168,8 @@ class ApiConfig {
       return {
         status: response.status,
         message: response.data.message,
-        data: response.data.data
+        data: response.data.data,
+        pagination: response.data.pagination 
       }
     } catch (error: any) {
       return errorHandler(error)

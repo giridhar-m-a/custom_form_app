@@ -12,6 +12,8 @@ import (
 type FormsHandler interface {
 	CreateForm(ctx *gin.Context)
 	CreateFormFields(ctx *gin.Context)
+	GetForms(ctx *gin.Context)
+	GetSingleForm(ctx *gin.Context)
 }
 
 type formHandler struct {
@@ -122,5 +124,81 @@ func (r *formHandler) CreateFormFields(ctx *gin.Context) {
 		"status":  "success",
 		"message": "Form fields created successfully",
 		"data":    createdFormFields,
+	})
+}
+
+// @Summary      Get forms
+// @Description  Gets forms for the authenticated user
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Param        query  query      dto.ListFormQuery  true  "Form query"
+// @Success      200    {object}  object{status=string,message=string,data=[]dto.FormResponse, pagination=object{totalRecords=int, page=int, limit=int, totalPages=int}}  "Forms retrieved successfully"
+// @Failure      400    {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401    {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500    {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms [get]
+// @Security     BearerAuth
+func (r *formHandler) GetForms(ctx *gin.Context) {
+	query := dto.ListFormQuery{}
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		ctx.JSON(400, gin.H{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{
+			"status":  "error",
+			"message": "Unauthorized: user ID not found in context",
+		})
+		return
+	}
+
+	forms, err := r.formService.GetForms(ctx, userID.(string), query)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"status":  "success",
+		"message": "Forms retrieved successfully",
+		"data":    forms.Forms,
+		"pagination": gin.H{
+			"totalRecords":  forms.Total,
+			"page":   forms.Page,
+			"limit":  forms.Limit,
+			"totalPages":  forms.Pages,
+		},
+	})
+}
+
+// @Summary      Get single form
+// @Description  Gets a single form for the authenticated user
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Param        formID  path      string  true  "Form ID"
+// @Success      200     {object}  object{status=string,message=string,data=dto.FormResponse}  "Form retrieved successfully"
+// @Failure      400     {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401     {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500     {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms/{formID} [get]
+// @Security     BearerAuth
+func (r *formHandler) GetSingleForm(ctx *gin.Context) {
+	formID := ctx.Param("formID")
+	form, err := r.formService.GetSingleForm(ctx, formID)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"status":  "success",
+		"message": "Form retrieved successfully",
+		"data":    form,
 	})
 }

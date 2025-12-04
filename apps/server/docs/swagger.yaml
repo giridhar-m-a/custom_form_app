@@ -1,5 +1,49 @@
 basePath: /api/v1
 definitions:
+  github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType:
+    enum:
+    - text
+    - number
+    - date
+    - time
+    - datetime
+    - email
+    - phone
+    - url
+    - file
+    - image
+    - video
+    - audio
+    - checkbox
+    - radio
+    - dropdown
+    - multiselect
+    - rating
+    - slider
+    - color
+    - textArea
+    type: string
+    x-enum-varnames:
+    - FormFieldTypeText
+    - FormFieldTypeNumber
+    - FormFieldTypeDate
+    - FormFieldTypeTime
+    - FormFieldTypeDatetime
+    - FormFieldTypeEmail
+    - FormFieldTypePhone
+    - FormFieldTypeUrl
+    - FormFieldTypeFile
+    - FormFieldTypeImage
+    - FormFieldTypeVideo
+    - FormFieldTypeAudio
+    - FormFieldTypeCheckbox
+    - FormFieldTypeRadio
+    - FormFieldTypeDropdown
+    - FormFieldTypeMultiselect
+    - FormFieldTypeRating
+    - FormFieldTypeSlider
+    - FormFieldTypeColor
+    - FormFieldTypeTextArea
   github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO:
     properties:
       description:
@@ -14,7 +58,7 @@ definitions:
       fieldLabel:
         type: string
       fieldType:
-        type: string
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType'
       isRequired:
         type: boolean
       options:
@@ -59,7 +103,7 @@ definitions:
       fieldLabel:
         type: string
       fieldType:
-        type: string
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType'
       formId:
         type: string
       isRequired:
@@ -536,6 +580,88 @@ paths:
       tags:
       - Files
   /forms:
+    get:
+      consumes:
+      - application/json
+      description: Gets forms for the authenticated user
+      parameters:
+      - in: query
+        name: access
+        type: string
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Forms retrieved successfully
+          schema:
+            properties:
+              ' pagination':
+                properties:
+                  ' limit':
+                    type: integer
+                  ' page':
+                    type: integer
+                  ' totalPages':
+                    type: integer
+                  totalRecords:
+                    type: integer
+                type: object
+              data:
+                items:
+                  $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse'
+                type: array
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get forms
+      tags:
+      - Forms
     post:
       consumes:
       - application/json
@@ -591,6 +717,63 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a new form
+      tags:
+      - Forms
+  /forms/{formID}:
+    get:
+      consumes:
+      - application/json
+      description: Gets a single form for the authenticated user
+      parameters:
+      - description: Form ID
+        in: path
+        name: formID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Form retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse'
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get single form
       tags:
       - Forms
   /forms/fields:

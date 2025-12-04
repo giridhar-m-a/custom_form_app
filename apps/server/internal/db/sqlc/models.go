@@ -54,6 +54,66 @@ func (ns NullFormAccess) Value() (driver.Value, error) {
 	return string(ns.FormAccess), nil
 }
 
+type FormFieldType string
+
+const (
+	FormFieldTypeText        FormFieldType = "text"
+	FormFieldTypeNumber      FormFieldType = "number"
+	FormFieldTypeDate        FormFieldType = "date"
+	FormFieldTypeTime        FormFieldType = "time"
+	FormFieldTypeDatetime    FormFieldType = "datetime"
+	FormFieldTypeEmail       FormFieldType = "email"
+	FormFieldTypePhone       FormFieldType = "phone"
+	FormFieldTypeUrl         FormFieldType = "url"
+	FormFieldTypeFile        FormFieldType = "file"
+	FormFieldTypeImage       FormFieldType = "image"
+	FormFieldTypeVideo       FormFieldType = "video"
+	FormFieldTypeAudio       FormFieldType = "audio"
+	FormFieldTypeCheckbox    FormFieldType = "checkbox"
+	FormFieldTypeRadio       FormFieldType = "radio"
+	FormFieldTypeDropdown    FormFieldType = "dropdown"
+	FormFieldTypeMultiselect FormFieldType = "multiselect"
+	FormFieldTypeRating      FormFieldType = "rating"
+	FormFieldTypeSlider      FormFieldType = "slider"
+	FormFieldTypeColor       FormFieldType = "color"
+	FormFieldTypeTextArea    FormFieldType = "textArea"
+)
+
+func (e *FormFieldType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = FormFieldType(s)
+	case string:
+		*e = FormFieldType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for FormFieldType: %T", src)
+	}
+	return nil
+}
+
+type NullFormFieldType struct {
+	FormFieldType FormFieldType
+	Valid         bool // Valid is true if FormFieldType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullFormFieldType) Scan(value interface{}) error {
+	if value == nil {
+		ns.FormFieldType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.FormFieldType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullFormFieldType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.FormFieldType), nil
+}
+
 type FormStatus string
 
 const (
@@ -156,7 +216,7 @@ type Form struct {
 type FormField struct {
 	FieldID    uuid.UUID
 	FieldLabel string
-	FieldType  string
+	FieldType  NullFormFieldType
 	FormID     uuid.UUID
 	IsRequired sql.NullBool
 	Ordering   int32

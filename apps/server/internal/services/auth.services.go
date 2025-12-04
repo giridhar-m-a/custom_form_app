@@ -45,14 +45,14 @@ func (a *authService) AuthenticateWithGoogle(ctxt context.Context, code string) 
 func (a *authService) AuthenticateWithEmailPassword(ctx context.Context, payload dto.EmailPasswordAuthRequest) (sqlc.GetUserByEmailRow, error) {
 	user, err := a.userService.GetUserDetailsByEmail(ctx, payload.Email)
 	if err != nil {
-		return sqlc.GetUserByEmailRow{}, err
+		return sqlc.GetUserByEmailRow{}, errors.New("invalid credentials")
 	}
 	if !user.UserPassword.Valid {
-		return sqlc.GetUserByEmailRow{}, errors.New("Invalid Credentials")
+		return sqlc.GetUserByEmailRow{}, errors.New("invalid credentials")
 	}
 	hashPassword := user.UserPassword.String
 	if hashPassword == "" {
-		return sqlc.GetUserByEmailRow{}, errors.New("Invalid Credentials")
+		return sqlc.GetUserByEmailRow{}, errors.New("invalid credentials")
 	}
 	isPasswordValid := a.hashService.ComparePassword(hashPassword, payload.Password)
 

@@ -1,3 +1,4 @@
+'use client'
 import { SignInSchemaType, SignUpSchemaType } from '@/app/schemas/auth.schemas'
 import { LOGIN_KEYS } from '@/lib/constants/queryKeys/login.keys'
 import { loginWithCredentials, loginWithGoogle, register } from '@/services/api/login/route'

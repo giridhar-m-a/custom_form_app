@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func GetEnv(key, defaultValue string) string {
@@ -95,4 +96,11 @@ func ConvertUUIDToNullUUID(id string) uuid.NullUUID {
 		UUID:  parsed,
 		Valid: true,
 	}
+}
+
+func ToPgText(s string) pgtype.Text {
+	if s == "" {
+		return pgtype.Text{Valid: false}
+	}
+	return pgtype.Text{String: s, Valid: true}
 }

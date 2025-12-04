@@ -7,12 +7,14 @@ export const errorHandler = <T>(error: any): ApiResponse<T> => {
     return {
       status: error.response?.status || 500,
       message: error.response?.data?.message || error.message || 'An error occurred',
-      data: undefined
+      data: undefined,
+      pagination: undefined
     }
   }
   return {
     status: 500,
     message: error.message || 'An error occurred',
-    data: undefined
+    data: undefined,
+    pagination: undefined
   }
 }

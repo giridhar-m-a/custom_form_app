@@ -99,7 +99,7 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 type CreateFormFieldParams struct {
 	FormID     uuid.UUID
 	FieldLabel string
-	FieldType  string
+	FieldType  NullFormFieldType
 	IsRequired sql.NullBool
 	Ordering   int32
 }
@@ -107,7 +107,7 @@ type CreateFormFieldParams struct {
 type CreateFormFieldRow struct {
 	FieldID    uuid.UUID
 	FieldLabel string
-	FieldType  string
+	FieldType  NullFormFieldType
 	IsRequired sql.NullBool
 	Ordering   int32
 	FormID     uuid.UUID
@@ -202,7 +202,7 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 type DeleteFormFieldRow struct {
 	FieldID    uuid.UUID
 	FieldLabel string
-	FieldType  string
+	FieldType  NullFormFieldType
 	IsRequired sql.NullBool
 	Ordering   int32
 	FormID     uuid.UUID
@@ -299,7 +299,7 @@ ORDER BY ff.ordering
 type GetFormFieldsWithOptionsRow struct {
 	FieldId    uuid.UUID
 	FieldLabel string
-	FieldType  string
+	FieldType  NullFormFieldType
 	IsRequired sql.NullBool
 	Ordering   int32
 	FormId     uuid.UUID
@@ -338,41 +338,63 @@ func (q *Queries) GetFormFieldsWithOptions(ctx context.Context, formID uuid.UUID
 }
 
 const listForms = `-- name: ListForms :many
-SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by
+SELECT 
+    form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by,
+    COUNT(*) OVER() as total_count
 FROM forms
 WHERE
     created_by = $1
-    AND ($2 IS NULL
-         OR form_title ILIKE '%' || $2 || '%'
-         OR form_description ILIKE '%' || $2 || '%')
-    AND ($3 IS NULL OR form_status = $3)
-    AND ($4 IS NULL OR form_access = $4)
+    AND (
+        $2::text IS NULL
+        OR form_title ILIKE '%' || $2::text || '%'
+        OR form_description ILIKE '%' || $2::text || '%'
+    )
+    AND ($3::form_status IS NULL OR form_status = $3::form_status)
+    AND ($4::form_access IS NULL OR form_access = $4::form_access)
 ORDER BY
-    CASE LOWER(COALESCE($5, 'created'))
-        WHEN 'title' THEN form_title
-        WHEN 'status' THEN form_status
-        WHEN 'access' THEN form_access
-        WHEN 'updated' THEN form_updated_at
-        ELSE form_created_at
-    END
-    /* Direction: 'asc' or 'desc' */
-    COLLATE "C" 
-    /* Note: SQLC currently does not directly allow dynamic ASC/DESC, handle in app code if needed */
-LIMIT COALESCE($7, 10)
-OFFSET COALESCE($6, 0)
+    CASE 
+        WHEN COALESCE($5::text, '-updated') = 'updated' 
+            THEN form_updated_at 
+    END DESC,
+    CASE 
+        WHEN COALESCE($5::text, '-updated') = '-updated' 
+            THEN form_updated_at 
+    END ASC,
+    CASE
+        WHEN COALESCE($5::text, '-updated') = 'title'
+            THEN form_title
+    END ASC,
+    CASE
+        WHEN COALESCE($5::text, '-updated') = '-title'
+            THEN form_title
+    END DESC
+LIMIT COALESCE($7::int, 10)
+OFFSET COALESCE($6::int, 0)
 `
 
 type ListFormsParams struct {
 	CreatedBy  uuid.NullUUID
-	Search     interface{}
-	FormStatus interface{}
-	FormAccess interface{}
-	ShortBy    interface{}
-	Offset     interface{}
-	Limit      interface{}
+	Search     sql.NullString
+	FormStatus NullFormStatus
+	FormAccess NullFormAccess
+	ShortBy    sql.NullString
+	Offset     sql.NullInt32
+	Limit      sql.NullInt32
 }
 
-func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]Form, error) {
+type ListFormsRow struct {
+	FormID          uuid.UUID
+	FormTitle       string
+	FormDescription sql.NullString
+	FormStatus      NullFormStatus
+	FormAccess      NullFormAccess
+	FormCreatedAt   sql.NullTime
+	FormUpdatedAt   sql.NullTime
+	CreatedBy       uuid.NullUUID
+	TotalCount      int64
+}
+
+func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFormsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listForms,
 		arg.CreatedBy,
 		arg.Search,
@@ -386,9 +408,9 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]Form, e
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Form
+	var items []ListFormsRow
 	for rows.Next() {
-		var i Form
+		var i ListFormsRow
 		if err := rows.Scan(
 			&i.FormID,
 			&i.FormTitle,
@@ -398,6 +420,7 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]Form, e
 			&i.FormCreatedAt,
 			&i.FormUpdatedAt,
 			&i.CreatedBy,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -524,7 +547,7 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 type UpdateFormFieldParams struct {
 	FieldID    uuid.UUID
 	FieldLabel string
-	FieldType  string
+	FieldType  NullFormFieldType
 	IsRequired sql.NullBool
 	Ordering   int32
 }
@@ -532,7 +555,7 @@ type UpdateFormFieldParams struct {
 type UpdateFormFieldRow struct {
 	FieldID    uuid.UUID
 	FieldLabel string
-	FieldType  string
+	FieldType  NullFormFieldType
 	IsRequired sql.NullBool
 	Ordering   int32
 	FormID     uuid.UUID

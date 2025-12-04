@@ -13,7 +13,7 @@ type FormsRepository interface {
 	CreateForm(form sqlc.CreateFormParams, ctx context.Context) (sqlc.CreateFormRow, error)
 	UpdateForm(form sqlc.UpdateFormParams, ctx context.Context) (sqlc.UpdateFormRow, error)
 	GetFormByID(id string, ctx context.Context) (sqlc.Form, error)
-	GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.Form, error)
+	GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.ListFormsRow, error)
 	DeleteForm(id string, ctx context.Context) (sqlc.DeleteFormRow, error)
 	FormRepoWithTx(tx *sql.Tx) FormsRepository
 }
@@ -44,7 +44,7 @@ func (r *formsRepository) GetFormByID(id string, ctx context.Context) (sqlc.Form
 	return r.q.GetFormByID(ctx, uid)
 }
 
-func (r *formsRepository) GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.Form, error) {
+func (r *formsRepository) GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.ListFormsRow, error) {
 	return r.q.ListForms(ctx, params)
 }
 

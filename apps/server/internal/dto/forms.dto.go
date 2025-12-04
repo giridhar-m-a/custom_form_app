@@ -15,3 +15,17 @@ type FormResponse struct {
 	UpdatedAt   string `json:"updatedAt"`
 	Access      string `json:"access"`
 }
+
+type ListFormQuery struct {
+	Query
+	Status string `form:"status"`
+	Access string `form:"access"`
+}
+
+type FormListResponse struct {
+	Forms []FormResponse `json:"forms"`
+	Total int            `json:"total"`
+	Page  int            `json:"page"`
+	Limit int            `json:"limit"`
+	Pages int            `json:"pages"`
+}

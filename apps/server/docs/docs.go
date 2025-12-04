@@ -631,6 +631,137 @@ const docTemplate = `{
             }
         },
         "/forms": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets forms for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Forms"
+                ],
+                "summary": "Get forms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "access",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Forms retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                " pagination": {
+                                    "type": "object",
+                                    "properties": {
+                                        " limit": {
+                                            "type": "integer"
+                                        },
+                                        " page": {
+                                            "type": "integer"
+                                        },
+                                        " totalPages": {
+                                            "type": "integer"
+                                        },
+                                        "totalRecords": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse"
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -759,6 +890,96 @@ const docTemplate = `{
                             "properties": {
                                 "data": {
                                     "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO"
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/forms/{formID}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets a single form for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Forms"
+                ],
+                "summary": "Get single form",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Form ID",
+                        "name": "formID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Form retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse"
                                 },
                                 "message": {
                                     "type": "string"
@@ -943,6 +1164,53 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType": {
+            "type": "string",
+            "enum": [
+                "text",
+                "number",
+                "date",
+                "time",
+                "datetime",
+                "email",
+                "phone",
+                "url",
+                "file",
+                "image",
+                "video",
+                "audio",
+                "checkbox",
+                "radio",
+                "dropdown",
+                "multiselect",
+                "rating",
+                "slider",
+                "color",
+                "textArea"
+            ],
+            "x-enum-varnames": [
+                "FormFieldTypeText",
+                "FormFieldTypeNumber",
+                "FormFieldTypeDate",
+                "FormFieldTypeTime",
+                "FormFieldTypeDatetime",
+                "FormFieldTypeEmail",
+                "FormFieldTypePhone",
+                "FormFieldTypeUrl",
+                "FormFieldTypeFile",
+                "FormFieldTypeImage",
+                "FormFieldTypeVideo",
+                "FormFieldTypeAudio",
+                "FormFieldTypeCheckbox",
+                "FormFieldTypeRadio",
+                "FormFieldTypeDropdown",
+                "FormFieldTypeMultiselect",
+                "FormFieldTypeRating",
+                "FormFieldTypeSlider",
+                "FormFieldTypeColor",
+                "FormFieldTypeTextArea"
+            ]
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO": {
             "type": "object",
             "required": [
@@ -969,7 +1237,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "fieldType": {
-                    "type": "string"
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType"
                 },
                 "isRequired": {
                     "type": "boolean"
@@ -1031,7 +1299,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "fieldType": {
-                    "type": "string"
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType"
                 },
                 "formId": {
                     "type": "string"
