@@ -120,7 +120,7 @@ SELECT
             ) ORDER BY fo.ordering
         ) FILTER (WHERE fo.option_id IS NOT NULL),
         '[]'
-    ) AS "options"
+    )::jsonb AS "options"
 FROM form_fields ff
 LEFT JOIN form_field_options fo ON ff.field_id = fo.field_id
 WHERE ff.form_id = $1

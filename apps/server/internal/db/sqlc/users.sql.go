@@ -19,21 +19,21 @@ RETURNING user_id, user_full_name, user_email, user_google_id, user_profile_pic_
 `
 
 type CreateUserParams struct {
-	UserFullName     string
-	UserEmail        string
-	UserGoogleID     sql.NullString
-	UserProfilePicID uuid.NullUUID
-	UserPassword     sql.NullString
+	UserFullName     string         `json:"user_full_name"`
+	UserEmail        string         `json:"user_email"`
+	UserGoogleID     sql.NullString `json:"user_google_id"`
+	UserProfilePicID uuid.NullUUID  `json:"user_profile_pic_id"`
+	UserPassword     sql.NullString `json:"user_password"`
 }
 
 type CreateUserRow struct {
-	UserID           uuid.UUID
-	UserFullName     string
-	UserEmail        string
-	UserGoogleID     sql.NullString
-	UserProfilePicID uuid.NullUUID
-	UserCreatedAt    sql.NullTime
-	UserUpdatedAt    sql.NullTime
+	UserID           uuid.UUID      `json:"user_id"`
+	UserFullName     string         `json:"user_full_name"`
+	UserEmail        string         `json:"user_email"`
+	UserGoogleID     sql.NullString `json:"user_google_id"`
+	UserProfilePicID uuid.NullUUID  `json:"user_profile_pic_id"`
+	UserCreatedAt    sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt    sql.NullTime   `json:"user_updated_at"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
@@ -85,14 +85,14 @@ WHERE u.user_email = $1
 `
 
 type GetUserByEmailRow struct {
-	UserID             uuid.UUID
-	UserFullName       string
-	UserEmail          string
-	UserProfilePicID   uuid.NullUUID
-	UserProfilePicName sql.NullString
-	UserCreatedAt      sql.NullTime
-	UserUpdatedAt      sql.NullTime
-	UserPassword       sql.NullString
+	UserID             uuid.UUID      `json:"user_id"`
+	UserFullName       string         `json:"user_full_name"`
+	UserEmail          string         `json:"user_email"`
+	UserProfilePicID   uuid.NullUUID  `json:"user_profile_pic_id"`
+	UserProfilePicName sql.NullString `json:"user_profile_pic_name"`
+	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt      sql.NullTime   `json:"user_updated_at"`
+	UserPassword       sql.NullString `json:"user_password"`
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, userEmail string) (GetUserByEmailRow, error) {
@@ -127,13 +127,13 @@ WHERE u.user_google_id = $1
 `
 
 type GetUserByGoogleIdRow struct {
-	UserID             uuid.UUID
-	UserFullName       string
-	UserEmail          string
-	UserProfilePicID   uuid.NullUUID
-	UserProfilePicName sql.NullString
-	UserCreatedAt      sql.NullTime
-	UserUpdatedAt      sql.NullTime
+	UserID             uuid.UUID      `json:"user_id"`
+	UserFullName       string         `json:"user_full_name"`
+	UserEmail          string         `json:"user_email"`
+	UserProfilePicID   uuid.NullUUID  `json:"user_profile_pic_id"`
+	UserProfilePicName sql.NullString `json:"user_profile_pic_name"`
+	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt      sql.NullTime   `json:"user_updated_at"`
 }
 
 func (q *Queries) GetUserByGoogleId(ctx context.Context, userGoogleID sql.NullString) (GetUserByGoogleIdRow, error) {
@@ -167,13 +167,13 @@ WHERE u.user_id = $1
 `
 
 type GetUserByIDRow struct {
-	UserID             uuid.UUID
-	UserFullName       string
-	UserEmail          string
-	UserProfilePicID   uuid.NullUUID
-	UserProfilePicName sql.NullString
-	UserCreatedAt      sql.NullTime
-	UserUpdatedAt      sql.NullTime
+	UserID             uuid.UUID      `json:"user_id"`
+	UserFullName       string         `json:"user_full_name"`
+	UserEmail          string         `json:"user_email"`
+	UserProfilePicID   uuid.NullUUID  `json:"user_profile_pic_id"`
+	UserProfilePicName sql.NullString `json:"user_profile_pic_name"`
+	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt      sql.NullTime   `json:"user_updated_at"`
 }
 
 func (q *Queries) GetUserByID(ctx context.Context, userID uuid.UUID) (GetUserByIDRow, error) {
@@ -204,21 +204,21 @@ RETURNING user_id, user_full_name, user_email, user_profile_pic_id, user_created
 `
 
 type UpdateUserParams struct {
-	UserFullName     sql.NullString
-	UserEmail        sql.NullString
-	UserProfilePicID uuid.NullUUID
-	UserPassword     sql.NullString
-	UserGoogleID     sql.NullString
-	UserID           uuid.UUID
+	UserFullName     sql.NullString `json:"user_full_name"`
+	UserEmail        sql.NullString `json:"user_email"`
+	UserProfilePicID uuid.NullUUID  `json:"user_profile_pic_id"`
+	UserPassword     sql.NullString `json:"user_password"`
+	UserGoogleID     sql.NullString `json:"user_google_id"`
+	UserID           uuid.UUID      `json:"user_id"`
 }
 
 type UpdateUserRow struct {
-	UserID           uuid.UUID
-	UserFullName     string
-	UserEmail        string
-	UserProfilePicID uuid.NullUUID
-	UserCreatedAt    sql.NullTime
-	UserUpdatedAt    sql.NullTime
+	UserID           uuid.UUID     `json:"user_id"`
+	UserFullName     string        `json:"user_full_name"`
+	UserEmail        string        `json:"user_email"`
+	UserProfilePicID uuid.NullUUID `json:"user_profile_pic_id"`
+	UserCreatedAt    sql.NullTime  `json:"user_created_at"`
+	UserUpdatedAt    sql.NullTime  `json:"user_updated_at"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {

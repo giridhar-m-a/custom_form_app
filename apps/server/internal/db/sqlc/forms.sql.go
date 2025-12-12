@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	"github.com/google/uuid"
 )
@@ -19,18 +20,18 @@ RETURNING option_id, field_id, option_label, ordering, is_answer
 `
 
 type CreateFieldOptionParams struct {
-	FieldID     uuid.NullUUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	FieldID     uuid.NullUUID `json:"field_id"`
+	OptionLabel string        `json:"option_label"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"is_answer"`
 }
 
 type CreateFieldOptionRow struct {
-	OptionID    uuid.UUID
-	FieldID     uuid.NullUUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	OptionID    uuid.UUID     `json:"option_id"`
+	FieldID     uuid.NullUUID `json:"field_id"`
+	OptionLabel string        `json:"option_label"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"is_answer"`
 }
 
 func (q *Queries) CreateFieldOption(ctx context.Context, arg CreateFieldOptionParams) (CreateFieldOptionRow, error) {
@@ -58,20 +59,20 @@ RETURNING form_id, form_title, form_description, created_by, form_created_at, fo
 `
 
 type CreateFormParams struct {
-	FormTitle       string
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
+	FormTitle       string         `json:"form_title"`
+	FormDescription sql.NullString `json:"form_description"`
+	CreatedBy       uuid.NullUUID  `json:"created_by"`
 }
 
 type CreateFormRow struct {
-	FormID          uuid.UUID
-	FormTitle       string
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
-	FormCreatedAt   sql.NullTime
-	FormUpdatedAt   sql.NullTime
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
+	FormID          uuid.UUID      `json:"form_id"`
+	FormTitle       string         `json:"form_title"`
+	FormDescription sql.NullString `json:"form_description"`
+	CreatedBy       uuid.NullUUID  `json:"created_by"`
+	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
+	FormStatus      NullFormStatus `json:"form_status"`
+	FormAccess      NullFormAccess `json:"form_access"`
 }
 
 func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (CreateFormRow, error) {
@@ -97,20 +98,20 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 `
 
 type CreateFormFieldParams struct {
-	FormID     uuid.UUID
-	FieldLabel string
-	FieldType  NullFormFieldType
-	IsRequired sql.NullBool
-	Ordering   int32
+	FormID     uuid.UUID         `json:"form_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
 }
 
 type CreateFormFieldRow struct {
-	FieldID    uuid.UUID
-	FieldLabel string
-	FieldType  NullFormFieldType
-	IsRequired sql.NullBool
-	Ordering   int32
-	FormID     uuid.UUID
+	FieldID    uuid.UUID         `json:"field_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
+	FormID     uuid.UUID         `json:"form_id"`
 }
 
 func (q *Queries) CreateFormField(ctx context.Context, arg CreateFormFieldParams) (CreateFormFieldRow, error) {
@@ -140,11 +141,11 @@ RETURNING option_id, field_id, option_label, ordering, is_answer
 `
 
 type DeleteFieldOptionRow struct {
-	OptionID    uuid.UUID
-	FieldID     uuid.NullUUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	OptionID    uuid.UUID     `json:"option_id"`
+	FieldID     uuid.NullUUID `json:"field_id"`
+	OptionLabel string        `json:"option_label"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"is_answer"`
 }
 
 func (q *Queries) DeleteFieldOption(ctx context.Context, optionID uuid.UUID) (DeleteFieldOptionRow, error) {
@@ -167,14 +168,14 @@ RETURNING form_id, form_title, form_description, created_by, form_created_at, fo
 `
 
 type DeleteFormRow struct {
-	FormID          uuid.UUID
-	FormTitle       string
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
-	FormCreatedAt   sql.NullTime
-	FormUpdatedAt   sql.NullTime
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
+	FormID          uuid.UUID      `json:"form_id"`
+	FormTitle       string         `json:"form_title"`
+	FormDescription sql.NullString `json:"form_description"`
+	CreatedBy       uuid.NullUUID  `json:"created_by"`
+	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
+	FormStatus      NullFormStatus `json:"form_status"`
+	FormAccess      NullFormAccess `json:"form_access"`
 }
 
 func (q *Queries) DeleteForm(ctx context.Context, formID uuid.UUID) (DeleteFormRow, error) {
@@ -200,12 +201,12 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 `
 
 type DeleteFormFieldRow struct {
-	FieldID    uuid.UUID
-	FieldLabel string
-	FieldType  NullFormFieldType
-	IsRequired sql.NullBool
-	Ordering   int32
-	FormID     uuid.UUID
+	FieldID    uuid.UUID         `json:"field_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
+	FormID     uuid.UUID         `json:"form_id"`
 }
 
 func (q *Queries) DeleteFormField(ctx context.Context, fieldID uuid.UUID) (DeleteFormFieldRow, error) {
@@ -288,7 +289,7 @@ SELECT
             ) ORDER BY fo.ordering
         ) FILTER (WHERE fo.option_id IS NOT NULL),
         '[]'
-    ) AS "options"
+    )::jsonb AS "options"
 FROM form_fields ff
 LEFT JOIN form_field_options fo ON ff.field_id = fo.field_id
 WHERE ff.form_id = $1
@@ -297,13 +298,13 @@ ORDER BY ff.ordering
 `
 
 type GetFormFieldsWithOptionsRow struct {
-	FieldId    uuid.UUID
-	FieldLabel string
-	FieldType  NullFormFieldType
-	IsRequired sql.NullBool
-	Ordering   int32
-	FormId     uuid.UUID
-	Options    interface{}
+	FieldId    uuid.UUID         `json:"fieldId"`
+	FieldLabel string            `json:"fieldLabel"`
+	FieldType  NullFormFieldType `json:"fieldType"`
+	IsRequired sql.NullBool      `json:"isRequired"`
+	Ordering   int32             `json:"ordering"`
+	FormId     uuid.UUID         `json:"formId"`
+	Options    json.RawMessage   `json:"options"`
 }
 
 func (q *Queries) GetFormFieldsWithOptions(ctx context.Context, formID uuid.UUID) ([]GetFormFieldsWithOptionsRow, error) {
@@ -373,25 +374,25 @@ OFFSET COALESCE($6::int, 0)
 `
 
 type ListFormsParams struct {
-	CreatedBy  uuid.NullUUID
-	Search     sql.NullString
-	FormStatus NullFormStatus
-	FormAccess NullFormAccess
-	ShortBy    sql.NullString
-	Offset     sql.NullInt32
-	Limit      sql.NullInt32
+	CreatedBy  uuid.NullUUID  `json:"created_by"`
+	Search     sql.NullString `json:"search"`
+	FormStatus NullFormStatus `json:"form_status"`
+	FormAccess NullFormAccess `json:"form_access"`
+	ShortBy    sql.NullString `json:"short_by"`
+	Offset     sql.NullInt32  `json:"offset"`
+	Limit      sql.NullInt32  `json:"limit"`
 }
 
 type ListFormsRow struct {
-	FormID          uuid.UUID
-	FormTitle       string
-	FormDescription sql.NullString
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
-	FormCreatedAt   sql.NullTime
-	FormUpdatedAt   sql.NullTime
-	CreatedBy       uuid.NullUUID
-	TotalCount      int64
+	FormID          uuid.UUID      `json:"form_id"`
+	FormTitle       string         `json:"form_title"`
+	FormDescription sql.NullString `json:"form_description"`
+	FormStatus      NullFormStatus `json:"form_status"`
+	FormAccess      NullFormAccess `json:"form_access"`
+	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
+	CreatedBy       uuid.NullUUID  `json:"created_by"`
+	TotalCount      int64          `json:"total_count"`
 }
 
 func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFormsRow, error) {
@@ -446,18 +447,18 @@ RETURNING option_id, field_id, option_label, ordering, is_answer
 `
 
 type UpdateFieldOptionParams struct {
-	OptionID    uuid.UUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	OptionID    uuid.UUID    `json:"option_id"`
+	OptionLabel string       `json:"option_label"`
+	Ordering    int32        `json:"ordering"`
+	IsAnswer    sql.NullBool `json:"is_answer"`
 }
 
 type UpdateFieldOptionRow struct {
-	OptionID    uuid.UUID
-	FieldID     uuid.NullUUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	OptionID    uuid.UUID     `json:"option_id"`
+	FieldID     uuid.NullUUID `json:"field_id"`
+	OptionLabel string        `json:"option_label"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"is_answer"`
 }
 
 func (q *Queries) UpdateFieldOption(ctx context.Context, arg UpdateFieldOptionParams) (UpdateFieldOptionRow, error) {
@@ -491,23 +492,23 @@ RETURNING form_id, form_title, form_description, created_by, form_created_at, fo
 `
 
 type UpdateFormParams struct {
-	FormTitle       sql.NullString
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
-	FormID          uuid.UUID
+	FormTitle       sql.NullString `json:"form_title"`
+	FormDescription sql.NullString `json:"form_description"`
+	CreatedBy       uuid.NullUUID  `json:"created_by"`
+	FormStatus      NullFormStatus `json:"form_status"`
+	FormAccess      NullFormAccess `json:"form_access"`
+	FormID          uuid.UUID      `json:"form_id"`
 }
 
 type UpdateFormRow struct {
-	FormID          uuid.UUID
-	FormTitle       string
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
-	FormCreatedAt   sql.NullTime
-	FormUpdatedAt   sql.NullTime
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
+	FormID          uuid.UUID      `json:"form_id"`
+	FormTitle       string         `json:"form_title"`
+	FormDescription sql.NullString `json:"form_description"`
+	CreatedBy       uuid.NullUUID  `json:"created_by"`
+	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
+	FormStatus      NullFormStatus `json:"form_status"`
+	FormAccess      NullFormAccess `json:"form_access"`
 }
 
 func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (UpdateFormRow, error) {
@@ -545,20 +546,20 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 `
 
 type UpdateFormFieldParams struct {
-	FieldID    uuid.UUID
-	FieldLabel string
-	FieldType  NullFormFieldType
-	IsRequired sql.NullBool
-	Ordering   int32
+	FieldID    uuid.UUID         `json:"field_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
 }
 
 type UpdateFormFieldRow struct {
-	FieldID    uuid.UUID
-	FieldLabel string
-	FieldType  NullFormFieldType
-	IsRequired sql.NullBool
-	Ordering   int32
-	FormID     uuid.UUID
+	FieldID    uuid.UUID         `json:"field_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
+	FormID     uuid.UUID         `json:"form_id"`
 }
 
 func (q *Queries) UpdateFormField(ctx context.Context, arg UpdateFormFieldParams) (UpdateFormFieldRow, error) {

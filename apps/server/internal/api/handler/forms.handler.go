@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
 	"github.com/giridhar-m-a/custom_form_app/internal/db"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
+	serializers "github.com/giridhar-m-a/custom_form_app/internal/serialisers"
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 )
@@ -14,6 +17,10 @@ type FormsHandler interface {
 	CreateFormFields(ctx *gin.Context)
 	GetForms(ctx *gin.Context)
 	GetSingleForm(ctx *gin.Context)
+	UpdateForm(ctx *gin.Context)
+	DeleteForm(ctx *gin.Context)
+	GetFormFields(ctx *gin.Context)
+	UpdateFormFields(ctx *gin.Context)
 }
 
 type formHandler struct {
@@ -45,19 +52,13 @@ func NewFormsHandler() FormsHandler {
 func (r *formHandler) CreateForm(ctx *gin.Context) {
 	var form dto.CreateFormDTO
 	if err := ctx.ShouldBind(&form); err != nil {
-		ctx.JSON(400, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
+		utils.HandleError(ctx, err)
 		return
 	}
 
 	userID, exists := ctx.Get("userID")
 	if !exists {
-		ctx.JSON(401, gin.H{
-			"status":  "error",
-			"message": "Unauthorized: user ID not found in context",
-		})
+		utils.HandleError(ctx, errors.New("user ID not found in context"))
 		return
 	}
 	createdForm, err := r.formService.CreateForm(ctx, form, userID.(string))
@@ -78,7 +79,7 @@ func (r *formHandler) CreateForm(ctx *gin.Context) {
 	}
 
 	ctx.JSON(201, gin.H{
-		"status":  "success",
+		"status":  201,
 		"message": "Form created successfully",
 		"data":    response,
 	})
@@ -90,7 +91,7 @@ func (r *formHandler) CreateForm(ctx *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        form  body      dto.CreateFormFieldsDTO  true  "Form fields data"
-// @Success      201   {object}  object{status=string,message=string,data=dto.CreatedFormFieldDTO}  "Form fields created successfully"
+// @Success      201   {object}  object{status=string,message=string,data=[]dto.FormFieldResponseDto}  "Form fields created successfully"
 // @Failure      400   {object}  object{status=string,message=string}  "Invalid request payload"
 // @Failure      401   {object}  object{status=string,message=string}  "Unauthorized"
 // @Failure      500   {object}  object{status=string,message=string}  "Internal server error"
@@ -99,19 +100,13 @@ func (r *formHandler) CreateForm(ctx *gin.Context) {
 func (r *formHandler) CreateFormFields(ctx *gin.Context) {
 	var form dto.CreateFormFieldsDTO
 	if err := ctx.ShouldBind(&form); err != nil {
-		ctx.JSON(400, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
+		utils.HandleError(ctx, err)
 		return
 	}
 
 	userID, exists := ctx.Get("userID")
 	if !exists {
-		ctx.JSON(401, gin.H{
-			"status":  "error",
-			"message": "Unauthorized: user ID not found in context",
-		})
+		utils.HandleError(ctx, errors.New("user ID not found in context"))
 		return
 	}
 	createdFormFields, err := r.formService.CreateFormFields(ctx, form, userID.(string))
@@ -120,10 +115,52 @@ func (r *formHandler) CreateFormFields(ctx *gin.Context) {
 		return
 	}
 
+	serializedFields := []dto.FormFieldResponseDto{}
+	for _, field := range createdFormFields {
+		serializedFields = append(serializedFields, serializers.MapCreatedFormFieldToResponse(field))
+	}
+
 	ctx.JSON(201, gin.H{
-		"status":  "success",
+		"status":  201,
 		"message": "Form fields created successfully",
-		"data":    createdFormFields,
+		"data":    serializedFields,
+	})
+}
+
+// @Summary      Update form fields
+// @Description  Creates form fields for the authenticated user
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Param        form  body      dto.UpdateFormFieldsDTO  true  "Form fields data"
+// @Success      201   {object}  object{status=string,message=string,data=[]dto.FormFieldResponseDto}  "Form fields Updated successfully"
+// @Failure      400   {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401   {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500   {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms/fields [Patch]
+// @Security     BearerAuth
+func (r *formHandler) UpdateFormFields(ctx *gin.Context) {
+	var fields dto.UpdateFormFieldsDTO
+	if err := ctx.ShouldBind(&fields); err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	updatedFormFields, err := r.formService.UpdateFormFields(ctx, fields)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	serializedFields := []dto.FormFieldResponseDto{}
+	for _, field := range updatedFormFields {
+		serializedFields = append(serializedFields, serializers.MapCreatedFormFieldToResponse(field))
+	}
+
+	ctx.JSON(201, gin.H{
+		"status":  201,
+		"message": "Form fields updated successfully",
+		"data":    serializedFields,
 	})
 }
 
@@ -142,18 +179,12 @@ func (r *formHandler) CreateFormFields(ctx *gin.Context) {
 func (r *formHandler) GetForms(ctx *gin.Context) {
 	query := dto.ListFormQuery{}
 	if err := ctx.ShouldBindQuery(&query); err != nil {
-		ctx.JSON(400, gin.H{
-			"status":  "error",
-			"message": err.Error(),
-		})
+		utils.HandleError(ctx, err)
 		return
 	}
 	userID, exists := ctx.Get("userID")
 	if !exists {
-		ctx.JSON(401, gin.H{
-			"status":  "error",
-			"message": "Unauthorized: user ID not found in context",
-		})
+		utils.HandleError(ctx, errors.New("user ID not found in context"))
 		return
 	}
 
@@ -164,14 +195,14 @@ func (r *formHandler) GetForms(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, gin.H{
-		"status":  "success",
+		"status":  200,
 		"message": "Forms retrieved successfully",
 		"data":    forms.Forms,
 		"pagination": gin.H{
-			"totalRecords":  forms.Total,
-			"page":   forms.Page,
-			"limit":  forms.Limit,
-			"totalPages":  forms.Pages,
+			"totalRecords": forms.Total,
+			"page":         forms.Page,
+			"limit":        forms.Limit,
+			"totalPages":   forms.Pages,
 		},
 	})
 }
@@ -190,6 +221,10 @@ func (r *formHandler) GetForms(ctx *gin.Context) {
 // @Security     BearerAuth
 func (r *formHandler) GetSingleForm(ctx *gin.Context) {
 	formID := ctx.Param("formID")
+	if formID == "" {
+		utils.HandleError(ctx, errors.New("form id is required"))
+		return
+	}
 	form, err := r.formService.GetSingleForm(ctx, formID)
 	if err != nil {
 		utils.HandleError(ctx, err)
@@ -197,8 +232,132 @@ func (r *formHandler) GetSingleForm(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, gin.H{
-		"status":  "success",
+		"status":  200,
 		"message": "Form retrieved successfully",
 		"data":    form,
+	})
+}
+
+// @Summary      Update form
+// @Description  Updates a form for the authenticated user
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Param        formID  path      string  true  "Form ID"
+// @Param        form    body      dto.UpdateFormDTO  true  "Form fields data"
+// @Success      200     {object}  object{status=string,message=string,data=dto.FormResponse}  "Form updated successfully"
+// @Failure      400     {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401     {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500     {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms/{formID} [patch]
+// @Security     BearerAuth
+func (r *formHandler) UpdateForm(ctx *gin.Context) {
+	formID := ctx.Param("formID")
+
+	if formID == "" {
+		utils.HandleError(ctx, errors.New("form id is required"))
+		return
+	}
+
+	var form dto.UpdateFormDTO
+	if err := ctx.ShouldBind(&form); err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+	updatedForm, err := r.formService.UpdateForm(ctx, form, formID)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"status":  200,
+		"message": "Form updated successfully",
+		"data": dto.FormResponse{
+			ID:          updatedForm.FormID.String(),
+			Title:       updatedForm.FormTitle,
+			Description: updatedForm.FormDescription.String,
+			CreatedBy:   updatedForm.CreatedBy.UUID.String(),
+			Status:      string(updatedForm.FormStatus.FormStatus),
+			CreatedAt:   updatedForm.FormCreatedAt.Time.String(),
+			UpdatedAt:   updatedForm.FormUpdatedAt.Time.String(),
+			Access:      string(updatedForm.FormAccess.FormAccess),
+		},
+	})
+}
+
+// @Summary      Delete form
+// @Description  Deletes a form for the authenticated user
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Param        formID  path      string  true  "Form ID"
+// @Success      200     {object}  object{status=string,message=string,data=dto.FormResponse}  "Form deleted successfully"
+// @Failure      400     {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401     {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500     {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms/{formID} [delete]
+// @Security     BearerAuth
+func (r *formHandler) DeleteForm(ctx *gin.Context) {
+	formID := ctx.Param("formID")
+	if formID == "" {
+		utils.HandleError(ctx, errors.New("form id is required"))
+		return
+	}
+	deletedForm, err := r.formService.DeleteForm(ctx, formID)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"status":  200,
+		"message": "Form deleted successfully",
+		"data": dto.FormResponse{
+			ID:          deletedForm.FormID.String(),
+			Title:       deletedForm.FormTitle,
+			Description: deletedForm.FormDescription.String,
+			CreatedBy:   deletedForm.CreatedBy.UUID.String(),
+			Status:      string(deletedForm.FormStatus.FormStatus),
+			CreatedAt:   deletedForm.FormCreatedAt.Time.String(),
+			UpdatedAt:   deletedForm.FormUpdatedAt.Time.String(),
+			Access:      string(deletedForm.FormAccess.FormAccess),
+		},
+	})
+}
+
+// @Summary      Get form fields
+// @Description  Gets form fields for the authenticated user
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Param        formID  path      string  true  "Form ID"
+// @Success      200     {object}  object{status=string,message=string,data=[]dto.FormFieldResponseDto}  "Form fields retrieved successfully"
+// @Failure      400     {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401     {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500     {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms/fields/{formID} [get]
+// @Security     BearerAuth
+func (r *formHandler) GetFormFields(ctx *gin.Context) {
+	formID := ctx.Param("formID")
+	if formID == "" {
+		utils.HandleError(ctx, errors.New("form id is required"))
+		return
+	}
+	formFields, err := r.formService.GetFormFieldsByFormId(ctx, formID)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	serializedFields := []dto.FormFieldResponseDto{}
+	for _, field := range formFields {
+		serializedFields = append(serializedFields, serializers.MapCreatedFormFieldToResponse(field))
+	}
+
+	ctx.JSON(200, gin.H{
+		"status":  200,
+		"message": "Form fields retrieved successfully",
+		"data":    serializedFields,
 	})
 }

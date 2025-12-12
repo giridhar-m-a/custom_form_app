@@ -75,7 +75,7 @@ func ConvertStringToUUID(id string) (uuid.UUID, error) {
 	return uuid.Parse(id)
 }
 
-func ConvertUUIDToNullUUID(id string) uuid.NullUUID {
+func ConvertStringToNullUUID(id string) uuid.NullUUID {
 	if id == "" {
 		return uuid.NullUUID{
 			UUID:  uuid.Nil,

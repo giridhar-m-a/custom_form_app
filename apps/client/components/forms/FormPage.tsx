@@ -38,15 +38,15 @@ export const FormPage = () => {
   ]
 
   const accessOptions = [
-    { value: 'Restricted', label: 'restricted' },
-    { value: 'Public', label: 'public' }
+    { value: 'restricted', label: 'Restricted' },
+    { value: 'public', label: 'Public' }
   ]
 
   const statusOptions = [
-    { value: 'Draft', label: 'draft' },
-    { value: 'Published', label: 'published' },
-    { value: 'Archived', label: 'archived' },
-    { value: 'Closed', label: 'closed' }
+    { value: 'draft', label: 'Draft' },
+    { value: 'published', label: 'Published' },
+    { value: 'archived', label: 'Archived' },
+    { value: 'closed', label: 'Closed' }
   ]
 
   const resetFilters = () => {
@@ -59,7 +59,7 @@ export const FormPage = () => {
   }
   return (
     <DataTable
-      columns={FormTableDef}
+      columns={FormTableDef(filters.page || 1, filters.limit || 15)}
       data={forms}
       currentPage={pagination.page}
       pageSize={pagination.limit}

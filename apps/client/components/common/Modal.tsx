@@ -15,11 +15,13 @@ interface ModalProps {
   children: React.ReactNode
   trigger: React.ReactNode
   className?: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export const Modal = ({ title, description, children, trigger, className }: ModalProps) => {
+export const Modal = ({ title, description, children, trigger, className, open, onOpenChange }: ModalProps) => {
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className={cn('sm:max-w-[425px]', className)}>
         <DialogHeader>

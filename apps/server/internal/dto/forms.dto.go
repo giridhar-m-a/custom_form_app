@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
+
 type CreateFormDTO struct {
 	Title       string `json:"title" binding:"required" form:"title" message:"title is required"`
 	Description string `json:"description" form:"description"`
@@ -28,4 +30,11 @@ type FormListResponse struct {
 	Page  int            `json:"page"`
 	Limit int            `json:"limit"`
 	Pages int            `json:"pages"`
+}
+
+type UpdateFormDTO struct {
+	Title       string          `json:"title" form:"title"`
+	Description string          `json:"description" form:"description"`
+	Access      sqlc.FormAccess `json:"access" form:"access"`
+	Status      sqlc.FormStatus `json:"status" form:"status"`
 }

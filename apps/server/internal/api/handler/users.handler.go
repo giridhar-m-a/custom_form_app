@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/giridhar-m-a/custom_form_app/internal/db"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
@@ -38,10 +39,7 @@ func NewUsersHandler() UsersHandler {
 func (h *usersHandler) GetMe(ctx *gin.Context) {
 	userID, exists := ctx.Get("userID")
 	if !exists {
-		ctx.JSON(401, gin.H{
-			"status":  "error",
-			"message": "Unauthorized: user ID not found in context",
-		})
+		utils.HandleError(ctx, errors.New("user ID not found in context"))
 		return
 	}
 	user, err := h.userService.GetUserDetailsById(ctx, userID.(string))
@@ -51,7 +49,7 @@ func (h *usersHandler) GetMe(ctx *gin.Context) {
 	}
 	userResponse := serializers.MapGetUserByIDRow(user)
 	ctx.JSON(200, gin.H{
-		"status":  "success",
+		"status":  200,
 		"message": "User retrieved successfully",
 		"data":    userResponse,
 	})

@@ -1,7 +1,7 @@
 export interface FormField {
   fieldId: string
   fieldLabel: string
-  fieldType: fieldType
+  fieldType: FieldType
   isRequired: boolean
   ordering: number
   formId: string
@@ -13,13 +13,21 @@ export interface FieldOption {
   optionLabel: string
   ordering: number
   fieldId: string
+  isAnswer?: boolean
 }
 
 export interface FormFieldOptionRecord {
   [key: string]: FieldOption
 }
 
-type fieldType =
+export interface FormUpdateType {
+  title?: string
+  access?: access
+  description?: string
+  status?: status
+}
+
+export type FieldType =
   | 'text'
   | 'number'
   | 'date'
@@ -42,12 +50,12 @@ type fieldType =
   | 'textArea'
 
 export interface FormType {
-  access: string
+  access: access
   createdAt: string
   createdBy: string
   description: string
   id: string
-  status: string
+  status: status
   title: string
   updatedAt: string
 }

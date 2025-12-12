@@ -889,7 +889,196 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO"
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto"
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates form fields for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Forms"
+                ],
+                "summary": "Update form fields",
+                "parameters": [
+                    {
+                        "description": "Form fields data",
+                        "name": "form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormFieldsDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Form fields Updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto"
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/forms/fields/{formID}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets form fields for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Forms"
+                ],
+                "summary": "Get form fields",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Form ID",
+                        "name": "formID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Form fields retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto"
+                                    }
                                 },
                                 "message": {
                                     "type": "string"
@@ -975,6 +1164,191 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "Form retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse"
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a form for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Forms"
+                ],
+                "summary": "Delete form",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Form ID",
+                        "name": "formID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Form deleted successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse"
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates a form for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Forms"
+                ],
+                "summary": "Update form",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Form ID",
+                        "name": "formID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Form fields data",
+                        "name": "form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Form updated successfully",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -1164,6 +1538,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess": {
+            "type": "string",
+            "enum": [
+                "public",
+                "restricted"
+            ],
+            "x-enum-varnames": [
+                "FormAccessPublic",
+                "FormAccessRestricted"
+            ]
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType": {
             "type": "string",
             "enum": [
@@ -1211,6 +1596,21 @@ const docTemplate = `{
                 "FormFieldTypeTextArea"
             ]
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "published",
+                "archived",
+                "closed"
+            ],
+            "x-enum-varnames": [
+                "FormStatusDraft",
+                "FormStatusPublished",
+                "FormStatusArchived",
+                "FormStatusClosed"
+            ]
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO": {
             "type": "object",
             "required": [
@@ -1233,6 +1633,9 @@ const docTemplate = `{
                 "ordering"
             ],
             "properties": {
+                "fieldId": {
+                    "type": "string"
+                },
                 "fieldLabel": {
                     "type": "string"
                 },
@@ -1263,6 +1666,9 @@ const docTemplate = `{
                 "isAnswer": {
                     "type": "boolean"
                 },
+                "optionId": {
+                    "type": "string"
+                },
                 "optionLabel": {
                     "type": "string"
                 },
@@ -1289,55 +1695,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO": {
-            "type": "object",
-            "properties": {
-                "fieldId": {
-                    "type": "string"
-                },
-                "fieldLabel": {
-                    "type": "string"
-                },
-                "fieldType": {
-                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType"
-                },
-                "formId": {
-                    "type": "string"
-                },
-                "isRequired": {
-                    "$ref": "#/definitions/sql.NullBool"
-                },
-                "options": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldOptionDTO"
-                    }
-                },
-                "ordering": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldOptionDTO": {
-            "type": "object",
-            "properties": {
-                "fieldId": {
-                    "$ref": "#/definitions/uuid.NullUUID"
-                },
-                "isAnswer": {
-                    "$ref": "#/definitions/sql.NullBool"
-                },
-                "optionId": {
-                    "type": "string"
-                },
-                "optionLabel": {
-                    "type": "string"
-                },
-                "ordering": {
-                    "type": "integer"
-                }
-            }
-        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest": {
             "type": "object",
             "required": [
@@ -1351,6 +1708,55 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 6
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldOptionResponseDto": {
+            "type": "object",
+            "properties": {
+                "fieldId": {
+                    "type": "string"
+                },
+                "isAnswer": {
+                    "type": "boolean"
+                },
+                "optionId": {
+                    "type": "string"
+                },
+                "optionLabel": {
+                    "type": "string"
+                },
+                "ordering": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto": {
+            "type": "object",
+            "properties": {
+                "fieldId": {
+                    "type": "string"
+                },
+                "fieldLabel": {
+                    "type": "string"
+                },
+                "fieldType": {
+                    "type": "string"
+                },
+                "formId": {
+                    "type": "string"
+                },
+                "isRequired": {
+                    "type": "boolean"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldOptionResponseDto"
+                    }
+                },
+                "ordering": {
+                    "type": "integer"
                 }
             }
         },
@@ -1383,27 +1789,50 @@ const docTemplate = `{
                 }
             }
         },
-        "sql.NullBool": {
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO": {
             "type": "object",
             "properties": {
-                "bool": {
-                    "type": "boolean"
+                "access": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess"
                 },
-                "valid": {
-                    "description": "Valid is true if Bool is not NULL",
-                    "type": "boolean"
+                "description": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
-        "uuid.NullUUID": {
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormFieldsDTO": {
             "type": "object",
+            "required": [
+                "formFields",
+                "formId"
+            ],
             "properties": {
-                "uuid": {
+                "formFields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldDTO"
+                    }
+                },
+                "formId": {
                     "type": "string"
                 },
-                "valid": {
-                    "description": "Valid is true if UUID is not NULL",
-                    "type": "boolean"
+                "removedFields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "removedOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         }

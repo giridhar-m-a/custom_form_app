@@ -18,10 +18,10 @@ RETURNING file_id, file_name, file_size, file_type, file_uploaded_at, user_id
 `
 
 type CreateUserProfilePicParams struct {
-	FileName string
-	FileSize int64
-	FileType string
-	UserID   uuid.NullUUID
+	FileName string        `json:"file_name"`
+	FileSize int64         `json:"file_size"`
+	FileType string        `json:"file_type"`
+	UserID   uuid.NullUUID `json:"user_id"`
 }
 
 func (q *Queries) CreateUserProfilePic(ctx context.Context, arg CreateUserProfilePicParams) (UserImage, error) {

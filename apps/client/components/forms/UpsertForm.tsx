@@ -7,14 +7,17 @@ import { Input } from '../ui/input'
 import { Textarea } from '../ui/textarea'
 import { Button } from '../ui/button'
 import { FormType } from '@/types/form.types'
-import { useCreateForm } from '@/hooks/queryHooks/useFormApp'
+import { useCreateForm, useUpdateForm } from '@/hooks/queryHooks/useFormApp'
+import { useMemo, useState } from 'react'
+import { SubmitButton } from '../common/SubmitButton'
 
 interface UpsertFormProps {
   formId?: string
   data?: FormType
+  onOpenChange?: (open: boolean) => void
 }
 
-export const UpsertForm = ({ formId, data }: UpsertFormProps) => {
+export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
   const form = useForm<CreateFormSchemaType>({
     resolver: zodResolver(CreateFormSchema),
     defaultValues: {
@@ -24,15 +27,35 @@ export const UpsertForm = ({ formId, data }: UpsertFormProps) => {
     mode: 'onChange',
     reValidateMode: 'onChange'
   })
-  const { mutate, isPending } = useCreateForm()
+  const { mutate, isPending: createIsPending } = useCreateForm()
+  const { mutate: updateMutate, isPending: updateIsPending } = useUpdateForm()
+
+  const isPending = useMemo(() => createIsPending || updateIsPending, [createIsPending, updateIsPending])
 
   const { control, handleSubmit, reset } = form
 
   const onSubmit = (formData: CreateFormSchemaType) => {
     if (formId) {
+      updateMutate(
+        { id: formId, data: formData },
+        {
+          onSuccess: () => {
+            reset()
+            onOpenChange?.(false)
+          }
+        }
+      )
       return
     }
-    mutate({ data: formData })
+    mutate(
+      { data: formData },
+      {
+        onSuccess: () => {
+          reset()
+          onOpenChange?.(false)
+        }
+      }
+    )
   }
 
   return (
@@ -65,9 +88,9 @@ export const UpsertForm = ({ formId, data }: UpsertFormProps) => {
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isPending}>
+          <SubmitButton type="submit" disabled={isPending} isLoading={isPending}>
             Submit
-          </Button>
+          </SubmitButton>
         </div>
       </form>
     </Form>
