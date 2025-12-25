@@ -64,6 +64,18 @@ definitions:
     - FormStatusPublished
     - FormStatusArchived
     - FormStatusClosed
+  github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.InvitationStatus:
+    enum:
+    - opened
+    - submitted
+    - invited
+    - expired
+    type: string
+    x-enum-varnames:
+    - InvitationStatusOpened
+    - InvitationStatusSubmitted
+    - InvitationStatusInvited
+    - InvitationStatusExpired
   github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO:
     properties:
       description:
@@ -96,6 +108,8 @@ definitions:
     type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldOptionDTO:
     properties:
+      fieldId:
+        type: string
       isAnswer:
         type: boolean
       optionId:
@@ -120,6 +134,15 @@ definitions:
     - formFields
     - formId
     type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.CreateInvitationDTO:
+    properties:
+      email:
+        type: string
+      form_id:
+        type: string
+      name:
+        type: string
+    type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest:
     properties:
       email:
@@ -129,6 +152,21 @@ definitions:
         type: string
     required:
     - email
+    - password
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        minLength: 2
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
     - password
     type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldOptionResponseDto:
@@ -201,11 +239,11 @@ definitions:
         type: array
       formId:
         type: string
-      removedFields:
+      removedFieldOptions:
         items:
           type: string
         type: array
-      removedOptions:
+      removedFields:
         items:
           type: string
         type: array
@@ -384,20 +422,12 @@ paths:
       - application/json
       description: Registers a user with name, email, and password
       parameters:
-      - in: query
-        name: email
+      - description: User registration payload
+        in: body
+        name: form
         required: true
-        type: string
-      - in: query
-        minLength: 2
-        name: name
-        required: true
-        type: string
-      - in: query
-        minLength: 6
-        name: password
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest'
       produces:
       - application/json
       responses:
@@ -1126,6 +1156,191 @@ paths:
       summary: Check API health
       tags:
       - health
+  /invitations:
+    get:
+      consumes:
+      - application/json
+      description: GetInvitationByFormId retrieves invitations by form ID
+      parameters:
+      - enum:
+        - opened
+        - submitted
+        - invited
+        - expired
+        in: query
+        name: exclude
+        type: string
+        x-enum-varnames:
+        - InvitationStatusOpened
+        - InvitationStatusSubmitted
+        - InvitationStatusInvited
+        - InvitationStatusExpired
+      - in: query
+        name: formId
+        type: string
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - enum:
+        - opened
+        - submitted
+        - invited
+        - expired
+        in: query
+        name: status
+        type: string
+        x-enum-varnames:
+        - InvitationStatusOpened
+        - InvitationStatusSubmitted
+        - InvitationStatusInvited
+        - InvitationStatusExpired
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: GetInvitationByFormId retrieves invitations by form ID
+      tags:
+      - Invitation
+    post:
+      consumes:
+      - application/json
+      description: CreateSingleInvitation creates a single invitation
+      parameters:
+      - description: Invitation data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateInvitationDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: CreateSingleInvitation creates a single invitation
+      tags:
+      - Invitation
+  /invitations/{formId}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: NewInvitationHandler creates a new invitation handler
+      parameters:
+      - description: Form ID
+        in: path
+        name: formId
+        required: true
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: NewInvitationHandler creates a new invitation handler
+      tags:
+      - Invitation
+  /invitations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: DeleteInvitation deletes an invitation
+      parameters:
+      - description: Invitation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: DeleteInvitation deletes an invitation
+      tags:
+      - Invitation
   /users/me:
     get:
       consumes:

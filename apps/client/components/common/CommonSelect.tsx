@@ -1,6 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-interface CommonSelectProps {
+export interface CommonSelectProps {
   options: Option[]
   placeholder: string
   value?: string

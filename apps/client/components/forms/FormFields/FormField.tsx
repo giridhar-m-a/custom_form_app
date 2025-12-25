@@ -28,6 +28,9 @@ import { MdDragIndicator } from 'react-icons/md'
 import { FieldErrors } from 'react-hook-form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormFieldOptions } from './FormFieldOptions'
+import { CommonSelect } from '@/components/common/CommonSelect'
+import { FIELD_TYPE_OPTIONS } from './formFields.config'
+import { FormStarRating } from '@/components/FormRender/FormStarRating'
 
 interface FormFieldProps {
   field: FormFieldCreateSchemaType
@@ -123,29 +126,12 @@ export const FormField = ({
             {/* Field Type Selector */}
             {onChangeFieldType && (
               <div className="w-40 shrink-0">
-                <Select value={fieldType} onValueChange={val => onChangeFieldType(val as FieldType)}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="text">Short Text</SelectItem>
-                    <SelectItem value="textArea">Long Text</SelectItem>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="phone">Phone</SelectItem>
-                    <SelectItem value="url">URL</SelectItem>
-                    <SelectItem value="date">Date</SelectItem>
-                    <SelectItem value="time">Time</SelectItem>
-                    <SelectItem value="datetime">Date Time</SelectItem>
-                    <SelectItem value="checkbox">Checkbox</SelectItem>
-                    <SelectItem value="radio">Single Choice</SelectItem>
-                    <SelectItem value="dropdown">Dropdown</SelectItem>
-                    <SelectItem value="multiselect">Multi Select</SelectItem>
-                    <SelectItem value="file">File Upload</SelectItem>
-                    <SelectItem value="image">Image</SelectItem>
-                    <SelectItem value="rating">Rating</SelectItem>
-                  </SelectContent>
-                </Select>
+                <CommonSelect
+                  options={FIELD_TYPE_OPTIONS}
+                  placeholder="Type"
+                  value={fieldType}
+                  onChange={val => onChangeFieldType(val as FieldType)}
+                />
               </div>
             )}
 
@@ -321,9 +307,19 @@ export const FormField = ({
             </div>
           )}
 
-          {fieldType === 'file' && (
+          {!!(fieldType === 'file' || fieldType === 'image' || fieldType === 'video' || fieldType === 'audio') && (
             <div className="h-20 w-full flex items-center justify-center rounded-md border-2 border-dashed border-input bg-background/50 text-sm text-muted-foreground">
               Click to upload file
+            </div>
+          )}
+          {fieldType === 'rating' && (
+            <div className="h-10 w-full flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground/50">
+              <FormStarRating disabled />
+            </div>
+          )}
+          {fieldType === 'slider' && (
+            <div className="h-10 w-full flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground/50">
+              <Input type="range" disabled />
             </div>
           )}
         </div>

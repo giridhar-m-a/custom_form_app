@@ -274,24 +274,13 @@ const docTemplate = `{
                 "summary": "Register a new user",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "minLength": 2,
-                        "type": "string",
-                        "name": "name",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "minLength": 6,
-                        "type": "string",
-                        "name": "password",
-                        "in": "query",
-                        "required": true
+                        "description": "User registration payload",
+                        "name": "form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -1432,6 +1421,289 @@ const docTemplate = `{
                 }
             }
         },
+        "/invitations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GetInvitationByFormId retrieves invitations by form ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invitation"
+                ],
+                "summary": "GetInvitationByFormId retrieves invitations by form ID",
+                "parameters": [
+                    {
+                        "enum": [
+                            "opened",
+                            "submitted",
+                            "invited",
+                            "expired"
+                        ],
+                        "type": "string",
+                        "x-enum-varnames": [
+                            "InvitationStatusOpened",
+                            "InvitationStatusSubmitted",
+                            "InvitationStatusInvited",
+                            "InvitationStatusExpired"
+                        ],
+                        "name": "exclude",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "formId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "opened",
+                            "submitted",
+                            "invited",
+                            "expired"
+                        ],
+                        "type": "string",
+                        "x-enum-varnames": [
+                            "InvitationStatusOpened",
+                            "InvitationStatusSubmitted",
+                            "InvitationStatusInvited",
+                            "InvitationStatusExpired"
+                        ],
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "CreateSingleInvitation creates a single invitation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invitation"
+                ],
+                "summary": "CreateSingleInvitation creates a single invitation",
+                "parameters": [
+                    {
+                        "description": "Invitation data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateInvitationDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/invitations/{formId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "NewInvitationHandler creates a new invitation handler",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invitation"
+                ],
+                "summary": "NewInvitationHandler creates a new invitation handler",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Form ID",
+                        "name": "formId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/invitations/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "DeleteInvitation deletes an invitation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invitation"
+                ],
+                "summary": "DeleteInvitation deletes an invitation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invitation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/me": {
             "get": {
                 "security": [
@@ -1611,6 +1883,21 @@ const docTemplate = `{
                 "FormStatusClosed"
             ]
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.InvitationStatus": {
+            "type": "string",
+            "enum": [
+                "opened",
+                "submitted",
+                "invited",
+                "expired"
+            ],
+            "x-enum-varnames": [
+                "InvitationStatusOpened",
+                "InvitationStatusSubmitted",
+                "InvitationStatusInvited",
+                "InvitationStatusExpired"
+            ]
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO": {
             "type": "object",
             "required": [
@@ -1663,6 +1950,9 @@ const docTemplate = `{
                 "ordering"
             ],
             "properties": {
+                "fieldId": {
+                    "type": "string"
+                },
                 "isAnswer": {
                     "type": "boolean"
                 },
@@ -1695,6 +1985,20 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateInvitationDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "form_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest": {
             "type": "object",
             "required": [
@@ -1704,6 +2008,27 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2
                 },
                 "password": {
                     "type": "string",
@@ -1822,13 +2147,13 @@ const docTemplate = `{
                 "formId": {
                     "type": "string"
                 },
-                "removedFields": {
+                "removedFieldOptions": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "removedOptions": {
+                "removedFields": {
                     "type": "array",
                     "items": {
                         "type": "string"

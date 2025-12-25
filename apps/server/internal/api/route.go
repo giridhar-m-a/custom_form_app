@@ -15,4 +15,5 @@ func RegisterRoutes(r *gin.Engine) {
 	controller.FileUploadController(api)
 	controller.RegisterFormsController(api)
 	controller.Users(api)
+	controller.RegisterInvitationsRoutes(api)
 }

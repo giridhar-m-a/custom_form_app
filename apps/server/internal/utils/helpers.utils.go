@@ -53,6 +53,13 @@ func ConvertIntToNullInt(i int) sql.NullInt64 {
 	return sql.NullInt64{Int64: int64(i), Valid: true}
 }
 
+func ConvertIntToNullInt32(i int) sql.NullInt32 {
+	if i == 0 {
+		return sql.NullInt32{Int32: 0, Valid: false}
+	}
+	return sql.NullInt32{Int32: (int32)(i), Valid: true}
+}
+
 func ConvertBoolToNullBool(b bool) sql.NullBool {
 	if !b {
 		return sql.NullBool{Bool: false, Valid: false}

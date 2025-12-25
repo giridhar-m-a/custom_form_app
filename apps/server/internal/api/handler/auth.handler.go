@@ -147,7 +147,7 @@ func (a *authHandler) EmailPasswordAuthHandler(c *gin.Context) {
 // @Tags         Authentication
 // @Accept       json
 // @Produce      json
-// @Param        request  query  dto.EmailPasswordRegisterRequest  true  "User registration payload"
+// @Param        form  body  dto.EmailPasswordRegisterRequest  true  "User registration payload"
 // @Success      200  {object}  object{status=int,message=string,data=object{accessToken=string,refreshToken=string,user=object{id=string,email=string,fullName=string,profilePic=string,profilePicId=string,createdAt=string,updatedAt=string}}}  "Authentication successful"
 // @Failure      400  {object}  object{status=int,message=string}  "Invalid request"
 // @Failure      409  {object}  object{status=int,message=string}  "Email already exists"

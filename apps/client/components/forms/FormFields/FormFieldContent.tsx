@@ -49,6 +49,7 @@ import {
 import { FormFieldWrapper } from './FormFieldWrapper'
 import { CustomLoader } from '@/components/common/CustomLoader'
 import toast from 'react-hot-toast'
+import { FIELD_TYPE_OPTIONS } from './formFields.config'
 
 interface FormFieldContentProps {
   formId: string
@@ -267,25 +268,6 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
     }
   }
 
-  const fieldTypes: { type: FieldType; label: string; icon: React.ReactNode }[] = [
-    { type: 'text', label: 'Short Text', icon: <MdShortText className="mr-2 h-4 w-4" /> },
-    { type: 'textArea', label: 'Long Text', icon: <MdNotes className="mr-2 h-4 w-4" /> },
-    { type: 'number', label: 'Number', icon: <MdNumbers className="mr-2 h-4 w-4" /> },
-    { type: 'email', label: 'Email', icon: <MdEmail className="mr-2 h-4 w-4" /> },
-    { type: 'phone', label: 'Phone', icon: <MdPhone className="mr-2 h-4 w-4" /> },
-    { type: 'url', label: 'URL', icon: <MdLink className="mr-2 h-4 w-4" /> },
-    { type: 'date', label: 'Date', icon: <MdDateRange className="mr-2 h-4 w-4" /> },
-    { type: 'time', label: 'Time', icon: <MdAccessTime className="mr-2 h-4 w-4" /> },
-    { type: 'datetime', label: 'Date Time', icon: <MdPermContactCalendar className="mr-2 h-4 w-4" /> },
-    { type: 'checkbox', label: 'Checkbox', icon: <MdCheckBox className="mr-2 h-4 w-4" /> },
-    { type: 'radio', label: 'Single Choice', icon: <MdRadioButtonChecked className="mr-2 h-4 w-4" /> },
-    { type: 'dropdown', label: 'Dropdown', icon: <MdArrowDropDownCircle className="mr-2 h-4 w-4" /> },
-    { type: 'multiselect', label: 'Multi Select', icon: <MdList className="mr-2 h-4 w-4" /> },
-    { type: 'file', label: 'File Upload', icon: <MdAttachFile className="mr-2 h-4 w-4" /> },
-    { type: 'image', label: 'Image', icon: <MdImage className="mr-2 h-4 w-4" /> },
-    { type: 'rating', label: 'Rating', icon: <MdStar className="mr-2 h-4 w-4" /> }
-  ]
-
   return (
     <>
       {!isLoading && (
@@ -304,9 +286,9 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
                 <DropdownMenuContent align="end" className="w-56 max-h-96 overflow-y-auto">
                   <DropdownMenuLabel>Select Field Type</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {fieldTypes.map(ft => (
-                    <DropdownMenuItem key={ft.type} onClick={() => handleAddField(formFields.length - 1, ft.type)}>
-                      {ft.icon}
+                  {FIELD_TYPE_OPTIONS.map(ft => (
+                    <DropdownMenuItem key={ft.value} onClick={() => handleAddField(formFields.length - 1, ft.value)}>
+                      {ft.icon && <ft.icon className="mr-2 h-4 w-4" />}
                       <span>{ft.label}</span>
                     </DropdownMenuItem>
                   ))}
@@ -353,9 +335,9 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="center" className="w-56 overflow-y-auto max-h-96">
-                      {fieldTypes.map(ft => (
-                        <DropdownMenuItem key={ft.type} onClick={() => handleAddField(-1, ft.type)}>
-                          {ft.icon}
+                      {FIELD_TYPE_OPTIONS.map(ft => (
+                        <DropdownMenuItem key={ft.value} onClick={() => handleAddField(-1, ft.value)}>
+                          {ft.icon && <ft.icon className="mr-2 h-4 w-4" />}
                           <span>{ft.label}</span>
                         </DropdownMenuItem>
                       ))}

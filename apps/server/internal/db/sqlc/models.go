@@ -235,7 +235,6 @@ type FormResponse struct {
 	FormID       uuid.UUID      `json:"form_id"`
 	SubmittedAt  sql.NullTime   `json:"submitted_at"`
 	RespondentID uuid.NullUUID  `json:"respondent_id"`
-	FormOptionID uuid.NullUUID  `json:"form_option_id"`
 	FormFieldID  uuid.UUID      `json:"form_field_id"`
 	ResponseText sql.NullString `json:"response_text"`
 }
@@ -252,15 +251,21 @@ type FormResponseFile struct {
 }
 
 type Invitation struct {
-	InvitationID    uuid.UUID            `json:"invitation_id"`
-	FormID          uuid.UUID            `json:"form_id"`
-	InvitedEmail    string               `json:"invited_email"`
-	InvitationToken uuid.NullUUID        `json:"invitation_token"`
-	InvitedAt       sql.NullTime         `json:"invited_at"`
-	InvitedBy       uuid.NullUUID        `json:"invited_by"`
-	Status          NullInvitationStatus `json:"status"`
-	OpenedAt        sql.NullTime         `json:"opened_at"`
-	SubmittedAt     sql.NullTime         `json:"submitted_at"`
+	InvitationID uuid.UUID            `json:"invitation_id"`
+	FormID       uuid.UUID            `json:"form_id"`
+	InvitedEmail string               `json:"invited_email"`
+	InvitedAt    sql.NullTime         `json:"invited_at"`
+	InvitedBy    uuid.NullUUID        `json:"invited_by"`
+	Status       NullInvitationStatus `json:"status"`
+	OpenedAt     sql.NullTime         `json:"opened_at"`
+	SubmittedAt  sql.NullTime         `json:"submitted_at"`
+	InvitedName  string               `json:"invited_name"`
+}
+
+type ResponseOption struct {
+	ID           uuid.UUID `json:"id"`
+	ResponseID   uuid.UUID `json:"response_id"`
+	FormOptionID uuid.UUID `json:"form_option_id"`
 }
 
 type User struct {

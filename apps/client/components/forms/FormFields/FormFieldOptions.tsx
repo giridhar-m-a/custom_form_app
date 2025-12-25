@@ -10,15 +10,8 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { FieldType } from '@/types/form.types'
-import {
-  MdAdd,
-  MdContentCopy,
-  MdDelete,
-  MdEdit,
-  MdSave,
-  MdShortText,
-  MdStar
-} from 'react-icons/md'
+import { MdAdd, MdContentCopy, MdDelete, MdEdit, MdSave, MdShortText } from 'react-icons/md'
+import { FIELD_TYPE_OPTIONS } from './formFields.config'
 
 interface FormFieldOptionsProps {
   onAddField: (type: FieldType) => void
@@ -69,22 +62,14 @@ export const FormFieldOptions = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 max-h-96 overflow-y-auto">
-          {/* ... items ... */}
           <DropdownMenuLabel>Add New Field</DropdownMenuLabel>
           <DropdownMenuSeparator />
-
-          <DropdownMenuItem onClick={() => onAddField('text')}>
-            <MdShortText className="mr-2 h-4 w-4" />
-            <span>Short Text</span>
-          </DropdownMenuItem>
-          {/* ... (truncated for brevity, logic remains the same) ... */}
-          {/* I will use the "AllowMultiple" feature to target specific chunks if needed, but here replacing the button blocks is safer */}
-
-          {/* ... items ... */}
-          <DropdownMenuItem onClick={() => onAddField('rating')}>
-            <MdStar className="mr-2 h-4 w-4" />
-            <span>Rating</span>
-          </DropdownMenuItem>
+          {FIELD_TYPE_OPTIONS.map(option => (
+            <DropdownMenuItem onClick={() => onAddField(option.value)}>
+              {option.icon && <option.icon className="mr-2 h-4 w-4" />}
+              <span>{option.label}</span>
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
