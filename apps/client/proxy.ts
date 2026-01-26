@@ -17,8 +17,8 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  // ✔ Token check only when token exists
-  if (accessToken) {
+  // ✔ Token check only during page rendering (GET requests)
+  if (accessToken && !isPublic && req.method === 'GET') {
     try {
       const verifyResp = await verifyToken(accessToken)
 

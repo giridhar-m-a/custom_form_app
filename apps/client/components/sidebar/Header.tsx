@@ -23,14 +23,18 @@ const Header = () => {
           {path.map((item, i) => (
             <Fragment key={i}>
               {i < path.length - 1 && (
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href={`/${item}`}>{item.replaceAll('-', ' ')}</BreadcrumbLink>
+                <BreadcrumbItem className="hidden md:block text-xl font-semibold capitalize">
+                  <BreadcrumbLink href={`/${path.slice(0, i + 1).join('/')}`}>
+                    {item.replaceAll('-', ' ')}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
               )}
               {i < path.length - 1 && <BreadcrumbSeparator className="hidden md:block" />}
               {i === path.length - 1 && (
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{item.replaceAll('-', ' ')}</BreadcrumbPage>
+                  <BreadcrumbPage className="text-xl font-semibold capitalize">
+                    {item.replaceAll('-', ' ')}
+                  </BreadcrumbPage>
                 </BreadcrumbItem>
               )}
             </Fragment>

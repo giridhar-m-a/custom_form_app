@@ -10,10 +10,10 @@ import (
 
 type FormsRepository interface {
 	// Define methods for form data access here
-	CreateForm(form sqlc.CreateFormParams, ctx context.Context) (sqlc.CreateFormRow, error)
-	UpdateForm(form sqlc.UpdateFormParams, ctx context.Context) (sqlc.UpdateFormRow, error)
+	CreateForm(form sqlc.CreateFormParams, ctx context.Context) (sqlc.Form, error)
+	UpdateForm(form sqlc.UpdateFormParams, ctx context.Context) (sqlc.Form, error)
 	GetFormByID(id string, ctx context.Context) (sqlc.Form, error)
-	GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.Form, error)
+	GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.ListFormsRow, error)
 	DeleteForm(id string, ctx context.Context) (sqlc.DeleteFormRow, error)
 	FormRepoWithTx(tx *sql.Tx) FormsRepository
 }
@@ -28,11 +28,11 @@ func NewFormsRepository(q *sqlc.Queries) FormsRepository {
 	}
 }
 
-func (r *formsRepository) CreateForm(form sqlc.CreateFormParams, ctx context.Context) (sqlc.CreateFormRow, error) {
+func (r *formsRepository) CreateForm(form sqlc.CreateFormParams, ctx context.Context) (sqlc.Form, error) {
 	return r.q.CreateForm(ctx, form)
 }
 
-func (r *formsRepository) UpdateForm(form sqlc.UpdateFormParams, ctx context.Context) (sqlc.UpdateFormRow, error) {
+func (r *formsRepository) UpdateForm(form sqlc.UpdateFormParams, ctx context.Context) (sqlc.Form, error) {
 	return r.q.UpdateForm(ctx, form)
 }
 
@@ -44,7 +44,7 @@ func (r *formsRepository) GetFormByID(id string, ctx context.Context) (sqlc.Form
 	return r.q.GetFormByID(ctx, uid)
 }
 
-func (r *formsRepository) GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.Form, error) {
+func (r *formsRepository) GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.ListFormsRow, error) {
 	return r.q.ListForms(ctx, params)
 }
 

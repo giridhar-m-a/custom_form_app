@@ -28,7 +28,7 @@ import (
 // @contact.name API Support
 // @contact.url http://giridhar.dev/
 // @contact.email m.a.giridhar08@gmail.com
-// @host localhost:8000
+// @host be.custom-form-app.home
 // @BasePath /api/v1
 // @schemes https http
 // @securityDefinitions.apikey BearerAuth
@@ -38,14 +38,20 @@ import (
 func main() {
 	// Get configuration from environment
 	port := utils.GetEnv("APP_PORT", "8080")
+	frontendUrl := utils.GetEnv("FRONTEND_URL", "http://localhost:3000")
+	backendUrl := utils.GetEnv("BACKEND_URL", "http://localhost:8000")
 	allowedOrigins := []string{
-		utils.GetEnv("FRONTEND_URL", "http://localhost:3000"),
-		"http://localhost:8000",
+		frontendUrl,
+		backendUrl,
 	}
 
 	// Initialize database
 	log.Println("Initializing database...")
 	db.InitDB()
+
+	// Initialize Resend
+	log.Println("Initialising Resend...")
+	utils.InitResend()
 
 	// Initialize cache
 	log.Println("Initializing cache...")

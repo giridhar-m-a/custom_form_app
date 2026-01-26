@@ -6,8 +6,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 )
 
+// FileUploadHandler godoc
+// @Summary Upload a file to MinIO
+// @Description Uploads a file to the specified MinIO bucket and returns file info
+// @Tags Files
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "File to upload"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /files/file-upload [post]
+// @Security BearerAuth
+// @type http
+// @scheme bearer
 func FileUploadHandler(c *gin.Context) {
 	// Parse the multipart form, with a max memory of 10MB
 	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
@@ -24,7 +39,7 @@ func FileUploadHandler(c *gin.Context) {
 	defer file.Close()
 
 	// Upload the file to MinIO
-	bucketName := "user-image" // Replace with your bucket name
+	bucketName := utils.GetEnv("MINIO_BUCKET_NAME", "custom-form-app") // Replace with your bucket name
 	objectName := header.Filename
 	contentType := header.Header.Get("Content-Type")
 
@@ -41,12 +56,12 @@ func FileUploadHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"message":    "File uploaded successfully",
-		"file_info":  fileInfo,
-		"bucket":     bucketName,
-		"objectName": objectName,
-		"signedUrl":  signedUrl.String(),
-		"signed":     signedUrl,
-		"status":     http.StatusOK,
+		"message": "File uploaded successfully",
+		"data": map[string]interface{}{
+			"file_info":  fileInfo,
+			"objectName": objectName,
+			"signed":     signedUrl,
+		},
+		"status": http.StatusOK,
 	})
 }

@@ -5,8 +5,10 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func GetEnv(key, defaultValue string) string {
@@ -52,6 +54,13 @@ func ConvertIntToNullInt(i int) sql.NullInt64 {
 	return sql.NullInt64{Int64: int64(i), Valid: true}
 }
 
+func ConvertIntToNullInt32(i int) sql.NullInt32 {
+	if i == 0 {
+		return sql.NullInt32{Int32: 0, Valid: false}
+	}
+	return sql.NullInt32{Int32: (int32)(i), Valid: true}
+}
+
 func ConvertBoolToNullBool(b bool) sql.NullBool {
 	if !b {
 		return sql.NullBool{Bool: false, Valid: false}
@@ -74,7 +83,7 @@ func ConvertStringToUUID(id string) (uuid.UUID, error) {
 	return uuid.Parse(id)
 }
 
-func ConvertUUIDToNullUUID(id string) uuid.NullUUID {
+func ConvertStringToNullUUID(id string) uuid.NullUUID {
 	if id == "" {
 		return uuid.NullUUID{
 			UUID:  uuid.Nil,
@@ -93,6 +102,63 @@ func ConvertUUIDToNullUUID(id string) uuid.NullUUID {
 
 	return uuid.NullUUID{
 		UUID:  parsed,
+		Valid: true,
+	}
+}
+
+func ToPgText(s string) pgtype.Text {
+	if s == "" {
+		return pgtype.Text{Valid: false}
+	}
+	return pgtype.Text{String: s, Valid: true}
+}
+
+func NullBoolToBoolOrDefault(nb sql.NullBool, def bool) bool {
+	if nb.Valid {
+		return nb.Bool
+	}
+	return def
+}
+
+func NullTimeToStringOrEmpty(nt sql.NullTime) string {
+	if nt.Valid {
+		return nt.Time.Format(time.RFC3339)
+	}
+	return ""
+}
+
+func NullUUIDToStringOrEmpty(u uuid.NullUUID) string {
+	if u.Valid {
+		return u.UUID.String()
+	}
+	return ""
+}
+
+// NullTimeToString safely converts sql.NullTime to string or empty string
+func NullTimeToString(nt sql.NullTime) string {
+	if nt.Valid {
+		return nt.Time.Format(time.RFC3339)
+	}
+	return ""
+}
+
+// NullBoolToBool safely converts sql.NullBool to bool or default value
+func NullBoolToBool(nb sql.NullBool, def bool) bool {
+	if nb.Valid {
+		return nb.Bool
+	}
+	return def
+}
+
+func BoolPtrToNullBool(b *bool) sql.NullBool {
+	if b == nil {
+		return sql.NullBool{
+			Bool:  false,
+			Valid: false,
+		}
+	}
+	return sql.NullBool{
+		Bool:  *b,
 		Valid: true,
 	}
 }

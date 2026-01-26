@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
 )
 
@@ -13,6 +14,7 @@ type FormFieldsRepository interface {
 	UpdateFormField(form sqlc.UpdateFormFieldParams, ctx context.Context) (sqlc.UpdateFormFieldRow, error)
 	DeleteFormField(id string, ctx context.Context) (sqlc.DeleteFormFieldRow, error)
 	FormFieldRepoWithTx(tx *sql.Tx) FormFieldsRepository
+	GetFormFieldsByFormId(formId string, ctx context.Context) ([]sqlc.GetFormFieldsWithOptionsRow, error)
 }
 
 type formFieldsRepository struct {
@@ -39,6 +41,14 @@ func (r *formFieldsRepository) DeleteFormField(id string, ctx context.Context) (
 		return sqlc.DeleteFormFieldRow{}, err
 	}
 	return r.q.DeleteFormField(ctx, uid)
+}
+
+func (r *formFieldsRepository) GetFormFieldsByFormId(formId string, ctx context.Context) ([]sqlc.GetFormFieldsWithOptionsRow, error) {
+	uid, err := utils.ConvertStringToUUID(formId)
+	if err != nil {
+		return nil, err
+	}
+	return r.q.GetFormFieldsWithOptions(ctx, uid)
 }
 
 func (r *formFieldsRepository) FormFieldRepoWithTx(tx *sql.Tx) FormFieldsRepository {

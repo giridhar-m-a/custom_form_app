@@ -3,7 +3,9 @@ package utils
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgconn"
@@ -26,8 +28,20 @@ func RespondError(c *gin.Context, status int, message string) {
 
 // Main error handler
 func HandleError(c *gin.Context, err error) {
+	fmt.Printf("Error: doing operation in path: %s with method: %s from ip: %s", c.FullPath(), c.Request.Method, c.ClientIP())
+	fmt.Printf("\tError message: %s", err)
 	// No error
 	if err == nil {
+		return
+	}
+
+	if strings.Contains(err.Error(), "json: unknown field") {
+		RespondError(c, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+
+	if strings.Contains(err.Error(), "user ID not found in context") {
+		RespondError(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 

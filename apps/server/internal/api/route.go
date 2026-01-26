@@ -8,10 +8,12 @@ import (
 
 func RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api/v1")
+	api.Use(middleware.UnknownFieldsMiddleware())
 	controller.RegisterHealth(api)
 	controller.Auth(api)
 	api.Use(middleware.AuthMiddleware())
 	controller.FileUploadController(api)
 	controller.RegisterFormsController(api)
 	controller.Users(api)
+	controller.RegisterInvitationsRoutes(api)
 }

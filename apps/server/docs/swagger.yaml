@@ -1,8 +1,120 @@
 basePath: /api/v1
 definitions:
+  github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess:
+    enum:
+    - public
+    - restricted
+    type: string
+    x-enum-varnames:
+    - FormAccessPublic
+    - FormAccessRestricted
+  github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType:
+    enum:
+    - text
+    - number
+    - date
+    - time
+    - datetime
+    - email
+    - phone
+    - url
+    - file
+    - image
+    - video
+    - audio
+    - checkbox
+    - radio
+    - dropdown
+    - multiselect
+    - rating
+    - slider
+    - color
+    - textArea
+    type: string
+    x-enum-varnames:
+    - FormFieldTypeText
+    - FormFieldTypeNumber
+    - FormFieldTypeDate
+    - FormFieldTypeTime
+    - FormFieldTypeDatetime
+    - FormFieldTypeEmail
+    - FormFieldTypePhone
+    - FormFieldTypeUrl
+    - FormFieldTypeFile
+    - FormFieldTypeImage
+    - FormFieldTypeVideo
+    - FormFieldTypeAudio
+    - FormFieldTypeCheckbox
+    - FormFieldTypeRadio
+    - FormFieldTypeDropdown
+    - FormFieldTypeMultiselect
+    - FormFieldTypeRating
+    - FormFieldTypeSlider
+    - FormFieldTypeColor
+    - FormFieldTypeTextArea
+  github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus:
+    enum:
+    - draft
+    - published
+    - archived
+    - closed
+    type: string
+    x-enum-varnames:
+    - FormStatusDraft
+    - FormStatusPublished
+    - FormStatusArchived
+    - FormStatusClosed
+  github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.InvitationStatus:
+    enum:
+    - pending
+    - accepted
+    - failed
+    - submitted
+    type: string
+    x-enum-varnames:
+    - InvitationStatusPending
+    - InvitationStatusAccepted
+    - InvitationStatusFailed
+    - InvitationStatusSubmitted
+  github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_User:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.User'
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  ? github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_UserProfilePicResponse
+  : properties:
+      data:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UserProfilePicResponse'
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO:
     properties:
+      closing_time:
+        type: string
       description:
+        type: string
+      form_access:
+        allOf:
+        - $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess'
+        description: default 'restricted'
+      is_scheduled:
+        type: boolean
+      scheduled_time:
         type: string
       title:
         type: string
@@ -11,10 +123,12 @@ definitions:
     type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldDTO:
     properties:
+      fieldId:
+        type: string
       fieldLabel:
         type: string
       fieldType:
-        type: string
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormFieldType'
       isRequired:
         type: boolean
       options:
@@ -30,8 +144,12 @@ definitions:
     type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldOptionDTO:
     properties:
+      fieldId:
+        type: string
       isAnswer:
         type: boolean
+      optionId:
+        type: string
       optionLabel:
         type: string
       ordering:
@@ -52,7 +170,63 @@ definitions:
     - formFields
     - formId
     type: object
-  github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO:
+  github_com_giridhar-m-a_custom_form_app_internal_dto.CreateInvitationDTO:
+    properties:
+      email:
+        type: string
+      form_id:
+        type: string
+      name:
+        type: string
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        minLength: 2
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse:
+    properties:
+      message:
+        example: Invalid request payload
+        type: string
+      status:
+        example: 400
+        type: integer
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldOptionResponseDto:
+    properties:
+      fieldId:
+        type: string
+      isAnswer:
+        type: boolean
+      optionId:
+        type: string
+      optionLabel:
+        type: string
+      ordering:
+        type: integer
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto:
     properties:
       fieldId:
         type: string
@@ -63,41 +237,19 @@ definitions:
       formId:
         type: string
       isRequired:
-        $ref: '#/definitions/sql.NullBool'
+        type: boolean
       options:
         items:
-          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldOptionDTO'
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldOptionResponseDto'
         type: array
       ordering:
         type: integer
     type: object
-  github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldOptionDTO:
-    properties:
-      fieldId:
-        $ref: '#/definitions/uuid.NullUUID'
-      isAnswer:
-        $ref: '#/definitions/sql.NullBool'
-      optionId:
-        type: string
-      optionLabel:
-        type: string
-      ordering:
-        type: integer
-    type: object
-  github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest:
-    properties:
-      email:
-        type: string
-      password:
-        minLength: 6
-        type: string
-    required:
-    - email
-    - password
-    type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse:
     properties:
       access:
+        type: string
+      closingTime:
         type: string
       createdAt:
         type: string
@@ -107,6 +259,14 @@ definitions:
         type: string
       id:
         type: string
+      isScheduleCompleted:
+        type: boolean
+      isScheduled:
+        type: boolean
+      scheduledTime:
+        type: string
+      schedulingId:
+        type: string
       status:
         type: string
       title:
@@ -114,23 +274,155 @@ definitions:
       updatedAt:
         type: string
     type: object
-  sql.NullBool:
+  github_com_giridhar-m-a_custom_form_app_internal_dto.InvitationListResponse:
     properties:
-      bool:
-        type: boolean
-      valid:
-        description: Valid is true if Bool is not NULL
-        type: boolean
-    type: object
-  uuid.NullUUID:
-    properties:
-      uuid:
+      data:
+        items:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.InvitationResponseDto'
+        type: array
+      message:
+        example: Invitations retrieved successfully
         type: string
-      valid:
-        description: Valid is true if UUID is not NULL
-        type: boolean
+      pagination:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse'
+      status:
+        example: 200
+        type: integer
     type: object
-host: localhost:8000
+  github_com_giridhar-m-a_custom_form_app_internal_dto.InvitationResponseDto:
+    properties:
+      formId:
+        type: string
+      invitationId:
+        type: string
+      invitedBy:
+        type: string
+      invitedEmail:
+        type: string
+      invitedName:
+        type: string
+      status:
+        type: string
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      totalPages:
+        type: integer
+      totalRecords:
+        type: integer
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.PasswordResetDto:
+    properties:
+      confirmPassword:
+        minLength: 6
+        type: string
+      newPassword:
+        minLength: 6
+        type: string
+      token:
+        type: string
+    required:
+    - confirmPassword
+    - newPassword
+    - token
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.PasswordResetRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO:
+    properties:
+      access:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess'
+      closingTime:
+        type: string
+      description:
+        type: string
+      isScheduleCompleted:
+        type: boolean
+      isScheduled:
+        type: boolean
+      scheduledTime:
+        type: string
+      schedulingId:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus'
+      title:
+        type: string
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormFieldsDTO:
+    properties:
+      formFields:
+        items:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormFieldDTO'
+        type: array
+      formId:
+        type: string
+      removedFieldOptions:
+        items:
+          type: string
+        type: array
+      removedFields:
+        items:
+          type: string
+        type: array
+    required:
+    - formFields
+    - formId
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateUserDetailsDTO:
+    properties:
+      userFullName:
+        type: string
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateUserPasswordDTO:
+    properties:
+      oldPassword:
+        type: string
+      userPassword:
+        type: string
+      userVerifyPassword:
+        type: string
+    required:
+    - oldPassword
+    - userPassword
+    - userVerifyPassword
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.User:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      fullName:
+        type: string
+      id:
+        type: string
+      profilePic:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.UserProfilePicResponse:
+    properties:
+      fileName:
+        type: string
+      fileSize:
+        type: integer
+      fileType:
+        type: string
+      userId:
+        type: string
+    type: object
+host: be.custom-form-app.home
 info:
   contact:
     email: m.a.giridhar08@gmail.com
@@ -295,26 +587,78 @@ paths:
       summary: Login with email and password
       tags:
       - Authentication
+  /auth/refresh-token:
+    get:
+      consumes:
+      - application/json
+      description: Verifies the access token and returns the user ID
+      parameters:
+      - description: Refresh token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token verification successful
+          schema:
+            properties:
+              data:
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Verify Access Token
+      tags:
+      - Authentication
   /auth/register:
     post:
       consumes:
       - application/json
       description: Registers a user with name, email, and password
       parameters:
-      - in: query
-        name: email
+      - description: User registration payload
+        in: body
+        name: form
         required: true
-        type: string
-      - in: query
-        minLength: 2
-        name: name
-        required: true
-        type: string
-      - in: query
-        minLength: 6
-        name: password
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordRegisterRequest'
       produces:
       - application/json
       responses:
@@ -381,6 +725,60 @@ paths:
       summary: Register a new user
       tags:
       - Authentication
+  /auth/request-password-reset:
+    post:
+      consumes:
+      - application/json
+      description: Reset the user's password using the provided token.
+      parameters:
+      - description: Form data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PasswordResetDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset request sent successfully
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Reset User Password
+      tags:
+      - Authentication
   /auth/verify:
     get:
       consumes:
@@ -439,67 +837,7 @@ paths:
       summary: Verify Access Token
       tags:
       - Authentication
-  /auth/verify-refresh-token:
-    get:
-      consumes:
-      - application/json
-      description: Verifies the access token and returns the user ID
-      parameters:
-      - description: Refresh token
-        in: query
-        name: token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Token verification successful
-          schema:
-            properties:
-              data:
-                properties:
-                  accessToken:
-                    type: string
-                  refreshToken:
-                    type: string
-                type: object
-              message:
-                type: string
-              status:
-                type: integer
-            type: object
-        "400":
-          description: Invalid request
-          schema:
-            properties:
-              message:
-                type: string
-              status:
-                type: integer
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            properties:
-              message:
-                type: string
-              status:
-                type: integer
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            properties:
-              message:
-                type: string
-              status:
-                type: integer
-            type: object
-      summary: Verify Access Token
-      tags:
-      - Authentication
-  /file-upload:
+  /files/file-upload:
     post:
       consumes:
       - multipart/form-data
@@ -536,6 +874,88 @@ paths:
       tags:
       - Files
   /forms:
+    get:
+      consumes:
+      - application/json
+      description: Gets forms for the authenticated user
+      parameters:
+      - in: query
+        name: access
+        type: string
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Forms retrieved successfully
+          schema:
+            properties:
+              ' pagination':
+                properties:
+                  ' limit':
+                    type: integer
+                  ' page':
+                    type: integer
+                  ' totalPages':
+                    type: integer
+                  totalRecords:
+                    type: integer
+                type: object
+              data:
+                items:
+                  $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse'
+                type: array
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get forms
+      tags:
+      - Forms
     post:
       consumes:
       - application/json
@@ -593,7 +1013,241 @@ paths:
       summary: Create a new form
       tags:
       - Forms
+  /forms/{formID}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a form for the authenticated user
+      parameters:
+      - description: Form ID
+        in: path
+        name: formID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Form deleted successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse'
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete form
+      tags:
+      - Forms
+    get:
+      consumes:
+      - application/json
+      description: Gets a single form for the authenticated user
+      parameters:
+      - description: Form ID
+        in: path
+        name: formID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Form retrieved successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse'
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get single form
+      tags:
+      - Forms
+    patch:
+      consumes:
+      - application/json
+      description: Updates a form for the authenticated user
+      parameters:
+      - description: Form ID
+        in: path
+        name: formID
+        required: true
+        type: string
+      - description: Form fields data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Form updated successfully
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse'
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update form
+      tags:
+      - Forms
   /forms/fields:
+    patch:
+      consumes:
+      - application/json
+      description: Creates form fields for the authenticated user
+      parameters:
+      - description: Form fields data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormFieldsDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Form fields Updated successfully
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto'
+                type: array
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update form fields
+      tags:
+      - Forms
     post:
       consumes:
       - application/json
@@ -613,7 +1267,9 @@ paths:
           schema:
             properties:
               data:
-                $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreatedFormFieldDTO'
+                items:
+                  $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto'
+                type: array
               message:
                 type: string
               status:
@@ -651,6 +1307,65 @@ paths:
       summary: Create form fields
       tags:
       - Forms
+  /forms/fields/{formID}:
+    get:
+      consumes:
+      - application/json
+      description: Gets form fields for the authenticated user
+      parameters:
+      - description: Form ID
+        in: path
+        name: formID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Form fields retrieved successfully
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto'
+                type: array
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get form fields
+      tags:
+      - Forms
   /health:
     get:
       description: Returns OK if the API is running
@@ -666,7 +1381,234 @@ paths:
       summary: Check API health
       tags:
       - health
+  /invitations:
+    get:
+      consumes:
+      - application/json
+      description: GetInvitationByFormId retrieves invitations by form ID
+      parameters:
+      - enum:
+        - pending
+        - accepted
+        - failed
+        - submitted
+        in: query
+        name: exclude
+        type: string
+        x-enum-varnames:
+        - InvitationStatusPending
+        - InvitationStatusAccepted
+        - InvitationStatusFailed
+        - InvitationStatusSubmitted
+      - in: query
+        name: formId
+        type: string
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - enum:
+        - pending
+        - accepted
+        - failed
+        - submitted
+        in: query
+        name: status
+        type: string
+        x-enum-varnames:
+        - InvitationStatusPending
+        - InvitationStatusAccepted
+        - InvitationStatusFailed
+        - InvitationStatusSubmitted
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invitations retrieved successfully
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.InvitationListResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: GetInvitationByFormId retrieves invitations by form ID
+      tags:
+      - Invitation
+    post:
+      consumes:
+      - application/json
+      description: CreateSingleInvitation creates a single invitation
+      parameters:
+      - description: Invitation data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateInvitationDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: CreateSingleInvitation creates a single invitation
+      tags:
+      - Invitation
+  /invitations/{formId}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: NewInvitationHandler creates a new invitation handler
+      parameters:
+      - description: Form ID
+        in: path
+        name: formId
+        required: true
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: NewInvitationHandler creates a new invitation handler
+      tags:
+      - Invitation
+  /invitations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: DeleteInvitation deletes an invitation
+      parameters:
+      - description: Invitation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: DeleteInvitation deletes an invitation
+      tags:
+      - Invitation
   /users/me:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any'
+        "400":
+          description: Bad request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete User
+      tags:
+      - Users
     get:
       consumes:
       - application/json
@@ -677,29 +1619,7 @@ paths:
         "200":
           description: User retrieved successfully
           schema:
-            properties:
-              data:
-                properties:
-                  createdAt:
-                    type: string
-                  email:
-                    type: string
-                  fullName:
-                    type: string
-                  id:
-                    type: string
-                  profilePic:
-                    type: string
-                  profilePicId:
-                    type: string
-                  updatedAt:
-                    type: string
-                type: object
-              message:
-                type: string
-              status:
-                type: integer
-            type: object
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_User'
         "400":
           description: Bad request
           schema:
@@ -730,6 +1650,185 @@ paths:
       security:
       - BearerAuth: []
       summary: Get current user details
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      description: Updates the details of the authenticated user
+      parameters:
+      - description: Form data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateUserDetailsDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_User'
+        "400":
+          description: Bad request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user details
+      tags:
+      - Users
+  /users/me/profile-pic:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes the authenticated user's profile picture
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile picture deleted successfully
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any'
+        "400":
+          description: Bad request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete User Profile Picture
+      tags:
+      - Users
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update the user's profile picture
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile picture updated successfully
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_UserProfilePicResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload a User Profile Picture
+      tags:
+      - Users
+  /users/me/update-password:
+    put:
+      consumes:
+      - application/json
+      description: Changes the password of the authenticated user
+      parameters:
+      - description: Form data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateUserPasswordDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated User Password successfully
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_User'
+        "400":
+          description: Bad request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Change password
       tags:
       - Users
 schemes:

@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	"github.com/google/uuid"
 )
@@ -19,18 +20,18 @@ RETURNING option_id, field_id, option_label, ordering, is_answer
 `
 
 type CreateFieldOptionParams struct {
-	FieldID     uuid.NullUUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	FieldID     uuid.NullUUID `json:"field_id"`
+	OptionLabel string        `json:"option_label"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"is_answer"`
 }
 
 type CreateFieldOptionRow struct {
-	OptionID    uuid.UUID
-	FieldID     uuid.NullUUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	OptionID    uuid.UUID     `json:"option_id"`
+	FieldID     uuid.NullUUID `json:"field_id"`
+	OptionLabel string        `json:"option_label"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"is_answer"`
 }
 
 func (q *Queries) CreateFieldOption(ctx context.Context, arg CreateFieldOptionParams) (CreateFieldOptionRow, error) {
@@ -52,40 +53,75 @@ func (q *Queries) CreateFieldOption(ctx context.Context, arg CreateFieldOptionPa
 }
 
 const createForm = `-- name: CreateForm :one
-INSERT INTO forms (form_title, form_description, created_by)
-VALUES ($1, $2, $3)
-RETURNING form_id, form_title, form_description, created_by, form_created_at, form_updated_at, form_status, form_access
+INSERT INTO forms (
+  form_title,
+  form_description,
+  created_by,
+  form_access,
+  scheduled_time,
+  closing_time,
+  is_scheduled
+)
+VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5,
+  $6,
+  $7
+)
+RETURNING
+  form_id,
+  form_title,
+  form_description,
+  form_status,
+  form_access,
+  form_created_at,
+  form_updated_at,
+  created_by,
+  scheduling_id,
+  scheduled_time,
+  closing_time,
+  is_schedule_completed,
+  is_scheduled
 `
 
 type CreateFormParams struct {
-	FormTitle       string
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
+	FormTitle       string         `json:"form_title"`
+	FormDescription sql.NullString `json:"form_description"`
+	CreatedBy       uuid.NullUUID  `json:"created_by"`
+	FormAccess      NullFormAccess `json:"form_access"`
+	ScheduledTime   sql.NullTime   `json:"scheduled_time"`
+	ClosingTime     sql.NullTime   `json:"closing_time"`
+	IsScheduled     sql.NullBool   `json:"is_scheduled"`
 }
 
-type CreateFormRow struct {
-	FormID          uuid.UUID
-	FormTitle       string
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
-	FormCreatedAt   sql.NullTime
-	FormUpdatedAt   sql.NullTime
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
-}
-
-func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (CreateFormRow, error) {
-	row := q.db.QueryRowContext(ctx, createForm, arg.FormTitle, arg.FormDescription, arg.CreatedBy)
-	var i CreateFormRow
+func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (Form, error) {
+	row := q.db.QueryRowContext(ctx, createForm,
+		arg.FormTitle,
+		arg.FormDescription,
+		arg.CreatedBy,
+		arg.FormAccess,
+		arg.ScheduledTime,
+		arg.ClosingTime,
+		arg.IsScheduled,
+	)
+	var i Form
 	err := row.Scan(
 		&i.FormID,
 		&i.FormTitle,
 		&i.FormDescription,
-		&i.CreatedBy,
-		&i.FormCreatedAt,
-		&i.FormUpdatedAt,
 		&i.FormStatus,
 		&i.FormAccess,
+		&i.FormCreatedAt,
+		&i.FormUpdatedAt,
+		&i.CreatedBy,
+		&i.SchedulingID,
+		&i.ScheduledTime,
+		&i.ClosingTime,
+		&i.IsScheduleCompleted,
+		&i.IsScheduled,
 	)
 	return i, err
 }
@@ -97,20 +133,20 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 `
 
 type CreateFormFieldParams struct {
-	FormID     uuid.UUID
-	FieldLabel string
-	FieldType  string
-	IsRequired sql.NullBool
-	Ordering   int32
+	FormID     uuid.UUID         `json:"form_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
 }
 
 type CreateFormFieldRow struct {
-	FieldID    uuid.UUID
-	FieldLabel string
-	FieldType  string
-	IsRequired sql.NullBool
-	Ordering   int32
-	FormID     uuid.UUID
+	FieldID    uuid.UUID         `json:"field_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
+	FormID     uuid.UUID         `json:"form_id"`
 }
 
 func (q *Queries) CreateFormField(ctx context.Context, arg CreateFormFieldParams) (CreateFormFieldRow, error) {
@@ -140,11 +176,11 @@ RETURNING option_id, field_id, option_label, ordering, is_answer
 `
 
 type DeleteFieldOptionRow struct {
-	OptionID    uuid.UUID
-	FieldID     uuid.NullUUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	OptionID    uuid.UUID     `json:"option_id"`
+	FieldID     uuid.NullUUID `json:"field_id"`
+	OptionLabel string        `json:"option_label"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"is_answer"`
 }
 
 func (q *Queries) DeleteFieldOption(ctx context.Context, optionID uuid.UUID) (DeleteFieldOptionRow, error) {
@@ -167,14 +203,14 @@ RETURNING form_id, form_title, form_description, created_by, form_created_at, fo
 `
 
 type DeleteFormRow struct {
-	FormID          uuid.UUID
-	FormTitle       string
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
-	FormCreatedAt   sql.NullTime
-	FormUpdatedAt   sql.NullTime
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
+	FormID          uuid.UUID      `json:"form_id"`
+	FormTitle       string         `json:"form_title"`
+	FormDescription sql.NullString `json:"form_description"`
+	CreatedBy       uuid.NullUUID  `json:"created_by"`
+	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
+	FormStatus      NullFormStatus `json:"form_status"`
+	FormAccess      NullFormAccess `json:"form_access"`
 }
 
 func (q *Queries) DeleteForm(ctx context.Context, formID uuid.UUID) (DeleteFormRow, error) {
@@ -200,12 +236,12 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 `
 
 type DeleteFormFieldRow struct {
-	FieldID    uuid.UUID
-	FieldLabel string
-	FieldType  string
-	IsRequired sql.NullBool
-	Ordering   int32
-	FormID     uuid.UUID
+	FieldID    uuid.UUID         `json:"field_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
+	FormID     uuid.UUID         `json:"form_id"`
 }
 
 func (q *Queries) DeleteFormField(ctx context.Context, fieldID uuid.UUID) (DeleteFormFieldRow, error) {
@@ -223,7 +259,7 @@ func (q *Queries) DeleteFormField(ctx context.Context, fieldID uuid.UUID) (Delet
 }
 
 const getFormByID = `-- name: GetFormByID :one
-SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by
+SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled
 FROM forms
 WHERE form_id = $1
 `
@@ -240,6 +276,11 @@ func (q *Queries) GetFormByID(ctx context.Context, formID uuid.UUID) (Form, erro
 		&i.FormCreatedAt,
 		&i.FormUpdatedAt,
 		&i.CreatedBy,
+		&i.SchedulingID,
+		&i.ScheduledTime,
+		&i.ClosingTime,
+		&i.IsScheduleCompleted,
+		&i.IsScheduled,
 	)
 	return i, err
 }
@@ -270,7 +311,7 @@ func (q *Queries) GetFormFieldOptionsMap(ctx context.Context, formID uuid.UUID) 
 }
 
 const getFormFieldsWithOptions = `-- name: GetFormFieldsWithOptions :many
-SELECT 
+SELECT
     ff.field_id AS "fieldId",
     ff.field_label AS "fieldLabel",
     ff.field_type AS "fieldType",
@@ -288,7 +329,7 @@ SELECT
             ) ORDER BY fo.ordering
         ) FILTER (WHERE fo.option_id IS NOT NULL),
         '[]'
-    ) AS "options"
+    )::jsonb AS "options"
 FROM form_fields ff
 LEFT JOIN form_field_options fo ON ff.field_id = fo.field_id
 WHERE ff.form_id = $1
@@ -297,13 +338,13 @@ ORDER BY ff.ordering
 `
 
 type GetFormFieldsWithOptionsRow struct {
-	FieldId    uuid.UUID
-	FieldLabel string
-	FieldType  string
-	IsRequired sql.NullBool
-	Ordering   int32
-	FormId     uuid.UUID
-	Options    interface{}
+	FieldId    uuid.UUID         `json:"fieldId"`
+	FieldLabel string            `json:"fieldLabel"`
+	FieldType  NullFormFieldType `json:"fieldType"`
+	IsRequired sql.NullBool      `json:"isRequired"`
+	Ordering   int32             `json:"ordering"`
+	FormId     uuid.UUID         `json:"formId"`
+	Options    json.RawMessage   `json:"options"`
 }
 
 func (q *Queries) GetFormFieldsWithOptions(ctx context.Context, formID uuid.UUID) ([]GetFormFieldsWithOptionsRow, error) {
@@ -338,41 +379,68 @@ func (q *Queries) GetFormFieldsWithOptions(ctx context.Context, formID uuid.UUID
 }
 
 const listForms = `-- name: ListForms :many
-SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by
+SELECT
+    form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled,
+    COUNT(*) OVER() as total_count
 FROM forms
 WHERE
     created_by = $1
-    AND ($2 IS NULL
-         OR form_title ILIKE '%' || $2 || '%'
-         OR form_description ILIKE '%' || $2 || '%')
-    AND ($3 IS NULL OR form_status = $3)
-    AND ($4 IS NULL OR form_access = $4)
+    AND (
+        $2::text IS NULL
+        OR form_title ILIKE '%' || $2::text || '%'
+        OR form_description ILIKE '%' || $2::text || '%'
+    )
+    AND ($3::form_status IS NULL OR form_status = $3::form_status)
+    AND ($4::form_access IS NULL OR form_access = $4::form_access)
 ORDER BY
-    CASE LOWER(COALESCE($5, 'created'))
-        WHEN 'title' THEN form_title
-        WHEN 'status' THEN form_status
-        WHEN 'access' THEN form_access
-        WHEN 'updated' THEN form_updated_at
-        ELSE form_created_at
-    END
-    /* Direction: 'asc' or 'desc' */
-    COLLATE "C" 
-    /* Note: SQLC currently does not directly allow dynamic ASC/DESC, handle in app code if needed */
-LIMIT COALESCE($7, 10)
-OFFSET COALESCE($6, 0)
+    CASE
+        WHEN COALESCE($5::text, '-updated') = 'updated'
+            THEN form_updated_at
+    END DESC,
+    CASE
+        WHEN COALESCE($5::text, '-updated') = '-updated'
+            THEN form_updated_at
+    END ASC,
+    CASE
+        WHEN COALESCE($5::text, '-updated') = 'title'
+            THEN form_title
+    END ASC,
+    CASE
+        WHEN COALESCE($5::text, '-updated') = '-title'
+            THEN form_title
+    END DESC
+LIMIT COALESCE($7::int, 10)
+OFFSET COALESCE($6::int, 0)
 `
 
 type ListFormsParams struct {
-	CreatedBy  uuid.NullUUID
-	Search     interface{}
-	FormStatus interface{}
-	FormAccess interface{}
-	ShortBy    interface{}
-	Offset     interface{}
-	Limit      interface{}
+	CreatedBy  uuid.NullUUID  `json:"created_by"`
+	Search     sql.NullString `json:"search"`
+	FormStatus NullFormStatus `json:"form_status"`
+	FormAccess NullFormAccess `json:"form_access"`
+	ShortBy    sql.NullString `json:"short_by"`
+	Offset     sql.NullInt32  `json:"offset"`
+	Limit      sql.NullInt32  `json:"limit"`
 }
 
-func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]Form, error) {
+type ListFormsRow struct {
+	FormID              uuid.UUID      `json:"form_id"`
+	FormTitle           string         `json:"form_title"`
+	FormDescription     sql.NullString `json:"form_description"`
+	FormStatus          NullFormStatus `json:"form_status"`
+	FormAccess          NullFormAccess `json:"form_access"`
+	FormCreatedAt       sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt       sql.NullTime   `json:"form_updated_at"`
+	CreatedBy           uuid.NullUUID  `json:"created_by"`
+	SchedulingID        uuid.NullUUID  `json:"scheduling_id"`
+	ScheduledTime       sql.NullTime   `json:"scheduled_time"`
+	ClosingTime         sql.NullTime   `json:"closing_time"`
+	IsScheduleCompleted sql.NullBool   `json:"is_schedule_completed"`
+	IsScheduled         sql.NullBool   `json:"is_scheduled"`
+	TotalCount          int64          `json:"total_count"`
+}
+
+func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFormsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listForms,
 		arg.CreatedBy,
 		arg.Search,
@@ -386,9 +454,9 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]Form, e
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Form
+	var items []ListFormsRow
 	for rows.Next() {
-		var i Form
+		var i ListFormsRow
 		if err := rows.Scan(
 			&i.FormID,
 			&i.FormTitle,
@@ -398,6 +466,12 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]Form, e
 			&i.FormCreatedAt,
 			&i.FormUpdatedAt,
 			&i.CreatedBy,
+			&i.SchedulingID,
+			&i.ScheduledTime,
+			&i.ClosingTime,
+			&i.IsScheduleCompleted,
+			&i.IsScheduled,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -423,18 +497,18 @@ RETURNING option_id, field_id, option_label, ordering, is_answer
 `
 
 type UpdateFieldOptionParams struct {
-	OptionID    uuid.UUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	OptionID    uuid.UUID    `json:"option_id"`
+	OptionLabel string       `json:"option_label"`
+	Ordering    int32        `json:"ordering"`
+	IsAnswer    sql.NullBool `json:"is_answer"`
 }
 
 type UpdateFieldOptionRow struct {
-	OptionID    uuid.UUID
-	FieldID     uuid.NullUUID
-	OptionLabel string
-	Ordering    int32
-	IsAnswer    sql.NullBool
+	OptionID    uuid.UUID     `json:"option_id"`
+	FieldID     uuid.NullUUID `json:"field_id"`
+	OptionLabel string        `json:"option_label"`
+	Ordering    int32         `json:"ordering"`
+	IsAnswer    sql.NullBool  `json:"is_answer"`
 }
 
 func (q *Queries) UpdateFieldOption(ctx context.Context, arg UpdateFieldOptionParams) (UpdateFieldOptionRow, error) {
@@ -460,52 +534,71 @@ UPDATE forms
 SET
   form_title = COALESCE($1, form_title),
   form_description = COALESCE($2, form_description),
-  created_by = COALESCE($3, created_by),
-  form_status = COALESCE($4, form_status),
-  form_access = COALESCE($5, form_access)
-WHERE form_id = $6
-RETURNING form_id, form_title, form_description, created_by, form_created_at, form_updated_at, form_status, form_access
+  form_status = COALESCE($3, form_status),
+  form_access = COALESCE($4, form_access),
+  scheduling_id = COALESCE($5, scheduling_id),
+  scheduled_time = COALESCE($6, scheduled_time),
+  closing_time = COALESCE($7, closing_time),
+  is_schedule_completed = COALESCE($8, is_schedule_completed),
+  is_scheduled = COALESCE($9, is_scheduled)
+WHERE form_id = $10
+RETURNING
+  form_id,
+  form_title,
+  form_description,
+  form_status,
+  form_access,
+  form_created_at,
+  form_updated_at,
+  created_by,
+  scheduling_id,
+  scheduled_time,
+  closing_time,
+  is_schedule_completed,
+  is_scheduled
 `
 
 type UpdateFormParams struct {
-	FormTitle       sql.NullString
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
-	FormID          uuid.UUID
+	FormTitle           sql.NullString `json:"form_title"`
+	FormDescription     sql.NullString `json:"form_description"`
+	FormStatus          NullFormStatus `json:"form_status"`
+	FormAccess          NullFormAccess `json:"form_access"`
+	SchedulingID        uuid.NullUUID  `json:"scheduling_id"`
+	ScheduledTime       sql.NullTime   `json:"scheduled_time"`
+	ClosingTime         sql.NullTime   `json:"closing_time"`
+	IsScheduleCompleted sql.NullBool   `json:"is_schedule_completed"`
+	IsScheduled         sql.NullBool   `json:"is_scheduled"`
+	FormID              uuid.UUID      `json:"form_id"`
 }
 
-type UpdateFormRow struct {
-	FormID          uuid.UUID
-	FormTitle       string
-	FormDescription sql.NullString
-	CreatedBy       uuid.NullUUID
-	FormCreatedAt   sql.NullTime
-	FormUpdatedAt   sql.NullTime
-	FormStatus      NullFormStatus
-	FormAccess      NullFormAccess
-}
-
-func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (UpdateFormRow, error) {
+func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (Form, error) {
 	row := q.db.QueryRowContext(ctx, updateForm,
 		arg.FormTitle,
 		arg.FormDescription,
-		arg.CreatedBy,
 		arg.FormStatus,
 		arg.FormAccess,
+		arg.SchedulingID,
+		arg.ScheduledTime,
+		arg.ClosingTime,
+		arg.IsScheduleCompleted,
+		arg.IsScheduled,
 		arg.FormID,
 	)
-	var i UpdateFormRow
+	var i Form
 	err := row.Scan(
 		&i.FormID,
 		&i.FormTitle,
 		&i.FormDescription,
-		&i.CreatedBy,
-		&i.FormCreatedAt,
-		&i.FormUpdatedAt,
 		&i.FormStatus,
 		&i.FormAccess,
+		&i.FormCreatedAt,
+		&i.FormUpdatedAt,
+		&i.CreatedBy,
+		&i.SchedulingID,
+		&i.ScheduledTime,
+		&i.ClosingTime,
+		&i.IsScheduleCompleted,
+		&i.IsScheduled,
 	)
 	return i, err
 }
@@ -522,20 +615,20 @@ RETURNING field_id, field_label, field_type, is_required, ordering, form_id
 `
 
 type UpdateFormFieldParams struct {
-	FieldID    uuid.UUID
-	FieldLabel string
-	FieldType  string
-	IsRequired sql.NullBool
-	Ordering   int32
+	FieldID    uuid.UUID         `json:"field_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
 }
 
 type UpdateFormFieldRow struct {
-	FieldID    uuid.UUID
-	FieldLabel string
-	FieldType  string
-	IsRequired sql.NullBool
-	Ordering   int32
-	FormID     uuid.UUID
+	FieldID    uuid.UUID         `json:"field_id"`
+	FieldLabel string            `json:"field_label"`
+	FieldType  NullFormFieldType `json:"field_type"`
+	IsRequired sql.NullBool      `json:"is_required"`
+	Ordering   int32             `json:"ordering"`
+	FormID     uuid.UUID         `json:"form_id"`
 }
 
 func (q *Queries) UpdateFormField(ctx context.Context, arg UpdateFormFieldParams) (UpdateFormFieldRow, error) {

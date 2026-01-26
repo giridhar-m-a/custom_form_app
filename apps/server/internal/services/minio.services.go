@@ -18,16 +18,16 @@ var MinioClient *minio.Client
 
 // InitMinio initializes the MinIO client
 func InitMinio() {
-	endpoint := utils.GetEnv("MINIO_SERVER", "")
+	// endpoint := utils.GetEnv("MINIO_SERVER", "")
 	accessKey := utils.GetEnv("MINIO_USER", "")
 	secretKey := utils.GetEnv("MINIO_PASSWORD", "")
 	useSSL := utils.GetEnvAsBool("MINIO_USE_SSL", false)
-	client, err := minio.New(endpoint, &minio.Options{
+	client, err := minio.New("minio.custom-form-app.home", &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
 	})
 	if err != nil {
-		log.Printf("Failed to initialize MinIO client: %v", err)
+		log.Printf("Failed to initialize Storage: %v", err)
 	}
 
 	MinioClient = client
@@ -59,15 +59,32 @@ func MinioUploadFile(bucketName, objectName string, reader io.Reader, size int64
 	return fileRes, nil
 }
 
+func MinioDeleteFile(bucketName, objectName string) error {
+	if MinioClient == nil {
+		log.Println("MinIO client not initialized")
+		return errors.New("MinIO client not initialized")
+	}
+
+	err := MinioClient.RemoveObject(context.Background(), bucketName, objectName, minio.RemoveObjectOptions{})
+	if err != nil {
+		log.Println("Failed to delete file from MinIO:", err)
+		return err
+	}
+
+	return nil
+}
+
 // GetPresignedURL generates a signed URL valid for `expiry` duration
 func GetMinioSignedURL(bucketName, objectName string, expiry time.Duration, versionID string) (*url.URL, error) {
 	if MinioClient == nil {
-		log.Fatalln("MinIO client not initialized")
+		log.Printf("MinIO client not initialized")
+		return nil, errors.New("MinIO client not initialized")
 	}
-
+	minioClientDomain := utils.GetEnv("MINIO_FRONTEND_DOMAIN", "minio.custom-form-app.home")
 	reqParams := make(url.Values) // additional query params if needed
 	if versionID != "" {
 		reqParams.Set("versionId", versionID)
+		reqParams.Set("Host", minioClientDomain)
 	}
 	presignedURL, err := MinioClient.PresignedGetObject(
 		context.Background(),

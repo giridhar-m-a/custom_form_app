@@ -53,6 +53,7 @@ ADD CONSTRAINT uq_user_profile_pic UNIQUE (user_profile_pic_id);
 CREATE TYPE form_status AS ENUM ('draft', 'published', 'archived', 'closed');
 CREATE TYPE form_access AS ENUM ('public', 'restricted');
 CREATE TYPE invitation_status AS ENUM ('opened', 'submitted', 'invited', 'expired');
+CREATE TYPE form_field_type AS ENUM ('text', 'number', 'date', 'time', 'datetime', 'email', 'phone', 'url', 'file', 'image', 'video', 'audio', 'checkbox', 'radio', 'dropdown', 'multiselect', 'rating', 'slider', 'color', 'textArea');
 
 -----------------------------
 -- Table: forms
@@ -95,7 +96,7 @@ ON forms USING gin (to_tsvector('english', form_title || ' ' || form_description
 CREATE TABLE IF NOT EXISTS form_fields (
     field_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     field_label TEXT NOT NULL,
-    field_type VARCHAR(255) NOT NULL,
+    field_type form_field_type DEFAULT 'text',
     form_id UUID NOT NULL REFERENCES forms(form_id) ON DELETE CASCADE,
     is_required BOOLEAN DEFAULT FALSE,
     ordering INT NOT NULL

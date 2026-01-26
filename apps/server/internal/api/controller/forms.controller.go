@@ -15,5 +15,11 @@ func RegisterFormsController(rg *gin.RouterGroup) {
 	{
 		forms.POST("/", formHandler.CreateForm)
 		forms.POST("/fields", formHandler.CreateFormFields)
+		forms.GET("/", formHandler.GetForms)
+		forms.GET("/:formID", formHandler.GetSingleForm)
+		forms.PATCH("/:formID", formHandler.UpdateForm)
+		forms.DELETE("/:formID", formHandler.DeleteForm)
+		forms.GET("/fields/:formID", formHandler.GetFormFields)
+		forms.PATCH("/fields", formHandler.UpdateFormFields)
 	}
 }

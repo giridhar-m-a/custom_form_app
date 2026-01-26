@@ -45,6 +45,7 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TYPE IF EXISTS invitation_status;
 DROP TYPE IF EXISTS form_status;
 DROP TYPE IF EXISTS form_access;
+DROP TYPE IF EXISTS form_field_type;
 
 -- Drop extension
 DROP EXTENSION IF EXISTS pgcrypto;

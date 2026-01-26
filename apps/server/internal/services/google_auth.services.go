@@ -6,6 +6,7 @@ import (
 
 	"github.com/giridhar-m-a/custom_form_app/configs"
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
+	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 )
 
@@ -14,11 +15,11 @@ type GoogleAuthService interface {
 }
 
 type googleAuthService struct {
-	repo UserService
+	service UserService
 }
 
-func NewGoogleAuthService(repo UserService) GoogleAuthService {
-	return &googleAuthService{repo: repo}
+func NewGoogleAuthService(service UserService) GoogleAuthService {
+	return &googleAuthService{service: service}
 }
 
 func (s *googleAuthService) Authenticate(ctx context.Context, code string) (sqlc.GetUserByGoogleIdRow, error) {
@@ -34,32 +35,34 @@ func (s *googleAuthService) Authenticate(ctx context.Context, code string) (sqlc
 		return sqlc.GetUserByGoogleIdRow{}, err
 	}
 
-	existingUser, err := s.repo.GetUserDetailsByGoogleId(ctx, userInfo["id"].(string))
+	existingUser, err := s.service.GetUserDetailsByGoogleId(ctx, userInfo["id"].(string))
 	if err == nil {
 		return existingUser, nil
 	}
 
-	existingMailUser, err := s.repo.GetUserDetailsByEmail(ctx, userInfo["email"].(string))
+	existingMailUser, err := s.service.GetUserDetailsByEmail(ctx, userInfo["email"].(string))
+	id := userInfo["id"].(string)
+
+	dto := dto.UserUpdateDTO{
+		UserGoogleId: id,
+	}
+
 	if err == nil && existingMailUser.UserID.String() != "" && existingMailUser.UserEmail == userInfo["email"].(string) {
-		updatedUser, err := s.repo.UpdateUser(ctx, sqlc.UpdateUserParams{
-			UserGoogleID: utils.ConvertStringToNullString(userInfo["id"].(string)),
-			UserID:       existingMailUser.UserID,
-		})
+		updatedUser, err := s.service.UpdateUser(ctx, existingUser.UserID.String(), dto)
 		if err != nil {
 			log.Printf("GoogleAuthService: update user error: %v", err)
 			return sqlc.GetUserByGoogleIdRow{}, err
 		}
 		return sqlc.GetUserByGoogleIdRow{
-			UserID:           updatedUser.UserID,
-			UserEmail:        updatedUser.UserEmail,
-			UserFullName:     updatedUser.UserFullName,
-			UserCreatedAt:    updatedUser.UserCreatedAt,
-			UserUpdatedAt:    updatedUser.UserUpdatedAt,
-			UserProfilePicID: updatedUser.UserProfilePicID,
+			UserID:        updatedUser.UserID,
+			UserEmail:     updatedUser.UserEmail,
+			UserFullName:  updatedUser.UserFullName,
+			UserCreatedAt: updatedUser.UserCreatedAt,
+			UserUpdatedAt: updatedUser.UserUpdatedAt,
 		}, nil
 	}
 
-	newUser, err := s.repo.CreateUser(ctx, userInfo)
+	newUser, err := s.service.CreateUser(ctx, userInfo)
 	if err != nil {
 		log.Printf("GoogleAuthService: create user error: %v", err)
 		return sqlc.GetUserByGoogleIdRow{}, err
