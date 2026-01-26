@@ -8,5 +8,7 @@ export const AUTH_ROUTES = {
   },
   register: `${base}/register`,
   verify: `${base}/verify`,
-  refreshToken: `${base}/refresh-token`
+  refreshToken: `${base}/refresh-token`,
+  resetRequest: `${base}/request-password-reset`,
+  resetPassword: `${base}/reset-password`
 }

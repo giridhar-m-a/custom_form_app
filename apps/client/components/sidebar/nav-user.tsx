@@ -16,6 +16,7 @@ import Link from 'next/link'
 import { User } from '@/types/user.types'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/navigation'
+import { getFileUrl } from '@/lib/utils'
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar()
@@ -39,7 +40,9 @@ export function NavUser({ user }: { user: User }) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
-                {user.profilePic && user.fullName && <AvatarImage src={user.profilePic} alt={user.fullName} />}
+                {user.profilePic && user.fullName && (
+                  <AvatarImage src={getFileUrl(user.profilePic)} alt={user.fullName} />
+                )}
                 <AvatarFallback className="rounded-lg">{user?.fullName?.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -68,7 +71,7 @@ export function NavUser({ user }: { user: User }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href={'/dashboard/account'}>
+              <Link href={'/account'}>
                 <DropdownMenuItem>
                   <BadgeCheck />
                   Account
@@ -76,7 +79,7 @@ export function NavUser({ user }: { user: User }) {
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="bg-red-600 hover:!bg-red-700 hover:cursor-pointer">
+            <DropdownMenuItem onClick={logout} className="bg-red-600 hover:bg-red-700! hover:cursor-pointer">
               <LogOut />
               Log out
             </DropdownMenuItem>

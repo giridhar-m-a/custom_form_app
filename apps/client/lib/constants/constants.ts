@@ -1,1 +1,1 @@
-export const unAuthorizedPages = new Set(['/'])
+export const unAuthorizedPages = new Set(['/', '/reset-password'])

@@ -3,7 +3,6 @@ export interface User {
   email: string
   fullName: string
   profilePic?: string
-  profilePicId?: string
   createdAt: string
   updatedAt: string
 }

@@ -169,7 +169,7 @@ class ApiConfig {
         status: response.status,
         message: response.data.message,
         data: response.data.data,
-        pagination: response.data.pagination 
+        pagination: response.data.pagination
       }
     } catch (error: any) {
       return errorHandler(error)
@@ -233,6 +233,26 @@ class ApiConfig {
       return errorHandler(error)
     }
   }
+
+  async PUT_FORM_DATA<T>(url: string, formData: FormData, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    try {
+      const response: AxiosResponse<ApiResponse<T>> = await this.axiosInstance.put(url, formData, {
+        ...config,
+        headers: {
+          ...config?.headers,
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      return {
+        status: response.status,
+        message: response.data.message,
+        data: response.data.data
+      }
+    } catch (error: any) {
+      return errorHandler(error)
+    }
+  }
 }
 
 // Create and export a singleton instance
@@ -246,4 +266,5 @@ export const PATCH = apiConfig.PATCH.bind(apiConfig)
 export const DELETE = apiConfig.DELETE.bind(apiConfig)
 export const UPLOAD_FILE = apiConfig.UPLOAD_FILE.bind(apiConfig)
 export const POST_FORM_DATA = apiConfig.POST_FORM_DATA.bind(apiConfig)
+export const PUT_FORM_DATA = apiConfig.PUT_FORM_DATA.bind(apiConfig)
 export default apiConfig

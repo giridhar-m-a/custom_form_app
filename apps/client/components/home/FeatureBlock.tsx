@@ -8,7 +8,7 @@ interface FeatureBlockProps {
 
 export const FeatureBlock: FC<FeatureBlockProps> = ({ icon: Icon, title, description }) => (
   <div className="flex items-start space-x-4 transition-transform hover:translate-x-1">
-    <div className="flex-shrink-0 p-3 rounded-full bg-indigo-500/20 text-indigo-400 shadow-inner">
+    <div className="shrink-0 p-3 rounded-full bg-indigo-500/20 text-indigo-400 shadow-inner">
       <Icon className="w-6 h-6" />
     </div>
     <div>

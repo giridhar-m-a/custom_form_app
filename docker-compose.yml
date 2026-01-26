@@ -1,3 +1,7 @@
+secrets:
+  cf-token:
+    file: ./traefik/cf-token
+
 services:
   db:
     image: postgres:15
@@ -24,20 +28,56 @@ services:
       - ./redis.acl:/usr/local/etc/redis/redis.acl:ro
     command: redis-server --aclfile /usr/local/etc/redis/redis.acl
 
-  minio:
-    image: minio/minio:latest
-    container_name: minio
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: rustfs
     ports:
       - "9000:9000" # MinIO API
       - "9001:9001" # MinIO Console
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      - RUSTFS_ADDRESS=0.0.0.0:9000
+      - RUSTFS_CONSOLE_ADDRESS=0.0.0.0:9001
+      - RUSTFS_CONSOLE_ENABLE=true
+      - RUSTFS_EXTERNAL_ADDRESS="http://minio.custom-form-app.home"
+      - RUSTFS_ACCESS_KEY=${MINIO_ROOT_USER}
+      - RUSTFS_SECRET_KEY=${MINIO_ROOT_PASSWORD}
     volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
+      - rustfs_data:/data
+      - rustfs_logs:/logs
+    networks:
+      - default
+    labels:
+      - "traefik.enable=true"
+
+      # MinIO API - root path
+      - "traefik.http.routers.minio-api.rule=Host(`minio.custom-form-app.home`)"
+      - "traefik.http.routers.minio-api.entrypoints=http"
+      # - "traefik.http.routers.minio-api.tls=true"
+      - "traefik.http.routers.minio-api.service=minio-api"
+      - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
+
+      # MinIO Console - /console path
+      - "traefik.http.routers.minio-console.rule=Host(`minio-console.custom-form-app.home`)"
+      - "traefik.http.routers.minio-console.entrypoints=http"
+      # - "traefik.http.routers.minio-console.tls=true"
+      - "traefik.http.routers.minio-console.priority=2"
+      - "traefik.http.routers.minio-console.service=minio-console-ui"
+      - "traefik.http.services.minio-console-ui.loadbalancer.server.port=9001"
+
+    #   # Strip /console prefix when forwarding to the console
+    #   - "traefik.http.middlewares.minio-console-stripprefix.stripprefix.prefixes=/console"
+    #   - "traefik.http.routers.minio-console.middlewares=minio-console-stripprefix"
+    # command: server /data/volume1 --console-address ":9001"
+    extra_hosts:
+      - "minio.custom-form-app.home:172.17.0.1"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "curl -f http://localhost:9000/health && curl -f http://localhost:9001/rustfs/console/health",
+        ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -54,15 +94,23 @@ services:
       - AIR_WATCHER_FORCE_POLLING=true
     env_file:
       - .env
+    ports:
+      - ${APP_PORT}:${APP_PORT}
     volumes:
       - ./apps/server:/app:delegated
       - air_tmp:/app/tmp
-    ports:
-      - ${APP_PORT}:${APP_PORT}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`be.custom-form-app.home`)"
+      - "traefik.http.routers.api.entrypoints=http"
+      # - "traefik.http.routers.api.tls=true"
+      - "traefik.http.services.api.loadbalancer.server.port=${APP_PORT}"
+    extra_hosts:
+      - "minio.custom-form-app.home:172.17.0.1"
     depends_on:
       - db
       - redis
-      - minio
+      - rustfs
 
   custom_form_client:
     build:
@@ -74,7 +122,7 @@ services:
     env_file:
       - .env
     environment:
-      - NEXT_PUBLIC_API_URL=http://custom_form_app_server:${APP_PORT}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_BACKEND_URL}
     ports:
       - "3000:3000"
     volumes:
@@ -84,13 +132,65 @@ services:
       - client_node_modules:/app/node_modules
       - client_next:/app/.next
       - client_turbo:/app/.turbo
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fe.rule=Host(`fe.custom-form-app.home`)"
+      - "traefik.http.routers.fe.entrypoints=http"
+      # - "traefik.http.routers.fe.tls=true"
+      - "traefik.http.services.fe.loadbalancer.server.port=3000"
+    extra_hosts:
+      - "minio.custom-form-app.home:172.17.0.1"
+      - "be.custom-form-app.home:172.17.0.1"
     depends_on:
       - custom_form_server
+
+  traefik:
+    image: traefik:latest # or traefik:v3.3 to pin a version
+    command: --configFile=/config/traefik.yaml
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true # helps to increase security
+    # secrets:
+    #   - cf-token # the secret at the top of this file
+    env_file:
+      - .env # store other secrets e.g., dashboard password
+    ports:
+      - 80:80
+      # - 10000:10000 # optional
+      # - 33073:33073 # optional
+    # environment:
+    # - TRAEFIK_DASHBOARD_CREDENTIALS=${TRAEFIK_DASHBOARD_CREDENTIALS}
+    # - CF_API_EMAIL=your@email.com # Cloudflare email
+    # - CF_DNS_API_TOKEN=YOUR-TOKEN # Cloudflare API Token
+    # - CF_DNS_API_TOKEN_FILE=/run/secrets/cf-token # see https://doc.traefik.io/traefik/https/acme/#providers
+    # token file is the proper way to do it
+    volumes:
+      - ./traefik:/config:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`custom-form-app.home`)"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+      - "traefik.http.routers.traefik.middlewares=traefik-auth"
+      # - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      # - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      # - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      # - "traefik.http.routers.traefik-secure.entrypointshttp"
+      # - "traefik.http.routers.traefik-secure.rule=Host(`custom-form-app.home`)"
+      # - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      # - "traefik.http.routers.traefik-secure.tls=true"
+      # # - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
+      # - "traefik.http.routers.traefik-secure.tls.domains[0].main=custom-form-app.home"
+      # - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.custom-form-app.home"
+      # - "traefik.http.routers.traefik-secure.service=api@internal"
 
 volumes:
   postgres_data:
   air_tmp:
-  minio_data:
+  rustfs_data:
+  rustfs_logs:
   client_node_modules: # Add this
   client_next: # Add this
   client_turbo: # Add this

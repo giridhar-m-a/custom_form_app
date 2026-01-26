@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextRequest } from 'next/server'
 import { unAuthorizedPages } from './lib/constants/constants'
-import { verifyRefreshToken, verifyToken } from './services/api/login/route'
+import { verifyRefreshToken, verifyToken } from './services/api/auth/route'
 
 export default async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname
@@ -10,7 +10,9 @@ export default async function proxy(req: NextRequest) {
   const refreshToken = req.cookies.get('refreshToken')?.value
 
   const isPublic = unAuthorizedPages.has(pathname)
-  const isDashboard = pathname.startsWith('/dashboard')
+  // const isDashboard = pathname.startsWith('/dashboard')
+  //
+  console.log('isPublic: ', isPublic)
 
   // ⛔ No token + protected route → send to login
   if (!accessToken && !isPublic) {
@@ -24,8 +26,10 @@ export default async function proxy(req: NextRequest) {
 
       // Token valid
       if (verifyResp.status === 200 && verifyResp.data?.userID) {
+        console.log('Token is valid')
         // ⛔ Do NOT redirect if already on dashboard
         if (isPublic) {
+          console.log('Redirecting to dashboard')
           return NextResponse.redirect(new URL('/dashboard', req.url))
         }
 
