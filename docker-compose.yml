@@ -43,11 +43,11 @@ services:
       retries: 3
     restart: unless-stopped
 
-  app:
+  custom_form_server:
     build:
-      context: .
+      context: ./apps/server
       dockerfile: Dockerfile.dev
-    container_name: custom_form_app_app
+    container_name: custom_form_app_server
     command: air -c .air.toml
     working_dir: /app
     environment:
@@ -55,7 +55,7 @@ services:
     env_file:
       - .env
     volumes:
-      - .:/app:delegated
+      - ./apps/server:/app:delegated
       - air_tmp:/app/tmp
     ports:
       - ${APP_PORT}:${APP_PORT}
@@ -64,7 +64,33 @@ services:
       - redis
       - minio
 
+  custom_form_client:
+    build:
+      context: ./apps/client
+      dockerfile: Dockerfile.dev
+    container_name: custom_form_app_client
+    working_dir: /app
+    command: sh -c "pnpm install && pnpm dev"
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://custom_form_app_server:${APP_PORT}
+    ports:
+      - "3000:3000"
+    volumes:
+      # Bind mount source code
+      - ./apps/client:/app
+      # Use named volumes for node_modules and cache (prevents permission issues)
+      - client_node_modules:/app/node_modules
+      - client_next:/app/.next
+      - client_turbo:/app/.turbo
+    depends_on:
+      - custom_form_server
+
 volumes:
   postgres_data:
   air_tmp:
   minio_data:
+  client_node_modules: # Add this
+  client_next: # Add this
+  client_turbo: # Add this

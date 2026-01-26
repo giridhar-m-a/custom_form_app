@@ -1,0 +1,15 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -buildvcs=false -o ./tmp/main ./cmd/server"
+  bin = "tmp/main"
+  full_bin = "tmp/main"
+  include_ext = ["go", "tpl", "tmpl", "html", "env", "internal/db/sqlc/*"]
+  exclude_dir = ["assets", "vendor", "internal/db/migrations", "internal/db/queries"]
+
+[watch]
+  dirs = ["."]
+
+[log]
+  time = true
