@@ -13,27 +13,25 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (user_full_name, user_email, user_google_id, user_profile_pic_id, user_password)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING user_id, user_full_name, user_email, user_google_id, user_profile_pic_id, user_created_at, user_updated_at
+INSERT INTO users (user_full_name, user_email, user_google_id, user_password)
+VALUES ($1, $2, $3, $4)
+RETURNING user_id, user_full_name, user_email, user_google_id, user_created_at, user_updated_at
 `
 
 type CreateUserParams struct {
-	UserFullName     string         `json:"user_full_name"`
-	UserEmail        string         `json:"user_email"`
-	UserGoogleID     sql.NullString `json:"user_google_id"`
-	UserProfilePicID uuid.NullUUID  `json:"user_profile_pic_id"`
-	UserPassword     sql.NullString `json:"user_password"`
+	UserFullName string         `json:"user_full_name"`
+	UserEmail    string         `json:"user_email"`
+	UserGoogleID sql.NullString `json:"user_google_id"`
+	UserPassword sql.NullString `json:"user_password"`
 }
 
 type CreateUserRow struct {
-	UserID           uuid.UUID      `json:"user_id"`
-	UserFullName     string         `json:"user_full_name"`
-	UserEmail        string         `json:"user_email"`
-	UserGoogleID     sql.NullString `json:"user_google_id"`
-	UserProfilePicID uuid.NullUUID  `json:"user_profile_pic_id"`
-	UserCreatedAt    sql.NullTime   `json:"user_created_at"`
-	UserUpdatedAt    sql.NullTime   `json:"user_updated_at"`
+	UserID        uuid.UUID      `json:"user_id"`
+	UserFullName  string         `json:"user_full_name"`
+	UserEmail     string         `json:"user_email"`
+	UserGoogleID  sql.NullString `json:"user_google_id"`
+	UserCreatedAt sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
@@ -41,7 +39,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 		arg.UserFullName,
 		arg.UserEmail,
 		arg.UserGoogleID,
-		arg.UserProfilePicID,
 		arg.UserPassword,
 	)
 	var i CreateUserRow
@@ -50,9 +47,47 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 		&i.UserFullName,
 		&i.UserEmail,
 		&i.UserGoogleID,
-		&i.UserProfilePicID,
 		&i.UserCreatedAt,
 		&i.UserUpdatedAt,
+	)
+	return i, err
+}
+
+const createUserProfilePic = `-- name: CreateUserProfilePic :one
+INSERT INTO user_images (file_name, file_size, file_type, user_id)
+VALUES ($1, $2, $3, $4)
+RETURNING file_id, file_name, file_size, file_type, user_id
+`
+
+type CreateUserProfilePicParams struct {
+	FileName string    `json:"file_name"`
+	FileSize int64     `json:"file_size"`
+	FileType string    `json:"file_type"`
+	UserID   uuid.UUID `json:"user_id"`
+}
+
+type CreateUserProfilePicRow struct {
+	FileID   uuid.UUID `json:"file_id"`
+	FileName string    `json:"file_name"`
+	FileSize int64     `json:"file_size"`
+	FileType string    `json:"file_type"`
+	UserID   uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) CreateUserProfilePic(ctx context.Context, arg CreateUserProfilePicParams) (CreateUserProfilePicRow, error) {
+	row := q.db.QueryRowContext(ctx, createUserProfilePic,
+		arg.FileName,
+		arg.FileSize,
+		arg.FileType,
+		arg.UserID,
+	)
+	var i CreateUserProfilePicRow
+	err := row.Scan(
+		&i.FileID,
+		&i.FileName,
+		&i.FileSize,
+		&i.FileType,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -60,7 +95,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM users
 WHERE user_id = $1
-RETURNING user_id, user_full_name, user_email, user_profile_pic_id, user_created_at, user_updated_at
+RETURNING user_id, user_full_name, user_email, user_created_at, user_updated_at
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, userID uuid.UUID) error {
@@ -68,31 +103,40 @@ func (q *Queries) DeleteUser(ctx context.Context, userID uuid.UUID) error {
 	return err
 }
 
+const deleteUserProfilePic = `-- name: DeleteUserProfilePic :exec
+DELETE FROM user_images
+WHERE user_id = $1
+RETURNING file_id, file_name, file_size, file_type, user_id
+`
+
+func (q *Queries) DeleteUserProfilePic(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteUserProfilePic, userID)
+	return err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT 
-    u.user_id, 
-    u.user_full_name, 
-    u.user_email, 
-    u.user_profile_pic_id, 
-    i.file_name AS user_profile_pic_name,
-    u.user_created_at, 
+SELECT
+    u.user_id,
+    u.user_full_name,
+    u.user_email,
+    u.user_created_at,
     u.user_updated_at,
-    u.user_password
+    u.user_password,
+    i.file_name
 FROM users u
 LEFT JOIN user_images i
-    ON u.user_profile_pic_id = i.file_id
+    ON u.user_id = i.user_id
 WHERE u.user_email = $1
 `
 
 type GetUserByEmailRow struct {
-	UserID             uuid.UUID      `json:"user_id"`
-	UserFullName       string         `json:"user_full_name"`
-	UserEmail          string         `json:"user_email"`
-	UserProfilePicID   uuid.NullUUID  `json:"user_profile_pic_id"`
-	UserProfilePicName sql.NullString `json:"user_profile_pic_name"`
-	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
-	UserUpdatedAt      sql.NullTime   `json:"user_updated_at"`
-	UserPassword       sql.NullString `json:"user_password"`
+	UserID        uuid.UUID      `json:"user_id"`
+	UserFullName  string         `json:"user_full_name"`
+	UserEmail     string         `json:"user_email"`
+	UserCreatedAt sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
+	UserPassword  sql.NullString `json:"user_password"`
+	FileName      sql.NullString `json:"file_name"`
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, userEmail string) (GetUserByEmailRow, error) {
@@ -102,38 +146,35 @@ func (q *Queries) GetUserByEmail(ctx context.Context, userEmail string) (GetUser
 		&i.UserID,
 		&i.UserFullName,
 		&i.UserEmail,
-		&i.UserProfilePicID,
-		&i.UserProfilePicName,
 		&i.UserCreatedAt,
 		&i.UserUpdatedAt,
 		&i.UserPassword,
+		&i.FileName,
 	)
 	return i, err
 }
 
 const getUserByGoogleId = `-- name: GetUserByGoogleId :one
-SELECT 
-    u.user_id, 
-    u.user_full_name, 
-    u.user_email, 
-    u.user_profile_pic_id, 
-    i.file_name AS user_profile_pic_name,
-    u.user_created_at, 
-    u.user_updated_at
+SELECT
+    u.user_id,
+    u.user_full_name,
+    u.user_email,
+    u.user_created_at,
+    u.user_updated_at,
+    i.file_name
 FROM users u
 LEFT JOIN user_images i
-    ON u.user_profile_pic_id = i.file_id
+    ON u.user_id = i.user_id
 WHERE u.user_google_id = $1
 `
 
 type GetUserByGoogleIdRow struct {
-	UserID             uuid.UUID      `json:"user_id"`
-	UserFullName       string         `json:"user_full_name"`
-	UserEmail          string         `json:"user_email"`
-	UserProfilePicID   uuid.NullUUID  `json:"user_profile_pic_id"`
-	UserProfilePicName sql.NullString `json:"user_profile_pic_name"`
-	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
-	UserUpdatedAt      sql.NullTime   `json:"user_updated_at"`
+	UserID        uuid.UUID      `json:"user_id"`
+	UserFullName  string         `json:"user_full_name"`
+	UserEmail     string         `json:"user_email"`
+	UserCreatedAt sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
+	FileName      sql.NullString `json:"file_name"`
 }
 
 func (q *Queries) GetUserByGoogleId(ctx context.Context, userGoogleID sql.NullString) (GetUserByGoogleIdRow, error) {
@@ -143,37 +184,34 @@ func (q *Queries) GetUserByGoogleId(ctx context.Context, userGoogleID sql.NullSt
 		&i.UserID,
 		&i.UserFullName,
 		&i.UserEmail,
-		&i.UserProfilePicID,
-		&i.UserProfilePicName,
 		&i.UserCreatedAt,
 		&i.UserUpdatedAt,
+		&i.FileName,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT 
-    u.user_id, 
-    u.user_full_name, 
-    u.user_email, 
-    u.user_profile_pic_id, 
-    i.file_name AS user_profile_pic_name,
-    u.user_created_at, 
-    u.user_updated_at
+SELECT
+    u.user_id,
+    u.user_full_name,
+    u.user_email,
+    u.user_created_at,
+    u.user_updated_at,
+    i.file_name
 FROM users u
 LEFT JOIN user_images i
-    ON u.user_profile_pic_id = i.file_id
+    ON u.user_id = i.user_id
 WHERE u.user_id = $1
 `
 
 type GetUserByIDRow struct {
-	UserID             uuid.UUID      `json:"user_id"`
-	UserFullName       string         `json:"user_full_name"`
-	UserEmail          string         `json:"user_email"`
-	UserProfilePicID   uuid.NullUUID  `json:"user_profile_pic_id"`
-	UserProfilePicName sql.NullString `json:"user_profile_pic_name"`
-	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
-	UserUpdatedAt      sql.NullTime   `json:"user_updated_at"`
+	UserID        uuid.UUID      `json:"user_id"`
+	UserFullName  string         `json:"user_full_name"`
+	UserEmail     string         `json:"user_email"`
+	UserCreatedAt sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
+	FileName      sql.NullString `json:"file_name"`
 }
 
 func (q *Queries) GetUserByID(ctx context.Context, userID uuid.UUID) (GetUserByIDRow, error) {
@@ -183,10 +221,43 @@ func (q *Queries) GetUserByID(ctx context.Context, userID uuid.UUID) (GetUserByI
 		&i.UserID,
 		&i.UserFullName,
 		&i.UserEmail,
-		&i.UserProfilePicID,
-		&i.UserProfilePicName,
 		&i.UserCreatedAt,
 		&i.UserUpdatedAt,
+		&i.FileName,
+	)
+	return i, err
+}
+
+const getUserPassword = `-- name: GetUserPassword :one
+SELECT
+    u.user_password
+FROM users u
+WHERE u.user_id = $1
+`
+
+func (q *Queries) GetUserPassword(ctx context.Context, userID uuid.UUID) (sql.NullString, error) {
+	row := q.db.QueryRowContext(ctx, getUserPassword, userID)
+	var user_password sql.NullString
+	err := row.Scan(&user_password)
+	return user_password, err
+}
+
+const getUserProfilePic = `-- name: GetUserProfilePic :one
+SELECT file_id, file_name, file_size, file_type, file_uploaded_at, user_id
+FROM user_images
+WHERE user_id = $1
+`
+
+func (q *Queries) GetUserProfilePic(ctx context.Context, userID uuid.UUID) (UserImage, error) {
+	row := q.db.QueryRowContext(ctx, getUserProfilePic, userID)
+	var i UserImage
+	err := row.Scan(
+		&i.FileID,
+		&i.FileName,
+		&i.FileSize,
+		&i.FileType,
+		&i.FileUploadedAt,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -196,36 +267,32 @@ UPDATE users
 SET
   user_full_name = COALESCE($1, user_full_name),
   user_email = COALESCE($2, user_email),
-  user_profile_pic_id = COALESCE($3, user_profile_pic_id),
-  user_password = COALESCE($4, user_password),  
-  user_google_id = COALESCE($5, user_google_id)
-WHERE user_id = $6
-RETURNING user_id, user_full_name, user_email, user_profile_pic_id, user_created_at, user_updated_at
+  user_password = COALESCE($3, user_password),
+  user_google_id = COALESCE($4, user_google_id)
+WHERE user_id = $5
+RETURNING user_id, user_full_name, user_email, user_created_at, user_updated_at
 `
 
 type UpdateUserParams struct {
-	UserFullName     sql.NullString `json:"user_full_name"`
-	UserEmail        sql.NullString `json:"user_email"`
-	UserProfilePicID uuid.NullUUID  `json:"user_profile_pic_id"`
-	UserPassword     sql.NullString `json:"user_password"`
-	UserGoogleID     sql.NullString `json:"user_google_id"`
-	UserID           uuid.UUID      `json:"user_id"`
+	UserFullName sql.NullString `json:"user_full_name"`
+	UserEmail    sql.NullString `json:"user_email"`
+	UserPassword sql.NullString `json:"user_password"`
+	UserGoogleID sql.NullString `json:"user_google_id"`
+	UserID       uuid.UUID      `json:"user_id"`
 }
 
 type UpdateUserRow struct {
-	UserID           uuid.UUID     `json:"user_id"`
-	UserFullName     string        `json:"user_full_name"`
-	UserEmail        string        `json:"user_email"`
-	UserProfilePicID uuid.NullUUID `json:"user_profile_pic_id"`
-	UserCreatedAt    sql.NullTime  `json:"user_created_at"`
-	UserUpdatedAt    sql.NullTime  `json:"user_updated_at"`
+	UserID        uuid.UUID    `json:"user_id"`
+	UserFullName  string       `json:"user_full_name"`
+	UserEmail     string       `json:"user_email"`
+	UserCreatedAt sql.NullTime `json:"user_created_at"`
+	UserUpdatedAt sql.NullTime `json:"user_updated_at"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
 	row := q.db.QueryRowContext(ctx, updateUser,
 		arg.UserFullName,
 		arg.UserEmail,
-		arg.UserProfilePicID,
 		arg.UserPassword,
 		arg.UserGoogleID,
 		arg.UserID,
@@ -235,9 +302,54 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateU
 		&i.UserID,
 		&i.UserFullName,
 		&i.UserEmail,
-		&i.UserProfilePicID,
 		&i.UserCreatedAt,
 		&i.UserUpdatedAt,
+	)
+	return i, err
+}
+
+const updateUserProfilePic = `-- name: UpdateUserProfilePic :one
+UPDATE user_images
+SET
+  file_name = COALESCE($1, file_name),
+  file_size = COALESCE($2, file_size),
+  file_type = COALESCE($3, file_type),
+  file_uploaded_at = COALESCE($4, file_uploaded_at)
+WHERE user_id = $5
+RETURNING file_id, file_name, file_size, file_type, user_id
+`
+
+type UpdateUserProfilePicParams struct {
+	FileName       sql.NullString `json:"file_name"`
+	FileSize       sql.NullInt64  `json:"file_size"`
+	FileType       sql.NullString `json:"file_type"`
+	FileUploadedAt sql.NullTime   `json:"file_uploaded_at"`
+	UserID         uuid.UUID      `json:"user_id"`
+}
+
+type UpdateUserProfilePicRow struct {
+	FileID   uuid.UUID `json:"file_id"`
+	FileName string    `json:"file_name"`
+	FileSize int64     `json:"file_size"`
+	FileType string    `json:"file_type"`
+	UserID   uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) UpdateUserProfilePic(ctx context.Context, arg UpdateUserProfilePicParams) (UpdateUserProfilePicRow, error) {
+	row := q.db.QueryRowContext(ctx, updateUserProfilePic,
+		arg.FileName,
+		arg.FileSize,
+		arg.FileType,
+		arg.FileUploadedAt,
+		arg.UserID,
+	)
+	var i UpdateUserProfilePicRow
+	err := row.Scan(
+		&i.FileID,
+		&i.FileName,
+		&i.FileSize,
+		&i.FileType,
+		&i.UserID,
 	)
 	return i, err
 }

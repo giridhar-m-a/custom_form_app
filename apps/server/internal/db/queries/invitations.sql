@@ -69,8 +69,31 @@ WHERE form_id = @form_id::uuid
         OR status <> sqlc.narg('exclude_status')::invitation_status
       )
 ORDER BY invited_at DESC
-LIMIT COALESCE(sqlc.narg('limit_val')::int, 20)
+LIMIT COALESCE(sqlc.narg('limit_val')::int, 10)
 OFFSET COALESCE(sqlc.narg('offset_val')::int, 0);
 
 
 
+-- name: CountInvitationsByFormId :one
+SELECT COUNT(*) AS total_records
+FROM invitations
+WHERE form_id = @form_id::uuid
+
+  -- Search filter (Email or Name)
+  AND (
+        sqlc.narg('search')::text IS NULL 
+        OR invited_name ILIKE '%' || sqlc.narg('search')::text || '%'
+        OR invited_email ILIKE '%' || sqlc.narg('search')::text || '%'
+      )
+
+  -- Status Inclusion filter
+  AND (
+        sqlc.narg('status')::invitation_status IS NULL 
+        OR status = sqlc.narg('status')::invitation_status
+      )
+
+  -- Status Exclusion filter
+  AND (
+        sqlc.narg('exclude_status')::invitation_status IS NULL 
+        OR status <> sqlc.narg('exclude_status')::invitation_status
+      );

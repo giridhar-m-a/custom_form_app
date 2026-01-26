@@ -10,6 +10,9 @@ import (
 
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
+	"github.com/giridhar-m-a/custom_form_app/internal/services/templates"
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
+	"github.com/resend/resend-go/v3"
 )
 
 type AuthService interface {
@@ -18,6 +21,8 @@ type AuthService interface {
 	CreateUserWithEmailPassword(ctx context.Context, data dto.EmailPasswordRegisterRequest) (sqlc.User, error)
 	GenerateTokens(userID string, audience string) (string, string, error)
 	VerifyToken(token string) (string, error)
+	RequestResetPassword(ctx context.Context, email string) (*resend.SendEmailResponse, error)
+	ResetPassword(ctx context.Context, token string, newPassword string) error
 }
 
 type authService struct {
@@ -25,16 +30,19 @@ type authService struct {
 	userService UserService
 	hashService BcryptService
 	jwtService  JWTService
+	mailService MailService
 }
 
 func NewAuthService(googleAuth GoogleAuthService, userService UserService) AuthService {
 	bcryptService := NewBcryptService()
 	jwtService := NewJWTService()
+	mailService := NewMailService(utils.ResendClient)
 	return &authService{
 		googleAuth:  googleAuth,
 		userService: userService,
 		jwtService:  jwtService,
 		hashService: bcryptService,
+		mailService: mailService,
 	}
 }
 
@@ -103,3 +111,103 @@ func (a *authService) GenerateTokens(userID string, audience string) (string, st
 func (a *authService) VerifyToken(token string) (string, error) {
 	return a.jwtService.ValidateToken(token)
 }
+
+func (a *authService) RequestResetPassword(
+	ctx context.Context,
+	email string,
+) (*resend.SendEmailResponse, error) {
+
+	frontendURL := utils.GetEnv("FRONTEND_URL", "")
+	if frontendURL == "" {
+		return nil, errors.New("frontend URL not set")
+	}
+
+	user, err := a.userService.GetUserDetailsByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	verifyToken, err := a.jwtService.GenerateToken(
+		user.UserID.String(),
+		10*time.Minute,
+		"reset",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// 1. Fixed scoping and initialization
+	fromEmail := utils.GetEnv("SENDER_EMAIL_ADDRESS", "form-genius-no-reply@giridhar.dev")
+
+	resetURL := fmt.Sprintf(
+		"%s/reset-password?token=%s",
+		frontendURL,
+		verifyToken,
+	)
+
+	templateData := struct {
+		PlatformName   string
+		UserName       string
+		ResetURL       string
+		Year           int
+		CompanyAddress string
+	}{
+		PlatformName:   "Form Genius",
+		UserName:       user.UserFullName,
+		ResetURL:       resetURL,
+		Year:           time.Now().Year(),
+		CompanyAddress: "Form Genius Inc",
+	}
+
+	// Note: Ensure the "templates" package is imported in your file
+	templateService := templates.NewService()
+
+	template, err := templateService.Render("password-reset.html", templateData)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Correctly formatting the 'From' string
+	sender := fmt.Sprintf("Form Genius <%s>", fromEmail)
+
+	emailParams := resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{user.UserEmail},
+		Subject: "Password Reset Request",
+		Html:    template,
+		Tags: []resend.Tag{
+			{
+				Name:  "category",
+				Value: "form-genius-password-reset",
+			},
+		},
+	}
+
+	return a.mailService.SendEmail(emailParams)
+} // Added missing closing brace for the function
+
+func (a *authService) ResetPassword(
+	ctx context.Context,
+	token string,
+	newPassword string,
+) error {
+
+	userID, err := a.jwtService.ValidateToken(token)
+	if err != nil {
+		return err
+	}
+
+	hashedPassword, err := a.hashService.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	_, err = a.userService.UpdateUser(ctx, userID, dto.UserUpdateDTO{
+		UserPassword: hashedPassword,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+} // Added missing closing brace for the function

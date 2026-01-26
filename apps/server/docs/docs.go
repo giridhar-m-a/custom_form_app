@@ -259,6 +259,99 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/refresh-token": {
+            "get": {
+                "description": "Verifies the access token and returns the user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify Access Token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Refresh token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token verification successful",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accessToken": {
+                                            "type": "string"
+                                        },
+                                        "refreshToken": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Registers a user with name, email, and password",
@@ -380,6 +473,90 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/request-password-reset": {
+            "post": {
+                "description": "Reset the user's password using the provided token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reset User Password",
+                "parameters": [
+                    {
+                        "description": "Form data",
+                        "name": "form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PasswordResetDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password reset request sent successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/verify": {
             "get": {
                 "description": "Verifies the access token and returns the user ID",
@@ -470,100 +647,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/verify-refresh-token": {
-            "get": {
-                "description": "Verifies the access token and returns the user ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Verify Access Token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Refresh token",
-                        "name": "token",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Token verification successful",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "accessToken": {
-                                            "type": "string"
-                                        },
-                                        "refreshToken": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
-                                "message": {
-                                    "type": "string"
-                                },
-                                "status": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
-                                },
-                                "status": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
-                                },
-                                "status": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
-                                },
-                                "status": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/file-upload": {
+        "/files/file-upload": {
             "post": {
                 "security": [
                     {
@@ -1442,17 +1526,17 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "enum": [
-                            "opened",
-                            "submitted",
-                            "invited",
-                            "expired"
+                            "pending",
+                            "accepted",
+                            "failed",
+                            "submitted"
                         ],
                         "type": "string",
                         "x-enum-varnames": [
-                            "InvitationStatusOpened",
-                            "InvitationStatusSubmitted",
-                            "InvitationStatusInvited",
-                            "InvitationStatusExpired"
+                            "InvitationStatusPending",
+                            "InvitationStatusAccepted",
+                            "InvitationStatusFailed",
+                            "InvitationStatusSubmitted"
                         ],
                         "name": "exclude",
                         "in": "query"
@@ -1484,17 +1568,17 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "opened",
-                            "submitted",
-                            "invited",
-                            "expired"
+                            "pending",
+                            "accepted",
+                            "failed",
+                            "submitted"
                         ],
                         "type": "string",
                         "x-enum-varnames": [
-                            "InvitationStatusOpened",
-                            "InvitationStatusSubmitted",
-                            "InvitationStatusInvited",
-                            "InvitationStatusExpired"
+                            "InvitationStatusPending",
+                            "InvitationStatusAccepted",
+                            "InvitationStatusFailed",
+                            "InvitationStatusSubmitted"
                         ],
                         "name": "status",
                         "in": "query"
@@ -1502,28 +1586,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Invitations retrieved successfully",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.InvitationListResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request payload",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1726,34 +1809,14 @@ const docTemplate = `{
                     "200": {
                         "description": "User retrieved successfully",
                         "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
                             "type": "object",
                             "properties": {
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "createdAt": {
-                                            "type": "string"
-                                        },
-                                        "email": {
-                                            "type": "string"
-                                        },
-                                        "fullName": {
-                                            "type": "string"
-                                        },
-                                        "id": {
-                                            "type": "string"
-                                        },
-                                        "profilePic": {
-                                            "type": "string"
-                                        },
-                                        "profilePicId": {
-                                            "type": "string"
-                                        },
-                                        "updatedAt": {
-                                            "type": "string"
-                                        }
-                                    }
-                                },
                                 "message": {
                                     "type": "string"
                                 },
@@ -1761,6 +1824,343 @@ const docTemplate = `{
                                     "type": "integer"
                                 }
                             }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete User",
+                "responses": {
+                    "200": {
+                        "description": "User deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the details of the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user details",
+                "parameters": [
+                    {
+                        "description": "Form data",
+                        "name": "form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateUserDetailsDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/profile-pic": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the user's profile picture",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Upload a User Profile Picture",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File to upload",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile picture updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_UserProfilePicResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes the authenticated user's profile picture",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Delete User Profile Picture",
+                "responses": {
+                    "200": {
+                        "description": "User profile picture deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me/update-password": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Changes the password of the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Change password",
+                "parameters": [
+                    {
+                        "description": "Form data",
+                        "name": "form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateUserPasswordDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated User Password successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_User"
                         }
                     },
                     "400": {
@@ -1886,17 +2286,57 @@ const docTemplate = `{
         "github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.InvitationStatus": {
             "type": "string",
             "enum": [
-                "opened",
-                "submitted",
-                "invited",
-                "expired"
+                "pending",
+                "accepted",
+                "failed",
+                "submitted"
             ],
             "x-enum-varnames": [
-                "InvitationStatusOpened",
-                "InvitationStatusSubmitted",
-                "InvitationStatusInvited",
-                "InvitationStatusExpired"
+                "InvitationStatusPending",
+                "InvitationStatusAccepted",
+                "InvitationStatusFailed",
+                "InvitationStatusSubmitted"
             ]
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_User": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.User"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_UserProfilePicResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.UserProfilePicResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
         },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateFormDTO": {
             "type": "object",
@@ -1904,7 +2344,24 @@ const docTemplate = `{
                 "title"
             ],
             "properties": {
+                "closing_time": {
+                    "type": "string"
+                },
                 "description": {
+                    "type": "string"
+                },
+                "form_access": {
+                    "description": "default 'restricted'",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess"
+                        }
+                    ]
+                },
+                "is_scheduled": {
+                    "type": "boolean"
+                },
+                "scheduled_time": {
                     "type": "string"
                 },
                 "title": {
@@ -2010,8 +2467,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string",
-                    "minLength": 6
+                    "type": "string"
                 }
             }
         },
@@ -2033,6 +2489,19 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 6
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Invalid request payload"
+                },
+                "status": {
+                    "type": "integer",
+                    "example": 400
                 }
             }
         },
@@ -2091,6 +2560,9 @@ const docTemplate = `{
                 "access": {
                     "type": "string"
                 },
+                "closingTime": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -2101,6 +2573,18 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "isScheduleCompleted": {
+                    "type": "boolean"
+                },
+                "isScheduled": {
+                    "type": "boolean"
+                },
+                "scheduledTime": {
+                    "type": "string"
+                },
+                "schedulingId": {
                     "type": "string"
                 },
                 "status": {
@@ -2114,13 +2598,122 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.InvitationListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.InvitationResponseDto"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Invitations retrieved successfully"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer",
+                    "example": 200
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.InvitationResponseDto": {
+            "type": "object",
+            "properties": {
+                "formId": {
+                    "type": "string"
+                },
+                "invitationId": {
+                    "type": "string"
+                },
+                "invitedBy": {
+                    "type": "string"
+                },
+                "invitedEmail": {
+                    "type": "string"
+                },
+                "invitedName": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                },
+                "totalRecords": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.PasswordResetDto": {
+            "type": "object",
+            "required": [
+                "confirmPassword",
+                "newPassword",
+                "token"
+            ],
+            "properties": {
+                "confirmPassword": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.PasswordResetRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO": {
             "type": "object",
             "properties": {
                 "access": {
                     "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess"
                 },
+                "closingTime": {
+                    "type": "string"
+                },
                 "description": {
+                    "type": "string"
+                },
+                "isScheduleCompleted": {
+                    "type": "boolean"
+                },
+                "isScheduled": {
+                    "type": "boolean"
+                },
+                "scheduledTime": {
+                    "type": "string"
+                },
+                "schedulingId": {
                     "type": "string"
                 },
                 "status": {
@@ -2160,6 +2753,73 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateUserDetailsDTO": {
+            "type": "object",
+            "properties": {
+                "userFullName": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateUserPasswordDTO": {
+            "type": "object",
+            "required": [
+                "oldPassword",
+                "userPassword",
+                "userVerifyPassword"
+            ],
+            "properties": {
+                "oldPassword": {
+                    "type": "string"
+                },
+                "userPassword": {
+                    "type": "string"
+                },
+                "userVerifyPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.User": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "profilePic": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.UserProfilePicResponse": {
+            "type": "object",
+            "properties": {
+                "fileName": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "fileType": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {
@@ -2175,7 +2835,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8000",
+	Host:             "be.custom-form-app.home",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https", "http"},
 	Title:            "My API",

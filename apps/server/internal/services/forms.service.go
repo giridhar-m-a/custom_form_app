@@ -14,11 +14,11 @@ import (
 )
 
 type FormService interface {
-	CreateForm(ctx context.Context, form dto.CreateFormDTO, userID string) (sqlc.CreateFormRow, error)
+	CreateForm(ctx context.Context, form dto.CreateFormDTO, userID string) (sqlc.Form, error)
 	CreateFormFields(ctx context.Context, form dto.CreateFormFieldsDTO, userID string) ([]dto.CreatedFormFieldDTO, error)
 	GetForms(ctx context.Context, userID string, query dto.ListFormQuery) (dto.FormListResponse, error)
-	GetSingleForm(ctx context.Context, formID string) (dto.FormResponse, error)
-	UpdateForm(ctx context.Context, form dto.UpdateFormDTO, formID string) (sqlc.UpdateFormRow, error)
+	GetSingleForm(ctx context.Context, formID string) (sqlc.Form, error)
+	UpdateForm(ctx context.Context, form dto.UpdateFormDTO, formID string) (sqlc.Form, error)
 	DeleteForm(ctx context.Context, formID string) (sqlc.DeleteFormRow, error)
 	GetFormFieldsByFormId(ctx context.Context, formId string) ([]dto.CreatedFormFieldDTO, error)
 	UpdateFormFields(ctx context.Context, form dto.UpdateFormFieldsDTO) ([]dto.CreatedFormFieldDTO, error)
@@ -35,26 +35,58 @@ func NewFormService(formRepo repositories.FormsRepository, fieldRepo repositorie
 	return &formService{formRepo: formRepo, fieldRepo: fieldRepo, fieldOptionRepo: fieldOptionRepo, db: db}
 }
 
-func (s *formService) CreateForm(ctx context.Context, form dto.CreateFormDTO, userID string) (sqlc.CreateFormRow, error) {
-
+func (s *formService) CreateForm(ctx context.Context, form dto.CreateFormDTO, userID string) (sqlc.Form, error) {
+	// Parse user ID
 	user, err := uuid.Parse(userID)
 	if err != nil {
-		return sqlc.CreateFormRow{}, err
+		return sqlc.Form{}, err
 	}
 
 	CreatedBy := uuid.NullUUID{
-		UUID:  user, // userID should be of type uuid.UUID
+		UUID:  user,
 		Valid: true,
 	}
-	formDescription := sql.NullString{
-		String: form.Description,
-		Valid:  form.Description != "",
+
+	// Convert optional description
+	var formDescription sql.NullString
+	if form.Description != nil {
+		formDescription = sql.NullString{
+			String: *form.Description,
+			Valid:  true,
+		}
 	}
+
+	// Convert optional times
+	var scheduledTime, closingTime sql.NullTime
+	if form.ScheduledTime != nil {
+		scheduledTime = sql.NullTime{Time: *form.ScheduledTime, Valid: true}
+	}
+	if form.ClosingTime != nil {
+		closingTime = sql.NullTime{Time: *form.ClosingTime, Valid: true}
+	}
+
+	formAccess := sqlc.NullFormAccess{
+		FormAccess: form.FormAccess,
+		Valid:      form.FormAccess != "",
+	}
+
+	if form.FormAccess == "" {
+		formAccess = sqlc.NullFormAccess{
+			FormAccess: sqlc.FormAccessRestricted,
+			Valid:      true,
+		}
+	}
+
+	isScheduled := utils.BoolPtrToNullBool(form.IsScheduled)
 
 	return s.formRepo.CreateForm(sqlc.CreateFormParams{
 		FormTitle:       form.Title,
 		FormDescription: formDescription,
 		CreatedBy:       CreatedBy,
+		FormAccess:      formAccess,
+		ScheduledTime:   scheduledTime,
+		ClosingTime:     closingTime,
+		IsScheduled:     isScheduled,
 	}, ctx)
 }
 
@@ -179,22 +211,8 @@ func (s *formService) GetForms(ctx context.Context, userID string, query dto.Lis
 		totalPages = 1
 	}
 
-	var formResponses []dto.FormResponse
-	for _, form := range forms {
-		formResponses = append(formResponses, dto.FormResponse{
-			ID:          form.FormID.String(),
-			Title:       form.FormTitle,
-			Description: form.FormDescription.String,
-			CreatedBy:   form.CreatedBy.UUID.String(),
-			Status:      string(form.FormStatus.FormStatus),
-			CreatedAt:   form.FormCreatedAt.Time.String(),
-			UpdatedAt:   form.FormUpdatedAt.Time.String(),
-			Access:      string(form.FormAccess.FormAccess),
-		})
-	}
-
 	return dto.FormListResponse{
-		Forms: formResponses,
+		Forms: forms,
 		Total: int(totalCount),
 		Page:  page,
 		Limit: limit,
@@ -202,41 +220,76 @@ func (s *formService) GetForms(ctx context.Context, userID string, query dto.Lis
 	}, nil
 }
 
-func (s *formService) GetSingleForm(ctx context.Context, formID string) (dto.FormResponse, error) {
-	form, err := s.formRepo.GetFormByID(formID, ctx)
-	if err != nil {
-		return dto.FormResponse{}, err
-	}
-	return dto.FormResponse{
-		ID:          form.FormID.String(),
-		Title:       form.FormTitle,
-		Description: form.FormDescription.String,
-		CreatedBy:   form.CreatedBy.UUID.String(),
-		Status:      string(form.FormStatus.FormStatus),
-		CreatedAt:   form.FormCreatedAt.Time.String(),
-		UpdatedAt:   form.FormUpdatedAt.Time.String(),
-		Access:      string(form.FormAccess.FormAccess),
-	}, nil
+func (s *formService) GetSingleForm(ctx context.Context, formID string) (sqlc.Form, error) {
+	return s.formRepo.GetFormByID(formID, ctx)
 }
 
-func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, formID string) (sqlc.UpdateFormRow, error) {
+func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, formID string) (sqlc.Form, error) {
+	// Convert formID to uuid.UUID
 	id, err := utils.ConvertStringToUUID(formID)
 	if err != nil {
-		return sqlc.UpdateFormRow{}, err
+		return sqlc.Form{}, err
 	}
 
+	// Convert optional strings
+	formTitle := utils.ConvertStringToNullString(*form.Title)
+	formDescription := utils.ConvertStringToNullString(*form.Description)
+
+	// Convert optional FormStatus
+	var formStatus sqlc.NullFormStatus
+	if form.Status != nil {
+		formStatus = sqlc.NullFormStatus{
+			FormStatus: *form.Status,
+			Valid:      true,
+		}
+	}
+
+	// Convert optional FormAccess
+	var formAccess sqlc.NullFormAccess
+	if form.Access != nil {
+		formAccess = sqlc.NullFormAccess{
+			FormAccess: *form.Access,
+			Valid:      true,
+		}
+	}
+
+	// Convert optional scheduling fields
+	var schedulingID uuid.NullUUID
+	if form.SchedulingID != nil {
+		u, err := uuid.Parse(*form.SchedulingID)
+		if err == nil {
+			schedulingID = uuid.NullUUID{UUID: u, Valid: true}
+		}
+	}
+
+	var scheduledTime, closingTime sql.NullTime
+	if form.ScheduledTime != nil {
+		scheduledTime = sql.NullTime{Time: *form.ScheduledTime, Valid: true}
+	}
+	if form.ClosingTime != nil {
+		closingTime = sql.NullTime{Time: *form.ClosingTime, Valid: true}
+	}
+
+	var isScheduleCompleted, isScheduled sql.NullBool
+	if form.IsScheduleCompleted != nil {
+		isScheduleCompleted = sql.NullBool{Bool: *form.IsScheduleCompleted, Valid: true}
+	}
+	if form.IsScheduled != nil {
+		isScheduled = sql.NullBool{Bool: *form.IsScheduled, Valid: true}
+	}
+
+	// Prepare payload
 	formPayload := sqlc.UpdateFormParams{
-		FormID:    id,
-		FormTitle: utils.ConvertStringToNullString(form.Title),
-		FormStatus: sqlc.NullFormStatus{
-			FormStatus: sqlc.FormStatus(form.Status),
-			Valid:      form.Status != "",
-		},
-		FormAccess: sqlc.NullFormAccess{
-			FormAccess: sqlc.FormAccess(form.Access),
-			Valid:      form.Access != "",
-		},
-		FormDescription: utils.ConvertStringToNullString(form.Description),
+		FormID:              id,
+		FormTitle:           formTitle,
+		FormDescription:     formDescription,
+		FormStatus:          formStatus,
+		FormAccess:          formAccess,
+		SchedulingID:        schedulingID,
+		ScheduledTime:       scheduledTime,
+		ClosingTime:         closingTime,
+		IsScheduleCompleted: isScheduleCompleted,
+		IsScheduled:         isScheduled,
 	}
 
 	return s.formRepo.UpdateForm(formPayload, ctx)

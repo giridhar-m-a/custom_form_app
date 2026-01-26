@@ -9,6 +9,12 @@ func Users(rg *gin.RouterGroup) {
 
 	usersHandler := handler.NewUsersHandler()
 
-	rg.GET("/users/me", usersHandler.GetMe)
+	api := rg.Group("/users/me")
+
+	api.GET("", usersHandler.GetMe)
+	api.PUT("/profile-pic", usersHandler.UpdateProfilePic)
+	api.PATCH("", usersHandler.UpdateUser)
+	api.PUT("/update-password", usersHandler.UpdatePassword)
+	api.DELETE("", usersHandler.DeleteUser)
 
 }

@@ -15,6 +15,7 @@ type InvitationRepository interface {
 	GetInvitationByFormId(query sqlc.GetInvitationByFormIdParams, ctx context.Context) ([]sqlc.Invitation, error)
 	CreateSingleInvitation(invitation sqlc.CreateInvitationParams, ctx context.Context) (sqlc.CreateInvitationRow, error)
 	InvitationRepositoryWithTx(tx *sql.Tx) InvitationRepository
+	CountInvitationsByFormId(params sqlc.CountInvitationsByFormIdParams, ctx context.Context) (int64, error)
 }
 
 type invitationRepository struct {
@@ -43,6 +44,10 @@ func (r *invitationRepository) DeleteInvitation(invitationID uuid.UUID, ctx cont
 
 func (r *invitationRepository) GetInvitationByFormId(query sqlc.GetInvitationByFormIdParams, ctx context.Context) ([]sqlc.Invitation, error) {
 	return r.q.GetInvitationByFormId(ctx, query)
+}
+
+func (r *invitationRepository) CountInvitationsByFormId(params sqlc.CountInvitationsByFormIdParams, ctx context.Context) (int64, error) {
+	return r.q.CountInvitationsByFormId(ctx, params)
 }
 
 func (r *invitationRepository) InvitationRepositoryWithTx(tx *sql.Tx) InvitationRepository {

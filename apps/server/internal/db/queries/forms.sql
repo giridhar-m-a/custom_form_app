@@ -1,18 +1,67 @@
 -- name: CreateForm :one
-INSERT INTO forms (form_title, form_description, created_by)
-VALUES ($1, $2, $3)
-RETURNING form_id, form_title, form_description, created_by, form_created_at, form_updated_at, form_status, form_access;
+INSERT INTO forms (
+  form_title,
+  form_description,
+  created_by,
+  form_access,
+  scheduled_time,
+  closing_time,
+  is_scheduled
+)
+VALUES (
+  sqlc.arg('form_title'),
+  sqlc.narg('form_description'),
+  sqlc.arg('created_by'),
+  sqlc.narg('form_access'),
+  sqlc.narg('scheduled_time'),
+  sqlc.narg('closing_time'),
+  sqlc.narg('is_scheduled')
+)
+RETURNING
+  form_id,
+  form_title,
+  form_description,
+  form_status,
+  form_access,
+  form_created_at,
+  form_updated_at,
+  created_by,
+  scheduling_id,
+  scheduled_time,
+  closing_time,
+  is_schedule_completed,
+  is_scheduled;
+
 
 -- name: UpdateForm :one
 UPDATE forms
 SET
   form_title = COALESCE(sqlc.narg('form_title'), form_title),
   form_description = COALESCE(sqlc.narg('form_description'), form_description),
-  created_by = COALESCE(sqlc.narg('created_by'), created_by),
   form_status = COALESCE(sqlc.narg('form_status'), form_status),
-  form_access = COALESCE(sqlc.narg('form_access'), form_access)
+  form_access = COALESCE(sqlc.narg('form_access'), form_access),
+  scheduling_id = COALESCE(sqlc.narg('scheduling_id'), scheduling_id),
+  scheduled_time = COALESCE(sqlc.narg('scheduled_time'), scheduled_time),
+  closing_time = COALESCE(sqlc.narg('closing_time'), closing_time),
+  is_schedule_completed = COALESCE(sqlc.narg('is_schedule_completed'), is_schedule_completed),
+  is_scheduled = COALESCE(sqlc.narg('is_scheduled'), is_scheduled)
 WHERE form_id = sqlc.arg('form_id')
-RETURNING form_id, form_title, form_description, created_by, form_created_at, form_updated_at, form_status, form_access;
+RETURNING
+  form_id,
+  form_title,
+  form_description,
+  form_status,
+  form_access,
+  form_created_at,
+  form_updated_at,
+  created_by,
+  scheduling_id,
+  scheduled_time,
+  closing_time,
+  is_schedule_completed,
+  is_scheduled;
+
+
 
 -- name: GetFormByID :one
 SELECT *
@@ -20,7 +69,7 @@ FROM forms
 WHERE form_id = $1;
 
 -- name: ListForms :many
-SELECT 
+SELECT
     *,
     COUNT(*) OVER() as total_count
 FROM forms
@@ -34,13 +83,13 @@ WHERE
     AND (sqlc.narg('form_status')::form_status IS NULL OR form_status = sqlc.narg('form_status')::form_status)
     AND (sqlc.narg('form_access')::form_access IS NULL OR form_access = sqlc.narg('form_access')::form_access)
 ORDER BY
-    CASE 
-        WHEN COALESCE(sqlc.narg('short_by')::text, '-updated') = 'updated' 
-            THEN form_updated_at 
+    CASE
+        WHEN COALESCE(sqlc.narg('short_by')::text, '-updated') = 'updated'
+            THEN form_updated_at
     END DESC,
-    CASE 
-        WHEN COALESCE(sqlc.narg('short_by')::text, '-updated') = '-updated' 
-            THEN form_updated_at 
+    CASE
+        WHEN COALESCE(sqlc.narg('short_by')::text, '-updated') = '-updated'
+            THEN form_updated_at
     END ASC,
     CASE
         WHEN COALESCE(sqlc.narg('short_by')::text, '-updated') = 'title'
@@ -102,7 +151,7 @@ RETURNING option_id, field_id, option_label, ordering, is_answer;
 
 
 -- name: GetFormFieldsWithOptions :many
-SELECT 
+SELECT
     ff.field_id AS "fieldId",
     ff.field_label AS "fieldLabel",
     ff.field_type AS "fieldType",
@@ -143,6 +192,3 @@ SELECT COALESCE(
 FROM form_field_options fo
 JOIN form_fields ff ON ff.field_id = fo.field_id
 WHERE ff.form_id = $1;
-
-
-

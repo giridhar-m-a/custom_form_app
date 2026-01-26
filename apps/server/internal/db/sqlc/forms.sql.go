@@ -53,40 +53,75 @@ func (q *Queries) CreateFieldOption(ctx context.Context, arg CreateFieldOptionPa
 }
 
 const createForm = `-- name: CreateForm :one
-INSERT INTO forms (form_title, form_description, created_by)
-VALUES ($1, $2, $3)
-RETURNING form_id, form_title, form_description, created_by, form_created_at, form_updated_at, form_status, form_access
+INSERT INTO forms (
+  form_title,
+  form_description,
+  created_by,
+  form_access,
+  scheduled_time,
+  closing_time,
+  is_scheduled
+)
+VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5,
+  $6,
+  $7
+)
+RETURNING
+  form_id,
+  form_title,
+  form_description,
+  form_status,
+  form_access,
+  form_created_at,
+  form_updated_at,
+  created_by,
+  scheduling_id,
+  scheduled_time,
+  closing_time,
+  is_schedule_completed,
+  is_scheduled
 `
 
 type CreateFormParams struct {
 	FormTitle       string         `json:"form_title"`
 	FormDescription sql.NullString `json:"form_description"`
 	CreatedBy       uuid.NullUUID  `json:"created_by"`
-}
-
-type CreateFormRow struct {
-	FormID          uuid.UUID      `json:"form_id"`
-	FormTitle       string         `json:"form_title"`
-	FormDescription sql.NullString `json:"form_description"`
-	CreatedBy       uuid.NullUUID  `json:"created_by"`
-	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
-	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
-	FormStatus      NullFormStatus `json:"form_status"`
 	FormAccess      NullFormAccess `json:"form_access"`
+	ScheduledTime   sql.NullTime   `json:"scheduled_time"`
+	ClosingTime     sql.NullTime   `json:"closing_time"`
+	IsScheduled     sql.NullBool   `json:"is_scheduled"`
 }
 
-func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (CreateFormRow, error) {
-	row := q.db.QueryRowContext(ctx, createForm, arg.FormTitle, arg.FormDescription, arg.CreatedBy)
-	var i CreateFormRow
+func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (Form, error) {
+	row := q.db.QueryRowContext(ctx, createForm,
+		arg.FormTitle,
+		arg.FormDescription,
+		arg.CreatedBy,
+		arg.FormAccess,
+		arg.ScheduledTime,
+		arg.ClosingTime,
+		arg.IsScheduled,
+	)
+	var i Form
 	err := row.Scan(
 		&i.FormID,
 		&i.FormTitle,
 		&i.FormDescription,
-		&i.CreatedBy,
-		&i.FormCreatedAt,
-		&i.FormUpdatedAt,
 		&i.FormStatus,
 		&i.FormAccess,
+		&i.FormCreatedAt,
+		&i.FormUpdatedAt,
+		&i.CreatedBy,
+		&i.SchedulingID,
+		&i.ScheduledTime,
+		&i.ClosingTime,
+		&i.IsScheduleCompleted,
+		&i.IsScheduled,
 	)
 	return i, err
 }
@@ -224,7 +259,7 @@ func (q *Queries) DeleteFormField(ctx context.Context, fieldID uuid.UUID) (Delet
 }
 
 const getFormByID = `-- name: GetFormByID :one
-SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by
+SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled
 FROM forms
 WHERE form_id = $1
 `
@@ -241,6 +276,11 @@ func (q *Queries) GetFormByID(ctx context.Context, formID uuid.UUID) (Form, erro
 		&i.FormCreatedAt,
 		&i.FormUpdatedAt,
 		&i.CreatedBy,
+		&i.SchedulingID,
+		&i.ScheduledTime,
+		&i.ClosingTime,
+		&i.IsScheduleCompleted,
+		&i.IsScheduled,
 	)
 	return i, err
 }
@@ -271,7 +311,7 @@ func (q *Queries) GetFormFieldOptionsMap(ctx context.Context, formID uuid.UUID) 
 }
 
 const getFormFieldsWithOptions = `-- name: GetFormFieldsWithOptions :many
-SELECT 
+SELECT
     ff.field_id AS "fieldId",
     ff.field_label AS "fieldLabel",
     ff.field_type AS "fieldType",
@@ -339,8 +379,8 @@ func (q *Queries) GetFormFieldsWithOptions(ctx context.Context, formID uuid.UUID
 }
 
 const listForms = `-- name: ListForms :many
-SELECT 
-    form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by,
+SELECT
+    form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled,
     COUNT(*) OVER() as total_count
 FROM forms
 WHERE
@@ -353,13 +393,13 @@ WHERE
     AND ($3::form_status IS NULL OR form_status = $3::form_status)
     AND ($4::form_access IS NULL OR form_access = $4::form_access)
 ORDER BY
-    CASE 
-        WHEN COALESCE($5::text, '-updated') = 'updated' 
-            THEN form_updated_at 
+    CASE
+        WHEN COALESCE($5::text, '-updated') = 'updated'
+            THEN form_updated_at
     END DESC,
-    CASE 
-        WHEN COALESCE($5::text, '-updated') = '-updated' 
-            THEN form_updated_at 
+    CASE
+        WHEN COALESCE($5::text, '-updated') = '-updated'
+            THEN form_updated_at
     END ASC,
     CASE
         WHEN COALESCE($5::text, '-updated') = 'title'
@@ -384,15 +424,20 @@ type ListFormsParams struct {
 }
 
 type ListFormsRow struct {
-	FormID          uuid.UUID      `json:"form_id"`
-	FormTitle       string         `json:"form_title"`
-	FormDescription sql.NullString `json:"form_description"`
-	FormStatus      NullFormStatus `json:"form_status"`
-	FormAccess      NullFormAccess `json:"form_access"`
-	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
-	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
-	CreatedBy       uuid.NullUUID  `json:"created_by"`
-	TotalCount      int64          `json:"total_count"`
+	FormID              uuid.UUID      `json:"form_id"`
+	FormTitle           string         `json:"form_title"`
+	FormDescription     sql.NullString `json:"form_description"`
+	FormStatus          NullFormStatus `json:"form_status"`
+	FormAccess          NullFormAccess `json:"form_access"`
+	FormCreatedAt       sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt       sql.NullTime   `json:"form_updated_at"`
+	CreatedBy           uuid.NullUUID  `json:"created_by"`
+	SchedulingID        uuid.NullUUID  `json:"scheduling_id"`
+	ScheduledTime       sql.NullTime   `json:"scheduled_time"`
+	ClosingTime         sql.NullTime   `json:"closing_time"`
+	IsScheduleCompleted sql.NullBool   `json:"is_schedule_completed"`
+	IsScheduled         sql.NullBool   `json:"is_scheduled"`
+	TotalCount          int64          `json:"total_count"`
 }
 
 func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFormsRow, error) {
@@ -421,6 +466,11 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFor
 			&i.FormCreatedAt,
 			&i.FormUpdatedAt,
 			&i.CreatedBy,
+			&i.SchedulingID,
+			&i.ScheduledTime,
+			&i.ClosingTime,
+			&i.IsScheduleCompleted,
+			&i.IsScheduled,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -484,52 +534,71 @@ UPDATE forms
 SET
   form_title = COALESCE($1, form_title),
   form_description = COALESCE($2, form_description),
-  created_by = COALESCE($3, created_by),
-  form_status = COALESCE($4, form_status),
-  form_access = COALESCE($5, form_access)
-WHERE form_id = $6
-RETURNING form_id, form_title, form_description, created_by, form_created_at, form_updated_at, form_status, form_access
+  form_status = COALESCE($3, form_status),
+  form_access = COALESCE($4, form_access),
+  scheduling_id = COALESCE($5, scheduling_id),
+  scheduled_time = COALESCE($6, scheduled_time),
+  closing_time = COALESCE($7, closing_time),
+  is_schedule_completed = COALESCE($8, is_schedule_completed),
+  is_scheduled = COALESCE($9, is_scheduled)
+WHERE form_id = $10
+RETURNING
+  form_id,
+  form_title,
+  form_description,
+  form_status,
+  form_access,
+  form_created_at,
+  form_updated_at,
+  created_by,
+  scheduling_id,
+  scheduled_time,
+  closing_time,
+  is_schedule_completed,
+  is_scheduled
 `
 
 type UpdateFormParams struct {
-	FormTitle       sql.NullString `json:"form_title"`
-	FormDescription sql.NullString `json:"form_description"`
-	CreatedBy       uuid.NullUUID  `json:"created_by"`
-	FormStatus      NullFormStatus `json:"form_status"`
-	FormAccess      NullFormAccess `json:"form_access"`
-	FormID          uuid.UUID      `json:"form_id"`
+	FormTitle           sql.NullString `json:"form_title"`
+	FormDescription     sql.NullString `json:"form_description"`
+	FormStatus          NullFormStatus `json:"form_status"`
+	FormAccess          NullFormAccess `json:"form_access"`
+	SchedulingID        uuid.NullUUID  `json:"scheduling_id"`
+	ScheduledTime       sql.NullTime   `json:"scheduled_time"`
+	ClosingTime         sql.NullTime   `json:"closing_time"`
+	IsScheduleCompleted sql.NullBool   `json:"is_schedule_completed"`
+	IsScheduled         sql.NullBool   `json:"is_scheduled"`
+	FormID              uuid.UUID      `json:"form_id"`
 }
 
-type UpdateFormRow struct {
-	FormID          uuid.UUID      `json:"form_id"`
-	FormTitle       string         `json:"form_title"`
-	FormDescription sql.NullString `json:"form_description"`
-	CreatedBy       uuid.NullUUID  `json:"created_by"`
-	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
-	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
-	FormStatus      NullFormStatus `json:"form_status"`
-	FormAccess      NullFormAccess `json:"form_access"`
-}
-
-func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (UpdateFormRow, error) {
+func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (Form, error) {
 	row := q.db.QueryRowContext(ctx, updateForm,
 		arg.FormTitle,
 		arg.FormDescription,
-		arg.CreatedBy,
 		arg.FormStatus,
 		arg.FormAccess,
+		arg.SchedulingID,
+		arg.ScheduledTime,
+		arg.ClosingTime,
+		arg.IsScheduleCompleted,
+		arg.IsScheduled,
 		arg.FormID,
 	)
-	var i UpdateFormRow
+	var i Form
 	err := row.Scan(
 		&i.FormID,
 		&i.FormTitle,
 		&i.FormDescription,
-		&i.CreatedBy,
-		&i.FormCreatedAt,
-		&i.FormUpdatedAt,
 		&i.FormStatus,
 		&i.FormAccess,
+		&i.FormCreatedAt,
+		&i.FormUpdatedAt,
+		&i.CreatedBy,
+		&i.SchedulingID,
+		&i.ScheduledTime,
+		&i.ClosingTime,
+		&i.IsScheduleCompleted,
+		&i.IsScheduled,
 	)
 	return i, err
 }

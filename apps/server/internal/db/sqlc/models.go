@@ -161,10 +161,10 @@ func (ns NullFormStatus) Value() (driver.Value, error) {
 type InvitationStatus string
 
 const (
-	InvitationStatusOpened    InvitationStatus = "opened"
+	InvitationStatusPending   InvitationStatus = "pending"
+	InvitationStatusAccepted  InvitationStatus = "accepted"
+	InvitationStatusFailed    InvitationStatus = "failed"
 	InvitationStatusSubmitted InvitationStatus = "submitted"
-	InvitationStatusInvited   InvitationStatus = "invited"
-	InvitationStatusExpired   InvitationStatus = "expired"
 )
 
 func (e *InvitationStatus) Scan(src interface{}) error {
@@ -203,14 +203,19 @@ func (ns NullInvitationStatus) Value() (driver.Value, error) {
 }
 
 type Form struct {
-	FormID          uuid.UUID      `json:"form_id"`
-	FormTitle       string         `json:"form_title"`
-	FormDescription sql.NullString `json:"form_description"`
-	FormStatus      NullFormStatus `json:"form_status"`
-	FormAccess      NullFormAccess `json:"form_access"`
-	FormCreatedAt   sql.NullTime   `json:"form_created_at"`
-	FormUpdatedAt   sql.NullTime   `json:"form_updated_at"`
-	CreatedBy       uuid.NullUUID  `json:"created_by"`
+	FormID              uuid.UUID      `json:"form_id"`
+	FormTitle           string         `json:"form_title"`
+	FormDescription     sql.NullString `json:"form_description"`
+	FormStatus          NullFormStatus `json:"form_status"`
+	FormAccess          NullFormAccess `json:"form_access"`
+	FormCreatedAt       sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt       sql.NullTime   `json:"form_updated_at"`
+	CreatedBy           uuid.NullUUID  `json:"created_by"`
+	SchedulingID        uuid.NullUUID  `json:"scheduling_id"`
+	ScheduledTime       sql.NullTime   `json:"scheduled_time"`
+	ClosingTime         sql.NullTime   `json:"closing_time"`
+	IsScheduleCompleted sql.NullBool   `json:"is_schedule_completed"`
+	IsScheduled         sql.NullBool   `json:"is_scheduled"`
 }
 
 type FormField struct {
@@ -260,6 +265,7 @@ type Invitation struct {
 	OpenedAt     sql.NullTime         `json:"opened_at"`
 	SubmittedAt  sql.NullTime         `json:"submitted_at"`
 	InvitedName  string               `json:"invited_name"`
+	ResendID     uuid.NullUUID        `json:"resend_id"`
 }
 
 type ResponseOption struct {
@@ -269,21 +275,20 @@ type ResponseOption struct {
 }
 
 type User struct {
-	UserID           uuid.UUID      `json:"user_id"`
-	UserFullName     string         `json:"user_full_name"`
-	UserEmail        string         `json:"user_email"`
-	UserGoogleID     sql.NullString `json:"user_google_id"`
-	UserProfilePicID uuid.NullUUID  `json:"user_profile_pic_id"`
-	UserCreatedAt    sql.NullTime   `json:"user_created_at"`
-	UserUpdatedAt    sql.NullTime   `json:"user_updated_at"`
-	UserPassword     sql.NullString `json:"user_password"`
+	UserID        uuid.UUID      `json:"user_id"`
+	UserFullName  string         `json:"user_full_name"`
+	UserEmail     string         `json:"user_email"`
+	UserGoogleID  sql.NullString `json:"user_google_id"`
+	UserCreatedAt sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
+	UserPassword  sql.NullString `json:"user_password"`
 }
 
 type UserImage struct {
-	FileID         uuid.UUID     `json:"file_id"`
-	FileName       string        `json:"file_name"`
-	FileSize       int64         `json:"file_size"`
-	FileType       string        `json:"file_type"`
-	FileUploadedAt sql.NullTime  `json:"file_uploaded_at"`
-	UserID         uuid.NullUUID `json:"user_id"`
+	FileID         uuid.UUID    `json:"file_id"`
+	FileName       string       `json:"file_name"`
+	FileSize       int64        `json:"file_size"`
+	FileType       string       `json:"file_type"`
+	FileUploadedAt sql.NullTime `json:"file_uploaded_at"`
+	UserID         uuid.UUID    `json:"user_id"`
 }

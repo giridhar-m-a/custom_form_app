@@ -7,10 +7,11 @@ import (
 
 func RegisterInvitationsRoutes(rg *gin.RouterGroup) {
 	invitationsHandler := handler.NewInvitationHandler()
+	api := rg.Group("/invitations")
 
-	rg.POST("/invitations/:formId", invitationsHandler.CreateInvitation)
-	rg.POST("/invitations", invitationsHandler.CreateSingleInvitation)
-	rg.DELETE("/invitations/:id", invitationsHandler.DeleteInvitation)
-	rg.GET("/invitations", invitationsHandler.GetInvitationByFormId)
+	api.POST("/:formId", invitationsHandler.CreateInvitation)
+	api.POST("", invitationsHandler.CreateSingleInvitation)
+	api.DELETE("/:id", invitationsHandler.DeleteInvitation)
+	api.GET("", invitationsHandler.GetInvitationByFormId)
 
 }

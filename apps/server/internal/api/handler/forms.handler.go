@@ -68,14 +68,19 @@ func (r *formHandler) CreateForm(ctx *gin.Context) {
 	}
 
 	response := dto.FormResponse{
-		ID:          createdForm.FormID.String(),
-		Title:       createdForm.FormTitle,
-		Description: createdForm.FormDescription.String,
-		CreatedBy:   createdForm.CreatedBy.UUID.String(),
-		Status:      string(createdForm.FormStatus.FormStatus),
-		CreatedAt:   createdForm.FormCreatedAt.Time.String(),
-		UpdatedAt:   createdForm.FormUpdatedAt.Time.String(),
-		Access:      string(createdForm.FormAccess.FormAccess),
+		ID:                  createdForm.FormID.String(),
+		Title:               createdForm.FormTitle,
+		Description:         utils.NullStringToString(createdForm.FormDescription),
+		CreatedBy:           utils.NullUUIDToString(createdForm.CreatedBy),
+		Status:              string(createdForm.FormStatus.FormStatus),
+		CreatedAt:           utils.NullTimeToString(createdForm.FormCreatedAt),
+		UpdatedAt:           utils.NullTimeToString(createdForm.FormUpdatedAt),
+		Access:              string(createdForm.FormAccess.FormAccess),
+		SchedulingID:        utils.NullUUIDToString(createdForm.SchedulingID),
+		ScheduledTime:       utils.NullTimeToString(createdForm.ScheduledTime),
+		ClosingTime:         utils.NullTimeToString(createdForm.ClosingTime),
+		IsScheduleCompleted: utils.NullBoolToBool(createdForm.IsScheduleCompleted, false),
+		IsScheduled:         utils.NullBoolToBool(createdForm.IsScheduled, false),
 	}
 
 	ctx.JSON(201, gin.H{
@@ -194,10 +199,29 @@ func (r *formHandler) GetForms(ctx *gin.Context) {
 		return
 	}
 
+	var formResponse []dto.FormResponse
+	for _, form := range forms.Forms {
+		formResponse = append(formResponse, dto.FormResponse{
+			ID:                  form.FormID.String(),
+			Title:               form.FormTitle,
+			CreatedAt:           utils.NullTimeToString(form.FormCreatedAt),
+			UpdatedAt:           utils.NullTimeToString(form.FormUpdatedAt),
+			Description:         utils.NullStringToString(form.FormDescription),
+			CreatedBy:           utils.NullUUIDToString(form.CreatedBy),
+			Status:              string(form.FormStatus.FormStatus),
+			Access:              string(form.FormAccess.FormAccess),
+			SchedulingID:        utils.NullUUIDToString(form.SchedulingID),
+			ScheduledTime:       utils.NullTimeToString(form.ScheduledTime),
+			ClosingTime:         utils.NullTimeToString(form.ClosingTime),
+			IsScheduleCompleted: utils.NullBoolToBool(form.IsScheduleCompleted, false),
+			IsScheduled:         utils.NullBoolToBool(form.IsScheduled, false),
+		})
+	}
+
 	ctx.JSON(200, gin.H{
 		"status":  200,
 		"message": "Forms retrieved successfully",
-		"data":    forms.Forms,
+		"data":    formResponse,
 		"pagination": gin.H{
 			"totalRecords": forms.Total,
 			"page":         forms.Page,
@@ -274,14 +298,19 @@ func (r *formHandler) UpdateForm(ctx *gin.Context) {
 		"status":  200,
 		"message": "Form updated successfully",
 		"data": dto.FormResponse{
-			ID:          updatedForm.FormID.String(),
-			Title:       updatedForm.FormTitle,
-			Description: updatedForm.FormDescription.String,
-			CreatedBy:   updatedForm.CreatedBy.UUID.String(),
-			Status:      string(updatedForm.FormStatus.FormStatus),
-			CreatedAt:   updatedForm.FormCreatedAt.Time.String(),
-			UpdatedAt:   updatedForm.FormUpdatedAt.Time.String(),
-			Access:      string(updatedForm.FormAccess.FormAccess),
+			ID:                  updatedForm.FormID.String(),
+			Title:               updatedForm.FormTitle,
+			Description:         utils.NullStringToString(updatedForm.FormDescription),
+			CreatedBy:           utils.NullUUIDToString(updatedForm.CreatedBy),
+			Status:              string(updatedForm.FormStatus.FormStatus),
+			CreatedAt:           utils.NullTimeToString(updatedForm.FormCreatedAt),
+			UpdatedAt:           utils.NullTimeToString(updatedForm.FormUpdatedAt),
+			Access:              string(updatedForm.FormAccess.FormAccess),
+			SchedulingID:        utils.NullUUIDToString(updatedForm.SchedulingID),
+			ScheduledTime:       utils.NullTimeToString(updatedForm.ScheduledTime),
+			ClosingTime:         utils.NullTimeToString(updatedForm.ClosingTime),
+			IsScheduleCompleted: utils.NullBoolToBool(updatedForm.IsScheduleCompleted, false),
+			IsScheduled:         utils.NullBoolToBool(updatedForm.IsScheduled, false),
 		},
 	})
 }

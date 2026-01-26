@@ -13,6 +13,50 @@ import (
 	"github.com/lib/pq"
 )
 
+const countInvitationsByFormId = `-- name: CountInvitationsByFormId :one
+SELECT COUNT(*) AS total_records
+FROM invitations
+WHERE form_id = $1::uuid
+
+  -- Search filter (Email or Name)
+  AND (
+        $2::text IS NULL 
+        OR invited_name ILIKE '%' || $2::text || '%'
+        OR invited_email ILIKE '%' || $2::text || '%'
+      )
+
+  -- Status Inclusion filter
+  AND (
+        $3::invitation_status IS NULL 
+        OR status = $3::invitation_status
+      )
+
+  -- Status Exclusion filter
+  AND (
+        $4::invitation_status IS NULL 
+        OR status <> $4::invitation_status
+      )
+`
+
+type CountInvitationsByFormIdParams struct {
+	FormID        uuid.UUID            `json:"form_id"`
+	Search        sql.NullString       `json:"search"`
+	Status        NullInvitationStatus `json:"status"`
+	ExcludeStatus NullInvitationStatus `json:"exclude_status"`
+}
+
+func (q *Queries) CountInvitationsByFormId(ctx context.Context, arg CountInvitationsByFormIdParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countInvitationsByFormId,
+		arg.FormID,
+		arg.Search,
+		arg.Status,
+		arg.ExcludeStatus,
+	)
+	var total_records int64
+	err := row.Scan(&total_records)
+	return total_records, err
+}
+
 const createInvitation = `-- name: CreateInvitation :one
 INSERT INTO invitations (
     form_id, 
@@ -130,7 +174,7 @@ func (q *Queries) DeleteInvitation(ctx context.Context, invitationID uuid.UUID) 
 }
 
 const getInvitationByFormId = `-- name: GetInvitationByFormId :many
-SELECT invitation_id, form_id, invited_email, invited_at, invited_by, status, opened_at, submitted_at, invited_name FROM invitations
+SELECT invitation_id, form_id, invited_email, invited_at, invited_by, status, opened_at, submitted_at, invited_name, resend_id FROM invitations
 WHERE form_id = $1::uuid
   -- Search filter (Email or Name)
   AND (
@@ -149,7 +193,7 @@ WHERE form_id = $1::uuid
         OR status <> $4::invitation_status
       )
 ORDER BY invited_at DESC
-LIMIT COALESCE($6::int, 20)
+LIMIT COALESCE($6::int, 10)
 OFFSET COALESCE($5::int, 0)
 `
 
@@ -188,6 +232,7 @@ func (q *Queries) GetInvitationByFormId(ctx context.Context, arg GetInvitationBy
 			&i.OpenedAt,
 			&i.SubmittedAt,
 			&i.InvitedName,
+			&i.ResendID,
 		); err != nil {
 			return nil, err
 		}

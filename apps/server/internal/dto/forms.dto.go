@@ -1,21 +1,34 @@
 package dto
 
-import "github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
+import (
+	"time"
+
+	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
+)
 
 type CreateFormDTO struct {
-	Title       string `json:"title" binding:"required" form:"title" message:"title is required"`
-	Description string `json:"description" form:"description"`
+	Title         string          `json:"title" binding:"required" form:"title" message:"title is required"`
+	Description   *string         `json:"description,omitempty" form:"description"`
+	FormAccess    sqlc.FormAccess `json:"form_access,omitempty" form:"form_access"` // default 'restricted'
+	ScheduledTime *time.Time      `json:"scheduled_time,omitempty" form:"scheduled_time"`
+	ClosingTime   *time.Time      `json:"closing_time,omitempty" form:"closing_time"`
+	IsScheduled   *bool           `json:"is_scheduled,omitempty" form:"is_scheduled"`
 }
 
 type FormResponse struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	CreatedBy   string `json:"createdBy"`
-	Status      string `json:"status"`
-	CreatedAt   string `json:"createdAt"`
-	UpdatedAt   string `json:"updatedAt"`
-	Access      string `json:"access"`
+	ID                  string `json:"id"`
+	Title               string `json:"title"`
+	Description         string `json:"description,omitempty"`
+	CreatedBy           string `json:"createdBy,omitempty"`
+	Status              string `json:"status,omitempty"`
+	CreatedAt           string `json:"createdAt,omitempty"`
+	UpdatedAt           string `json:"updatedAt,omitempty"`
+	Access              string `json:"access,omitempty"`
+	SchedulingID        string `json:"schedulingId,omitempty"`
+	ScheduledTime       string `json:"scheduledTime,omitempty"`
+	ClosingTime         string `json:"closingTime,omitempty"`
+	IsScheduleCompleted bool   `json:"isScheduleCompleted,omitempty"`
+	IsScheduled         bool   `json:"isScheduled,omitempty"`
 }
 
 type ListFormQuery struct {
@@ -25,16 +38,21 @@ type ListFormQuery struct {
 }
 
 type FormListResponse struct {
-	Forms []FormResponse `json:"forms"`
-	Total int            `json:"total"`
-	Page  int            `json:"page"`
-	Limit int            `json:"limit"`
-	Pages int            `json:"pages"`
+	Forms []sqlc.ListFormsRow `json:"forms"`
+	Total int                 `json:"total"`
+	Page  int                 `json:"page"`
+	Limit int                 `json:"limit"`
+	Pages int                 `json:"pages"`
 }
 
 type UpdateFormDTO struct {
-	Title       string          `json:"title" form:"title"`
-	Description string          `json:"description" form:"description"`
-	Access      sqlc.FormAccess `json:"access" form:"access"`
-	Status      sqlc.FormStatus `json:"status" form:"status"`
+	Title               *string          `json:"title,omitempty" form:"title"`
+	Description         *string          `json:"description,omitempty" form:"description"`
+	Access              *sqlc.FormAccess `json:"access,omitempty" form:"access"`
+	Status              *sqlc.FormStatus `json:"status,omitempty" form:"status"`
+	SchedulingID        *string          `json:"schedulingId,omitempty" form:"scheduling_id"`
+	ScheduledTime       *time.Time       `json:"scheduledTime,omitempty" form:"scheduled_time"`
+	ClosingTime         *time.Time       `json:"closingTime,omitempty" form:"closing_time"`
+	IsScheduleCompleted *bool            `json:"isScheduleCompleted,omitempty" form:"is_schedule_completed"`
+	IsScheduled         *bool            `json:"isScheduled,omitempty" form:"is_scheduled"`
 }

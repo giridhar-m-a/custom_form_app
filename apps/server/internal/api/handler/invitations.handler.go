@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -72,7 +71,7 @@ func (h *invitationHandler) CreateInvitation(c *gin.Context) {
 	// 4. Call the Service
 	// We pass c.Request.Context() so if the user cancels the request, the service knows
 	success, failed, err := h.svc.CreateInvitation(fileHeader, formID, userID, c.Request.Context())
-	
+
 	if err != nil {
 		// If it's a fatal error (like DB connection loss)
 		utils.HandleError(c, err)
@@ -113,13 +112,13 @@ func (h *invitationHandler) CreateSingleInvitation(c *gin.Context) {
 	}
 
 	user := c.GetString("userID")
-	
+
 	invitedUser, err := h.svc.CreateSingleInvitation(data, user, c)
 	if err != nil {
 		utils.HandleError(c, err)
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Invitation created successfully",
 		"data":    invitedUser,
@@ -169,16 +168,16 @@ func (h *invitationHandler) DeleteInvitation(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param   query query dto.InvitationListQueryDto true "Invitation List Query"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Success 200 {object} dto.InvitationListResponse "Invitations retrieved successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request payload"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /invitations [get]
 // @Security BearerAuth
 // @type http
 // @scheme bearer
 func (h *invitationHandler) GetInvitationByFormId(c *gin.Context) {
 
-	
 	var params dto.InvitationListQueryDto
 	if err := c.ShouldBindQuery(&params); err != nil {
 		utils.HandleError(c, err)
@@ -191,10 +190,43 @@ func (h *invitationHandler) GetInvitationByFormId(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("Invitations: %v\n", invitations)
+	var page int
+	if params.Page == 0 {
+		page = 1
+	} else {
+		page = params.Page
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Invitations retrieved successfully",
-		"data":    invitations,
+	var limit int
+	if params.Limit == 0 {
+		limit = 10
+	} else {
+		limit = params.Limit
+	}
+
+	pagination := dto.PaginationResponse{
+		TotalRecords: invitations.Total,
+		Page:         page,
+		Limit:        limit,
+		TotalPages:   invitations.Pages,
+	}
+
+	response := []dto.InvitationResponseDto{}
+	for _, invitation := range invitations.Invitations {
+		response = append(response, dto.InvitationResponseDto{
+			InvitationID: invitation.InvitationID.String(),
+			FormID:       invitation.FormID.String(),
+			InvitedEmail: invitation.InvitedEmail,
+			Status:       string(invitation.Status.InvitationStatus),
+			InvitedBy:    invitation.InvitedBy.UUID.String(),
+			InvitedName:  invitation.InvitedName,
+		})
+	}
+
+	c.JSON(http.StatusOK, dto.InvitationListResponse{
+		Status:     http.StatusOK,
+		Message:    "Invitations retrieved successfully",
+		Data:       response,
+		Pagination: pagination,
 	})
 }

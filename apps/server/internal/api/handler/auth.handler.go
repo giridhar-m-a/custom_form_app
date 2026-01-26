@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
 	serializers "github.com/giridhar-m-a/custom_form_app/internal/serialisers"
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
+	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
 )
 
@@ -20,6 +22,8 @@ type AuthHandler interface {
 	EmailPasswordAuthHandler(c *gin.Context)
 	VerifyTokenHandler(c *gin.Context)
 	RefreshTokenHandler(c *gin.Context)
+	PasswordResetRequestHandler(c *gin.Context)
+	ResetPasswordHandler(c *gin.Context)
 }
 
 type authHandler struct {
@@ -223,7 +227,7 @@ func (a *authHandler) VerifyTokenHandler(c *gin.Context) {
 // @Failure      400  {object}  object{status=int,message=string}  "Invalid request"
 // @Failure      401  {object}  object{status=int,message=string}  "Unauthorized"
 // @Failure      500  {object}  object{status=int,message=string}  "Internal server error"
-// @Router       /auth/verify-refresh-token [get]
+// @Router       /auth/refresh-token [get]
 // @Schemes      https
 func (a *authHandler) RefreshTokenHandler(c *gin.Context) {
 	token := c.Query("token")
@@ -254,4 +258,84 @@ func (a *authHandler) RefreshTokenHandler(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"data": gin.H{"accessToken": token, "refreshToken": refreshToken}, "status": http.StatusOK, "message": "Token refreshed successfully"})
 		}
 	}
+}
+
+// @Summary      Request Password Reset URL
+// @Description  Request a password reset token for the user's email address.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        form  body      dto.PasswordResetRequest  true  "Form data"
+// @Success      200  {object}  object{status=int,message=string}  "Password reset request sent successfully"
+// @Failure      400  {object}  object{status=int,message=string}  "Invalid request"
+// @Failure      401  {object}  object{status=int,message=string}  "Unauthorized"
+// @Failure      500  {object}  object{status=int,message=string}  "Internal server error"
+// @Router       /auth/request-password-reset [post]
+// @Schemes      https
+func (a *authHandler) PasswordResetRequestHandler(ctx *gin.Context) {
+	var data dto.PasswordResetRequest
+	if err := ctx.ShouldBindJSON(&data); err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	sent, err := a.authService.RequestResetPassword(ctx, data.Email)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	if sent.Id != "" {
+		ctx.JSON(http.StatusOK, gin.H{"message": "Password reset email sent successfully", "status": http.StatusOK})
+	} else {
+		ctx.JSON(http.StatusNotFound, gin.H{"message": "User not found", "status": http.StatusNotFound})
+	}
+
+}
+
+// @Summary      Reset User Password
+// @Description  Reset the user's password using the provided token.
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        form  body      dto.PasswordResetDto  true  "Form data"
+// @Success      200  {object}  object{status=int,message=string}  "Password reset request sent successfully"
+// @Failure      400  {object}  object{status=int,message=string}  "Invalid request"
+// @Failure      401  {object}  object{status=int,message=string}  "Unauthorized"
+// @Failure      500  {object}  object{status=int,message=string}  "Internal server error"
+// @Router       /auth/request-password-reset [post]
+// @Schemes      https
+func (a *authHandler) ResetPasswordHandler(ctx *gin.Context) {
+	var data dto.PasswordResetDto
+	if err := ctx.ShouldBindJSON(&data); err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	if data.Token == "" {
+		utils.HandleError(ctx, errors.New("token is required"))
+		return
+	}
+
+	if data.NewPassword == "" {
+		utils.HandleError(ctx, errors.New("new password is required"))
+		return
+	}
+
+	if data.NewPassword != data.ConfirmPassword {
+		utils.HandleError(ctx, errors.New("passwords do not match"))
+		return
+	}
+
+	if err := a.authService.ResetPassword(ctx, data.Token, data.NewPassword); err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Password reset successfully", "status": http.StatusOK})
 }

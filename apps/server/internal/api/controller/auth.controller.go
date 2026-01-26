@@ -19,4 +19,8 @@ func Auth(rg *gin.RouterGroup) {
 	auth.GET("/verify", authHandler.VerifyTokenHandler)
 
 	auth.GET("/refresh-token", authHandler.RefreshTokenHandler)
+
+	auth.POST("/request-password-reset", authHandler.PasswordResetRequestHandler)
+
+	auth.POST("/reset-password", authHandler.ResetPasswordHandler)
 }
