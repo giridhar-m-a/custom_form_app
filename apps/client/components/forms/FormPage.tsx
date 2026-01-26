@@ -67,6 +67,7 @@ export const FormPage = () => {
       totalPage={pagination.totalPages}
       handlePageChange={page => setFilters({ ...filters, page })}
       handlePageSizeChange={size => setFilters({ ...filters, limit: size, page: 1 })}
+      isLoading={isFetching}
       headerTemplate={
         <div className="flex items-center justify-evenly gap-4">
           <Search

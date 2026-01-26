@@ -1,6 +1,13 @@
 'use server'
 
-import { SignInSchema, SignInSchemaType, SignUpSchema, SignUpSchemaType } from '@/app/schemas/auth.schemas'
+import {
+  RequestPasswordResetSchemaType,
+  ResetPasswordSchemaType,
+  SignInSchema,
+  SignInSchemaType,
+  SignUpSchema,
+  SignUpSchemaType
+} from '@/app/schemas/auth.schemas'
 import { GET, POST } from '@/lib/api.config'
 import { AUTH_ROUTES } from '@/lib/constants/apiRoutes/auth.routes'
 import { errorHandler } from '@/lib/errorHandler'
@@ -8,7 +15,7 @@ import { AuthResponse, RefreshTokenResponse, VerifyTokenResponse } from '@/types
 
 export const loginWithCredentials = async (data: SignInSchemaType) => {
   try {
-    const parsed = await SignInSchema.safeParse(data)
+    const parsed = SignInSchema.safeParse(data)
     if (!parsed.success) {
       throw new Error(JSON.stringify(parsed.error))
     }
@@ -31,11 +38,11 @@ export const loginWithGoogle = async (code: string) => {
 
 export const register = async (data: SignUpSchemaType) => {
   try {
-    const parsed = await SignUpSchema.safeParse(data)
+    const parsed = SignUpSchema.safeParse(data)
     if (!parsed.success) {
       throw new Error(JSON.stringify(parsed.error))
     }
-    const response = await POST<AuthResponse>(AUTH_ROUTES.register, parsed.data)
+    const response = await POST<AuthResponse>(AUTH_ROUTES.register, { ...parsed.data, confirmPassword: undefined })
     return response
   } catch (e) {
     return errorHandler<AuthResponse>(e)
@@ -57,5 +64,23 @@ export const verifyRefreshToken = async (token: string) => {
     return response
   } catch (e) {
     return errorHandler<RefreshTokenResponse>(e)
+  }
+}
+
+export const requestPasswordReset = async (data: RequestPasswordResetSchemaType) => {
+  try {
+    const response = await POST<AuthResponse>(AUTH_ROUTES.resetRequest, data)
+    return response
+  } catch (e) {
+    return errorHandler<AuthResponse>(e)
+  }
+}
+
+export const resetPassword = async (data: ResetPasswordSchemaType) => {
+  try {
+    const response = await POST<AuthResponse>(AUTH_ROUTES.resetPassword, data)
+    return response
+  } catch (e) {
+    return errorHandler<AuthResponse>(e)
   }
 }

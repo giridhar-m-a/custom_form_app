@@ -9,6 +9,7 @@ import { Grid2X2, List } from 'lucide-react'
 import { CommonSelect } from './CommonSelect'
 import { Pagination } from './Pagination'
 import { ScrollArea } from '../ui/scroll-area'
+import { CustomLoader } from './CustomLoader'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -22,6 +23,9 @@ interface DataTableProps<TData, TValue> {
   handlePageSizeChange?: (size: number) => void
   totalPage?: number
   totalRecords?: number
+  isLoading?: boolean
+  maxHeight?: string
+  minHeight?: string
 }
 
 export function DataTable<TData, TValue>({
@@ -35,7 +39,10 @@ export function DataTable<TData, TValue>({
   handlePageSizeChange,
   pageSize,
   totalPage,
-  totalRecords
+  totalRecords,
+  isLoading,
+  maxHeight,
+  minHeight
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -80,83 +87,96 @@ export function DataTable<TData, TValue>({
           <div className="basis-[96%]">{headerTemplate}</div>
         </div>
       )}
-      <div
-        className="relative overflow-auto"
-        style={{ maxHeight: 'calc(100vh - 50vh)', minHeight: 'calc(100vh - 50vh)' }}>
-        {!isGrid && (
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-accent border-background border-2">
-              {table.getHeaderGroups().map(headerGroup => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map(header => {
-                    return (
-                      <TableHead key={header.id} className="px-6">
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody className="w-full">
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map(row => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                    {row.getVisibleCells().map(cell => (
-                      <TableCell className="px-6" key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      {!isLoading ? (
+        <>
+          <div
+            className="relative overflow-auto"
+            style={{ maxHeight: maxHeight || 'calc(100vh - 50vh)', minHeight: minHeight || 'calc(100vh - 50vh)' }}>
+            {!isGrid && (
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-accent border-background border-2">
+                  {table.getHeaderGroups().map(headerGroup => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map(header => {
+                        return (
+                          <TableHead key={header.id} className="px-6">
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        )
+                      })}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody className="w-full">
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row, i) => (
+                      <TableRow
+                        key={row.id}
+                        className={i % 2 !== 0 ? 'bg-accent/30' : ''}
+                        data-state={row.getIsSelected() && 'selected'}>
+                        {row.getVisibleCells().map(cell => (
+                          <TableCell className="px-6" key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="h-24 text-center">
+                        No results.
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        )}
-        {isGrid && gridContentTemplate && (
-          <div className="w-full h-full flex items-center justify-start gap-6 flex-wrap p-12">
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map(row => gridContentTemplate(row.original))
-            ) : (
-              <div className="p-6 flex items-center justify-center w-full h-full">No results.</div>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
+            {isGrid && gridContentTemplate && (
+              <div className="w-full h-full flex items-center justify-start gap-6 flex-wrap p-12">
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map(row => gridContentTemplate(row.original))
+                ) : (
+                  <div className="p-6 flex items-center justify-center w-full h-full">No results.</div>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
-      {!footerTemplate && (
-        <div className="p-6 flex items-center justify-between gap-4">
-          {/* Page size selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page:</span>
-            <CommonSelect
-              value={pageSize?.toString() || '15'}
-              options={pageSizeOptions}
-              onChange={value => {
-                if (!isNaN(Number(value))) handlePageSizeChange?.(Number(value))
-              }}
-              placeholder="Select Page Size"
-            />
-          </div>
+          {!footerTemplate && (
+            <div className="p-6 flex items-center justify-between gap-4">
+              {/* Page size selector */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page:</span>
+                <CommonSelect
+                  value={pageSize?.toString() || '15'}
+                  options={pageSizeOptions}
+                  onChange={value => {
+                    if (!isNaN(Number(value))) handlePageSizeChange?.(Number(value))
+                  }}
+                  placeholder="Select Page Size"
+                />
+              </div>
 
-          {/* Pagination controls */}
-          {totalPage && totalPage > 1 && (
-            <Pagination
-              currentPage={currentPage || 1}
-              totalPages={totalPage}
-              onPageChange={page => handlePageChange?.(page)}
-              totalRecords={totalRecords}
-              pageSize={pageSize}
-            />
+              {/* Pagination controls */}
+              {totalPage && totalPage > 1 && (
+                <Pagination
+                  currentPage={currentPage || 1}
+                  totalPages={totalPage}
+                  onPageChange={page => handlePageChange?.(page)}
+                  totalRecords={totalRecords}
+                  pageSize={pageSize}
+                />
+              )}
+            </div>
           )}
+          {footerTemplate && footerTemplate}
+        </>
+      ) : (
+        <div className="flex items-center justify-center min-h-[calc(100vh-60vh)] h-full w-full">
+          <CustomLoader />
         </div>
       )}
-      {footerTemplate && footerTemplate}
     </div>
   )
 }

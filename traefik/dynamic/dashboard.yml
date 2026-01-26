@@ -1,0 +1,8 @@
+http:
+  routers:
+    traefik-dashboard:
+      rule: Host(`traefik.custom-form-app.home`)
+      entryPoints:
+        - https
+      service: api@internal
+      tls: {}

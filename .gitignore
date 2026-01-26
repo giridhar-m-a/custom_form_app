@@ -5,6 +5,7 @@ dist/
 node_modules/
 .build/
 .
+/rustfs
 
 # Logs
 *.log
@@ -69,11 +70,10 @@ next-env.d.ts
 .turbo/
 .next/
 
-traefik/certs/custom-form-app.cnf
-traefik/certs/custom-form-app.crt
-traefik/certs/homeCA.crt
-**/*.key
-**/*.pem
-
-**/*.csr
-**/*.srl
+#certs
+*.crt
+*.key
+*.csr
+*.cnf
+*.srl
+cf-token

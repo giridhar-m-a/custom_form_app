@@ -1,0 +1,31 @@
+api:
+  dashboard: true
+  debug: true
+
+entryPoints:
+  http:
+    address: ":80"
+
+# serversTransport:
+#   insecureSkipVerify: true
+
+# tls:
+#   certificates:
+#     - certFile: /certs/custom-form-app.crt
+#       keyFile: /certs/custom-form-app.key
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+
+  file:
+    directory: /config/dynamic # ✅ FIXED
+    watch: true
+
+log:
+  level: INFO
+  filePath: /config/logs/traefik.log # ✅ FIXED
+
+accessLog:
+  filePath: /config/logs/access.log # ✅ FIXED
