@@ -20,6 +20,7 @@ interface FormFieldWrapperProps {
   errors?: FieldErrors<FormFieldCreateSchemaType>
   isEdit: boolean
   setEdit: () => void
+  tempId: string // new prop
 }
 
 export const FormFieldWrapper = ({
@@ -31,13 +32,14 @@ export const FormFieldWrapper = ({
   handleSubmitField,
   errors,
   isEdit,
-  setEdit
+  setEdit,
+  tempId
 }: FormFieldWrapperProps) => {
   const [field, setField] = useState<FormFieldCreateSchemaType>(formField)
 
   // Setup sortable
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: formField.ordering ?? 0,
+    id: tempId, // Use stable tempId
     transition: {
       duration: 200,
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)'

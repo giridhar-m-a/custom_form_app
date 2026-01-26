@@ -41,7 +41,9 @@ const AuthFormSignUp = () => {
               <FormItem>
                 <FormControl>
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name" className="text-black">
+                      Full Name
+                    </Label>
                     <Input
                       id="name"
                       type="text"
@@ -61,7 +63,9 @@ const AuthFormSignUp = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="email">Email</FormLabel>
+                <FormLabel className="text-black" htmlFor="email">
+                  Email
+                </FormLabel>
                 <FormControl>
                   <div className="relative mt-1">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -85,7 +89,9 @@ const AuthFormSignUp = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="password">Password</FormLabel>
+                <FormLabel className="text-black" htmlFor="password">
+                  Password
+                </FormLabel>
                 <FormControl>
                   <div className="relative mt-1">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -109,7 +115,9 @@ const AuthFormSignUp = () => {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
+                <FormLabel className="text-black" htmlFor="confirmPassword">
+                  Confirm Password
+                </FormLabel>
                 <FormControl>
                   <div className="relative mt-1">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

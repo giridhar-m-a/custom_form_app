@@ -1,7 +1,18 @@
 'use client'
-import { SignInSchemaType, SignUpSchemaType } from '@/app/schemas/auth.schemas'
+import {
+  RequestPasswordResetSchemaType,
+  ResetPasswordSchemaType,
+  SignInSchemaType,
+  SignUpSchemaType
+} from '@/app/schemas/auth.schemas'
 import { LOGIN_KEYS } from '@/lib/constants/queryKeys/login.keys'
-import { loginWithCredentials, loginWithGoogle, register } from '@/services/api/login/route'
+import {
+  loginWithCredentials,
+  loginWithGoogle,
+  register,
+  requestPasswordReset,
+  resetPassword
+} from '@/services/api/auth/route'
 import { setTokens } from '@/store/slices/auth.slice'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
@@ -77,6 +88,46 @@ export const useRegister = () => {
       }
       toast.success(message)
       router.push('/dashboard')
+    },
+    onError: ({ message }) => {
+      toast.error(message)
+    }
+  })
+}
+
+export const useResetPassword = () => {
+  const { push } = useRouter()
+  return useMutation({
+    mutationKey: LOGIN_KEYS.resetPassword,
+    mutationFn: async (data: ResetPasswordSchemaType) => {
+      const res = await resetPassword(data)
+      if (res.status === 200 || res.status === 201) {
+        return res
+      }
+      throw new Error(res.message)
+    },
+    onSuccess: ({ message }) => {
+      toast.success(message)
+      push('/')
+    },
+    onError: ({ message }) => {
+      toast.error(message)
+    }
+  })
+}
+
+export const useRequestPasswordReset = () => {
+  return useMutation({
+    mutationKey: LOGIN_KEYS.requestPasswordReset,
+    mutationFn: async (data: RequestPasswordResetSchemaType) => {
+      const res = await requestPasswordReset(data)
+      if (res.status === 200 || res.status === 201) {
+        return res
+      }
+      throw new Error(res.message)
+    },
+    onSuccess: ({ message }) => {
+      toast.success(message)
     },
     onError: ({ message }) => {
       toast.error(message)

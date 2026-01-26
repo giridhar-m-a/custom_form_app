@@ -5,6 +5,7 @@ dist/
 node_modules/
 .build/
 .
+/rustfs
 
 # Logs
 *.log
@@ -69,3 +70,10 @@ next-env.d.ts
 .turbo/
 .next/
 
+#certs
+*.crt
+*.key
+*.csr
+*.cnf
+*.srl
+cf-token

@@ -12,9 +12,10 @@ import { useForm } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
 import AuthFormSignUp from './AuthFormSignUp'
 import { useGoogleLogin } from '@react-oauth/google'
+import AuthFormReset from './AuthFormReset'
 
 const AuthFormLogin = () => {
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [isSignUp, setIsSignUp] = useState<'login' | 'signup' | 'forget'>('login')
   const { mutate: credentialLogin, isPending: isFormLoading } = useCredentialAuth()
   const { mutate: googleLogin, isPending: isGoogleLoading } = useGoogleAuth()
 
@@ -43,10 +44,14 @@ const AuthFormLogin = () => {
 
   return (
     <Card className="w-full max-w-md border-none shadow-xl bg-white/95 backdrop-blur-sm">
-      <CardHeader className="text-center pb-4">
-        <h2 className="text-3xl font-bold text-gray-800">{isSignUp ? 'Sign Up' : 'Welcome Back'}</h2>
-        <p className="text-sm text-gray-500">{isSignUp ? 'Create' : 'Sign in to'} your FormGenius account</p>
-      </CardHeader>
+      {isSignUp !== 'forget' && (
+        <CardHeader className="text-center pb-4">
+          <h2 className="text-3xl font-bold text-gray-800">{isSignUp === 'signup' ? 'Sign Up' : 'Welcome Back'}</h2>
+          <p className="text-sm text-gray-500">
+            {isSignUp === 'signup' ? 'Create' : 'Sign in to'} your FormGenius account
+          </p>
+        </CardHeader>
+      )}
 
       <CardContent>
         <Button
@@ -70,7 +75,7 @@ const AuthFormLogin = () => {
           </span>
         </div>
 
-        {!isSignUp && (
+        {isSignUp === 'login' && (
           <Form {...form}>
             <form onSubmit={handleSubmit(handleFormLogin)} className="space-y-4">
               <div>
@@ -79,7 +84,9 @@ const AuthFormLogin = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel htmlFor="email">Email</FormLabel>
+                      <FormLabel htmlFor="email" className="text-black">
+                        Email
+                      </FormLabel>
                       <FormControl>
                         <div className="relative mt-1">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -106,7 +113,9 @@ const AuthFormLogin = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel htmlFor="password">Password</FormLabel>
+                      <FormLabel htmlFor="password" className="text-black">
+                        Password
+                      </FormLabel>
                       <FormControl>
                         <div className="relative mt-1">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -122,6 +131,11 @@ const AuthFormLogin = () => {
                         </div>
                       </FormControl>
                       <FormMessage />
+                      <p
+                        className="underline text-right text-primary hover:text-indigo-700"
+                        onClick={() => setIsSignUp('forget')}>
+                        Forgot Password?
+                      </p>
                     </FormItem>
                   )}
                 />
@@ -137,14 +151,15 @@ const AuthFormLogin = () => {
             </form>
           </Form>
         )}
-        {isSignUp && <AuthFormSignUp />}
+        {isSignUp === 'signup' && <AuthFormSignUp />}
+        {isSignUp === 'forget' && <AuthFormReset />}
         <p className="mt-4 text-center text-sm text-gray-500">
-          {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+          {isSignUp === 'login' || isSignUp === 'forget' ? 'Already have an account? ' : "Don't have an account? "}
           <button
             type="button"
             className="text-indigo-600 hover:underline font-medium"
-            onClick={() => setIsSignUp(!isSignUp)}>
-            {isSignUp ? 'Log in' : 'Sign up'}
+            onClick={() => setIsSignUp(prev => (prev === 'login' ? 'signup' : 'login'))}>
+            {isSignUp === 'login' ? 'Sign Up' : 'Login'}
           </button>
         </p>
       </CardContent>

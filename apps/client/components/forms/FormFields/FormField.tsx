@@ -111,7 +111,7 @@ export const FormField = ({
               <Textarea
                 value={field.fieldLabel}
                 onChange={e => onLabelChange(e.target.value)}
-                className="w-full resize-none text-lg font-semibold border-none shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/50 min-h-[40px]"
+                className="w-full resize-none text-lg font-semibold border-none shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/50 min-h-10"
                 placeholder="Question / Field Title"
                 rows={1}
                 onInput={e => {
@@ -297,7 +297,7 @@ export const FormField = ({
           {fieldType === 'dropdown' && (
             <div className="h-10 w-full max-w-[200px] flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
               <span>Select visible option</span>
-              <div className="h-4 w-4 border-l border-b border-muted-foreground/50 -rotate-45 origin-center translate-y-[-2px] scale-50" />
+              <div className="h-4 w-4 border-l border-b border-muted-foreground/50 -rotate-45 origin-center -translate-y-0.5 scale-50" />
             </div>
           )}
 

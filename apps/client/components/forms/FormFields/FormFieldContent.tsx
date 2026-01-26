@@ -1,6 +1,7 @@
 'use client'
 
 import { FormFieldCreateSchemaType, FormFieldSchema, FormFieldSchemaType } from '@/app/schemas/form.schemas'
+import { CustomLoader } from '@/components/common/CustomLoader'
 import { SubmitButton } from '@/components/common/SubmitButton'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,31 +26,15 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import {
-  MdAccessTime,
-  MdAdd,
-  MdArrowDropDownCircle,
-  MdAttachFile,
-  MdCheckBox,
-  MdDateRange,
-  MdEmail,
-  MdImage,
-  MdLink,
-  MdList,
-  MdNotes,
-  MdNumbers,
-  MdPermContactCalendar,
-  MdPhone,
-  MdRadioButtonChecked,
-  MdShortText,
-  MdStar
-} from 'react-icons/md'
-import { FormFieldWrapper } from './FormFieldWrapper'
-import { CustomLoader } from '@/components/common/CustomLoader'
 import toast from 'react-hot-toast'
+import { MdAdd } from 'react-icons/md'
+import { FormFieldWrapper } from './FormFieldWrapper'
 import { FIELD_TYPE_OPTIONS } from './formFields.config'
+
+// Augment the schema type locally to include tempId for UI stability
+type FormFieldWithId = FormFieldCreateSchemaType & { tempId: string }
 
 interface FormFieldContentProps {
   formId: string
@@ -59,7 +44,7 @@ interface FormFieldContentProps {
 }
 
 export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode = 'create' }: FormFieldContentProps) => {
-  const [editingField, setEditingField] = useState<number | null>(null)
+  const [editingField, setEditingField] = useState<string | null>(null)
   const { mutateAsync: createFormField, isPending: isCreatingFormField } = useCreateFormField()
   const { mutateAsync: updateFormField, isPending: isUpdatingFormField } = useUpdateFormField()
   const { data: FieldRes, isLoading } = useGetFormFields(formId, initialFields)
@@ -78,13 +63,18 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
     resolver: zodResolver(schema),
     defaultValues: {
       formId,
-      formFields: FieldRes?.data,
+      formFields:
+        FieldRes?.data?.map(f => ({
+          ...f,
+          tempId: crypto.randomUUID()
+        })) || [],
       removedFields: [],
       removedFieldOptions: []
     }
   })
 
-  const formFields = watch('formFields') || []
+  // We cast watch result to our augmented type
+  const formFields = (watch('formFields') || []) as FormFieldWithId[]
   const removedFields = watch('removedFields') || []
   const removedFieldOptions = watch('removedFieldOptions') || []
 
@@ -100,8 +90,8 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (active.id !== over?.id) {
-      const oldIndex = formFields.findIndex(field => field.ordering === active.id)
-      const newIndex = formFields.findIndex(field => field.ordering === over?.id)
+      const oldIndex = formFields.findIndex(field => field.tempId === active.id)
+      const newIndex = formFields.findIndex(field => field.tempId === over?.id)
       const reorderedFields = arrayMove(formFields, oldIndex, newIndex)
 
       // Update ordering values to match the new positions
@@ -111,36 +101,24 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
       }))
 
       setValue('formFields', updatedFields as any, { shouldValidate: true, shouldDirty: true })
-
-      // If the currently edited field was moved, update the editingField index
-      if (editingField !== null) {
-        // Easier way: The item at oldIndex moved to newIndex.
-        if (editingField === oldIndex) {
-          setEditingField(newIndex)
-        } else if (oldIndex < newIndex && editingField > oldIndex && editingField <= newIndex) {
-          // Item moved down, items in between moved up
-          setEditingField(editingField - 1)
-        } else if (oldIndex > newIndex && editingField >= newIndex && editingField < oldIndex) {
-          // Item moved up, items in between moved down
-          setEditingField(editingField + 1)
-        }
-      }
+      // No need to manually update editingField since it now tracks ID, which didn't change
     }
   }
 
   // Toggle edit mode for a specific field
-  const toggleEdit = (index: number) => {
-    setEditingField(prev => (prev === index ? null : index))
+  const toggleEdit = (id: string) => {
+    setEditingField(prev => (prev === id ? null : id))
   }
 
   // Add a new field
   const handleAddField = (afterIndex: number, fieldType: FieldType = 'text') => {
-    const newField: FormFieldCreateSchemaType = {
+    const newField: FormFieldWithId = {
       fieldLabel: 'New Field',
       fieldType: fieldType,
       isRequired: false,
       ordering: afterIndex + 1,
-      options: []
+      options: [],
+      tempId: crypto.randomUUID()
     }
 
     const updatedFields = [...formFields]
@@ -152,9 +130,9 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
       ordering: idx
     }))
 
-    setValue('formFields', reorderedFields, { shouldValidate: true, shouldDirty: true })
+    setValue('formFields', reorderedFields as any, { shouldValidate: true, shouldDirty: true })
     // Auto-edit the new field
-    setEditingField(afterIndex + 1)
+    setEditingField(newField.tempId)
   }
 
   // Duplicate a field
@@ -165,7 +143,7 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
       return
     }
     handleSubmitField(fieldToDuplicate as FormFieldCreateSchemaType, index)
-    const duplicatedField: FormFieldCreateSchemaType = {
+    const duplicatedField: FormFieldWithId = {
       fieldLabel: `${fieldToDuplicate.fieldLabel} (Copy)`,
       fieldType: fieldToDuplicate.fieldType ?? 'text',
       isRequired: fieldToDuplicate.isRequired ?? false,
@@ -177,8 +155,9 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
         isAnswer: opt.isAnswer ?? false,
         optionId: undefined,
         fieldId: undefined
-      }))
-    } as FormFieldCreateSchemaType
+      })),
+      tempId: crypto.randomUUID()
+    } as FormFieldWithId
 
     const updatedFields = [...formFields]
     updatedFields.splice(index + 1, 0, duplicatedField)
@@ -189,8 +168,8 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
       ordering: idx
     }))
 
-    setValue('formFields', reorderedFields, { shouldValidate: true, shouldDirty: true })
-    setEditingField(index + 1)
+    setValue('formFields', reorderedFields as any, { shouldValidate: true, shouldDirty: true })
+    setEditingField(duplicatedField.tempId)
   }
 
   // Remove a field
@@ -212,21 +191,20 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
       ordering: idx
     }))
 
-    setValue('formFields', reorderedFields, { shouldValidate: true, shouldDirty: true })
+    setValue('formFields', reorderedFields as any, { shouldValidate: true, shouldDirty: true })
 
     // Adjust editingField
-    if (editingField === index) {
+    if (editingField === fieldToRemove.tempId) {
       setEditingField(null)
-    } else if (editingField !== null && editingField > index) {
-      setEditingField(editingField - 1)
     }
   }
 
   // Submit a single field (save changes)
   const handleSubmitField = (field: FormFieldCreateSchemaType, index: number) => {
     const updatedFields = [...formFields]
-    updatedFields[index] = field
-    setValue('formFields', updatedFields, { shouldValidate: true, shouldDirty: true })
+    // Preserve the tempId when updating the field data from edit form
+    updatedFields[index] = { ...field, tempId: formFields[index].tempId } as FormFieldWithId
+    setValue('formFields', updatedFields as any, { shouldValidate: true, shouldDirty: true })
 
     // Exit edit mode for this field if valid
     // TODO: Adding validation check here would be good, but react-hook-form handles validation on submit
@@ -254,13 +232,16 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
       updateFormField(
         { data },
         {
-          onSuccess: data => {
-            if (data.data?.length) {
-              reset({
-                formFields: data.data,
-                removedFields: [],
-                removedFieldOptions: []
-              })
+          onSuccess: ({ data }) => {
+            if (data?.length) {
+              // Re-map with new tempIds to ensure consistency, though we could try to preserve them if we matched fieldIds
+              const fieldsWithIds = data.map(f => ({
+                ...f,
+                tempId: crypto.randomUUID()
+              }))
+              setValue('formFields', fieldsWithIds)
+              setValue('removedFields', [])
+              setValue('removedFieldOptions', [])
             }
           }
         }
@@ -302,22 +283,21 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
           <ScrollArea className="h-[calc(100vh-30rem)] p-4">
             <form onSubmit={handleSubmit(onFormSubmit as any)} className="space-y-6">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext
-                  items={formFields.map(field => ({ ...field, id: field.ordering ?? 0 }))}
-                  strategy={verticalListSortingStrategy}>
+                <SortableContext items={formFields.map(field => field.tempId)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-4">
                     {formFields.map((field, index) => (
                       <FormFieldWrapper
-                        key={`field-${index}-${field.fieldId || 'new'}`}
+                        key={field.tempId}
                         formField={field as FormFieldCreateSchemaType}
-                        handleRemoveField={handleRemoveField}
-                        handleDuplicateField={handleDuplicateField}
-                        handleAddField={handleAddField}
+                        tempId={field.tempId}
+                        handleRemoveField={index => handleRemoveField(index)}
+                        handleDuplicateField={index => handleDuplicateField(index)}
+                        handleAddField={(index, type) => handleAddField(index, type)}
                         index={index}
-                        handleSubmitField={handleSubmitField}
+                        handleSubmitField={(f, i) => handleSubmitField(f, i)}
                         errors={errors.formFields?.[index]}
-                        isEdit={editingField === index}
-                        setEdit={() => toggleEdit(index)}
+                        isEdit={editingField === field.tempId}
+                        setEdit={() => toggleEdit(field.tempId)}
                       />
                     ))}
                   </div>

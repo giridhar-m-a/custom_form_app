@@ -10,14 +10,17 @@ dev:
 	@sleep 5
 	$(MAKE) migrate-up
 
-exec:
+exec-client:
+	docker compose exec custom_form_client sh
+
+exec-server:
 	docker compose exec custom_form_server sh
 
 logs-server:
 	docker compose logs -f custom_form_server
 
 logs-client:
-	docker compose logs -f custom_form_client	
+	docker compose logs -f custom_form_client
 
 
 logs-db:
