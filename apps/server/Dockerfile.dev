@@ -5,8 +5,8 @@ WORKDIR /app
 # Install build dependencies (git, bash, make)
 RUN apk add --no-cache git bash make
 
-# Install Air (for live reload)
-RUN go install github.com/air-verse/air@latest&& \
+# Install Wgo (for live reload)
+RUN go install github.com/bokwoon95/wgo@latest && \
     go install github.com/swaggo/swag/cmd/swag@latest&& \
     go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 ENV PATH=$PATH:/go/bin
@@ -21,5 +21,5 @@ COPY . .
 
 RUN swag init -g cmd/server/main.go -o docs/ --parseDependency --parseInternal
 
-# Default command: run with Air
-CMD ["sh", "-c", "make migrate-up && air -c .air.toml"]
+# Default command: run with Wgo
+CMD ["sh", "-c", "wgo -file=.go -file=.tpl -file=.tmpl -file=.html -file=.env -xfile=_test.go -xdir=assets -xdir=vendor -xdir=internal/db/sqlc go run ./cmd/server"]

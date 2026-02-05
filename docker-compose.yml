@@ -88,17 +88,13 @@ services:
       context: ./apps/server
       dockerfile: Dockerfile.dev
     container_name: custom_form_app_server
-    command: air -c .air.toml
     working_dir: /app
-    environment:
-      - AIR_WATCHER_FORCE_POLLING=true
     env_file:
       - .env
     ports:
       - ${APP_PORT}:${APP_PORT}
     volumes:
       - ./apps/server:/app:delegated
-      - air_tmp:/app/tmp
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`be.custom-form-app.home`)"
@@ -188,7 +184,6 @@ services:
 
 volumes:
   postgres_data:
-  air_tmp:
   rustfs_data:
   rustfs_logs:
   client_node_modules: # Add this
