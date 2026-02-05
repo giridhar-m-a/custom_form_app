@@ -203,19 +203,20 @@ func (ns NullInvitationStatus) Value() (driver.Value, error) {
 }
 
 type Form struct {
-	FormID              uuid.UUID      `json:"form_id"`
-	FormTitle           string         `json:"form_title"`
-	FormDescription     sql.NullString `json:"form_description"`
-	FormStatus          NullFormStatus `json:"form_status"`
-	FormAccess          NullFormAccess `json:"form_access"`
-	FormCreatedAt       sql.NullTime   `json:"form_created_at"`
-	FormUpdatedAt       sql.NullTime   `json:"form_updated_at"`
-	CreatedBy           uuid.NullUUID  `json:"created_by"`
-	SchedulingID        uuid.NullUUID  `json:"scheduling_id"`
-	ScheduledTime       sql.NullTime   `json:"scheduled_time"`
-	ClosingTime         sql.NullTime   `json:"closing_time"`
-	IsScheduleCompleted sql.NullBool   `json:"is_schedule_completed"`
-	IsScheduled         sql.NullBool   `json:"is_scheduled"`
+	FormID               uuid.UUID      `json:"form_id"`
+	FormTitle            string         `json:"form_title"`
+	FormDescription      sql.NullString `json:"form_description"`
+	FormStatus           NullFormStatus `json:"form_status"`
+	FormAccess           NullFormAccess `json:"form_access"`
+	FormCreatedAt        sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt        sql.NullTime   `json:"form_updated_at"`
+	CreatedBy            uuid.NullUUID  `json:"created_by"`
+	SchedulingID         uuid.NullUUID  `json:"scheduling_id"`
+	ScheduledTime        sql.NullTime   `json:"scheduled_time"`
+	ClosingTime          sql.NullTime   `json:"closing_time"`
+	IsScheduleCompleted  sql.NullBool   `json:"is_schedule_completed"`
+	IsScheduled          sql.NullBool   `json:"is_scheduled"`
+	InvitationScheduleID uuid.NullUUID  `json:"invitation_schedule_id"`
 }
 
 type FormField struct {

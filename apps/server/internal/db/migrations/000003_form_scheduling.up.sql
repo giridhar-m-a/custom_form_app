@@ -23,7 +23,7 @@ ALTER TABLE invitations
   USING status::text::invitation_status;
 
 ALTER TABLE invitations
-  ADD COLUMN resend_id UUID;
+  ADD COLUMN IF NOT EXISTS resend_id UUID;
 
 -- 5. Drop old enum
 DROP TYPE invitation_status_old;
@@ -34,7 +34,9 @@ ALTER TABLE forms ADD COLUMN IF NOT EXISTS scheduled_time TIMESTAMP WITH TIME ZO
 ALTER TABLE forms ADD COLUMN IF NOT EXISTS closing_time TIMESTAMP WITH TIME ZONE;
 ALTER TABLE forms ADD COLUMN IF NOT EXISTS is_schedule_completed BOOLEAN DEFAULT FALSE;
 ALTER TABLE forms ADD COLUMN IF NOT EXISTS is_scheduled BOOLEAN DEFAULT FALSE;
+ALTER TABLE forms ADD COLUMN IF NOT EXISTS invitation_schedule_id UUID;
 CREATE INDEX IF NOT EXISTS idx_forms_scheduling_id ON forms(scheduling_id);
+CREATE INDEX IF NOT EXISTS idx_forms_invitation_schedule_id ON forms(invitation_schedule_id);
 
 -- 7. Set new default
 ALTER TABLE invitations

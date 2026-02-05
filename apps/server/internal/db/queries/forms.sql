@@ -6,7 +6,8 @@ INSERT INTO forms (
   form_access,
   scheduled_time,
   closing_time,
-  is_scheduled
+  is_scheduled,
+  invitation_schedule_id
 )
 VALUES (
   sqlc.arg('form_title'),
@@ -15,7 +16,8 @@ VALUES (
   sqlc.narg('form_access'),
   sqlc.narg('scheduled_time'),
   sqlc.narg('closing_time'),
-  sqlc.narg('is_scheduled')
+  sqlc.narg('is_scheduled'),
+  sqlc.narg('invitation_schedule_id')
 )
 RETURNING
   form_id,
@@ -30,7 +32,9 @@ RETURNING
   scheduled_time,
   closing_time,
   is_schedule_completed,
-  is_scheduled;
+  is_scheduled,
+  invitation_schedule_id
+;
 
 
 -- name: UpdateForm :one
@@ -44,7 +48,8 @@ SET
   scheduled_time = COALESCE(sqlc.narg('scheduled_time'), scheduled_time),
   closing_time = COALESCE(sqlc.narg('closing_time'), closing_time),
   is_schedule_completed = COALESCE(sqlc.narg('is_schedule_completed'), is_schedule_completed),
-  is_scheduled = COALESCE(sqlc.narg('is_scheduled'), is_scheduled)
+  is_scheduled = COALESCE(sqlc.narg('is_scheduled'), is_scheduled),
+  invitation_schedule_id = COALESCE(sqlc.narg('invitation_schedule_id'), invitation_schedule_id)
 WHERE form_id = sqlc.arg('form_id')
 RETURNING
   form_id,
@@ -59,7 +64,8 @@ RETURNING
   scheduled_time,
   closing_time,
   is_schedule_completed,
-  is_scheduled;
+  is_scheduled,
+  invitation_schedule_id;
 
 
 

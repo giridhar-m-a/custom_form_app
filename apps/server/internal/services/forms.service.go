@@ -265,9 +265,13 @@ func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, fo
 	var scheduledTime, closingTime sql.NullTime
 	if form.ScheduledTime != nil {
 		scheduledTime = sql.NullTime{Time: *form.ScheduledTime, Valid: true}
+	} else {
+		scheduledTime = sql.NullTime{Valid: false}
 	}
 	if form.ClosingTime != nil {
 		closingTime = sql.NullTime{Time: *form.ClosingTime, Valid: true}
+	} else {
+		closingTime = sql.NullTime{Valid: false}
 	}
 
 	var isScheduleCompleted, isScheduled sql.NullBool
