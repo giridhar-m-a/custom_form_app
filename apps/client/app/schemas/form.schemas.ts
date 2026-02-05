@@ -1,12 +1,46 @@
 import * as z from 'zod'
 
-export const CreateFormSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters long'),
-  description: z
-    .string()
-    .min(10, 'Description must be at least 10 characters long')
-    .max(100, 'Description must be at most 100 characters long')
-})
+export const CreateFormSchema = z
+  .object({
+    title: z.string().min(3, 'Title must be at least 3 characters long'),
+    description: z
+      .string()
+      .min(10, 'Description must be at least 10 characters long')
+      .max(100, 'Description must be at most 100 characters long'),
+    isScheduled: z.boolean(),
+    scheduledTime: z.iso.datetime().optional(),
+    closingTime: z.iso.datetime().optional()
+  })
+  .superRefine((data, ctx) => {
+    if (data.isScheduled && !data.scheduledTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Scheduled time is required when form is scheduled',
+        path: ['scheduledTime']
+      })
+    }
+    if (!data.isScheduled && data.scheduledTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Scheduled time is not allowed when form is not scheduled',
+        path: ['scheduledTime']
+      })
+    }
+    if (data.scheduledTime && new Date(data.scheduledTime) <= new Date()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Scheduled time must be in the future',
+        path: ['scheduledTime']
+      })
+    }
+    if (data.closingTime && new Date(data.closingTime) <= new Date()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Closing time must be in the future',
+        path: ['closingTime']
+      })
+    }
+  })
 
 export type CreateFormSchemaType = z.infer<typeof CreateFormSchema>
 

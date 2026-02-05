@@ -1,15 +1,17 @@
 'use client'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { CreateFormSchema, CreateFormSchemaType } from '@/app/schemas/form.schemas'
-import { Input } from '../ui/input'
-import { Textarea } from '../ui/textarea'
-import { Button } from '../ui/button'
-import { FormType } from '@/types/form.types'
 import { useCreateForm, useUpdateForm } from '@/hooks/queryHooks/useFormApp'
-import { useMemo, useState } from 'react'
+import { FormType } from '@/types/form.types'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useMemo } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 import { SubmitButton } from '../common/SubmitButton'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
+import { Input } from '../ui/input'
+import { Switch } from '../ui/switch'
+import { Textarea } from '../ui/textarea'
+import { addHours } from 'date-fns'
+import { toDateTimeLocal } from '@/lib/date.utils'
 
 interface UpsertFormProps {
   formId?: string
@@ -18,11 +20,14 @@ interface UpsertFormProps {
 }
 
 export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
-  const form = useForm<CreateFormSchemaType>({
+  const form = useForm({
     resolver: zodResolver(CreateFormSchema),
     defaultValues: {
       title: data?.title || '',
-      description: data?.description || ''
+      description: data?.description || '',
+      isScheduled: data?.isScheduled ?? false,
+      scheduledTime: toDateTimeLocal(data?.scheduledTime),
+      closingTime: toDateTimeLocal(data?.closingTime)
     },
     mode: 'onChange',
     reValidateMode: 'onChange'
@@ -32,7 +37,14 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
 
   const isPending = useMemo(() => createIsPending || updateIsPending, [createIsPending, updateIsPending])
 
-  const { control, handleSubmit, reset } = form
+  const { control, handleSubmit, reset, setValue } = form
+  const { isScheduled, closingTime, scheduledTime } = useWatch({ control })
+
+  useEffect(() => {
+    if (!isScheduled) {
+      setValue('scheduledTime', undefined)
+    }
+  }, [isScheduled])
 
   const onSubmit = (formData: CreateFormSchemaType) => {
     if (formId) {
@@ -83,6 +95,46 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea className="h-36" {...field} disabled={isPending} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="isScheduled"
+            control={control}
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between">
+                <FormLabel>Should be scheduled</FormLabel>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="scheduledTime"
+            control={control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="scheduledTime">Scheduled At</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" id="scheduledTime" {...field} disabled={isPending || !isScheduled} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+            disabled={!isScheduled}
+          />
+          <FormField
+            name="closingTime"
+            control={control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="closingTime">Closes At</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" id="closingTime" {...field} disabled={isPending} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

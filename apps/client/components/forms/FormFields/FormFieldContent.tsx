@@ -32,6 +32,7 @@ import toast from 'react-hot-toast'
 import { MdAdd } from 'react-icons/md'
 import { FormFieldWrapper } from './FormFieldWrapper'
 import { FIELD_TYPE_OPTIONS } from './formFields.config'
+import { v4 as uuidv4 } from 'uuid'
 
 // Augment the schema type locally to include tempId for UI stability
 type FormFieldWithId = FormFieldCreateSchemaType & { tempId: string }
@@ -66,7 +67,7 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
       formFields:
         FieldRes?.data?.map(f => ({
           ...f,
-          tempId: crypto.randomUUID()
+          tempId: uuidv4()
         })) || [],
       removedFields: [],
       removedFieldOptions: []
@@ -118,7 +119,7 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
       isRequired: false,
       ordering: afterIndex + 1,
       options: [],
-      tempId: crypto.randomUUID()
+      tempId: uuidv4()
     }
 
     const updatedFields = [...formFields]
@@ -156,7 +157,7 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
         optionId: undefined,
         fieldId: undefined
       })),
-      tempId: crypto.randomUUID()
+      tempId: uuidv4()
     } as FormFieldWithId
 
     const updatedFields = [...formFields]
@@ -237,7 +238,7 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
               // Re-map with new tempIds to ensure consistency, though we could try to preserve them if we matched fieldIds
               const fieldsWithIds = data.map(f => ({
                 ...f,
-                tempId: crypto.randomUUID()
+                tempId: uuidv4()
               }))
               setValue('formFields', fieldsWithIds)
               setValue('removedFields', [])
