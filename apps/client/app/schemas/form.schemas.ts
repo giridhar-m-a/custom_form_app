@@ -9,7 +9,8 @@ export const CreateFormSchema = z
       .max(100, 'Description must be at most 100 characters long'),
     isScheduled: z.boolean(),
     scheduledTime: z.iso.datetime().optional(),
-    closingTime: z.iso.datetime().optional()
+    closingTime: z.iso.datetime().optional(),
+    invitationScheduleGap: z.number().optional()
   })
   .superRefine((data, ctx) => {
     if (data.isScheduled && !data.scheduledTime) {
@@ -38,6 +39,20 @@ export const CreateFormSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Closing time must be in the future',
         path: ['closingTime']
+      })
+    }
+    if(data.isScheduled && !data.invitationScheduleGap){
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invitation schedule gap is required when form is scheduled',
+        path: ['invitationScheduleGap']
+      })
+    }
+    if(data.isScheduled && data.invitationScheduleGap && data.invitationScheduleGap <= 0){
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invitation schedule gap must be a positive number',
+        path: ['invitationScheduleGap']
       })
     }
   })

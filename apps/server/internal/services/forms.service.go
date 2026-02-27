@@ -78,15 +78,16 @@ func (s *formService) CreateForm(ctx context.Context, form dto.CreateFormDTO, us
 	}
 
 	isScheduled := utils.BoolPtrToNullBool(form.IsScheduled)
-
+	scheduleGap := utils.ConvertInt32PtrToNullInt32(form.InvitationScheduleGap)
 	return s.formRepo.CreateForm(sqlc.CreateFormParams{
-		FormTitle:       form.Title,
-		FormDescription: formDescription,
-		CreatedBy:       CreatedBy,
-		FormAccess:      formAccess,
-		ScheduledTime:   scheduledTime,
-		ClosingTime:     closingTime,
-		IsScheduled:     isScheduled,
+		FormTitle:             form.Title,
+		FormDescription:       formDescription,
+		CreatedBy:             CreatedBy,
+		FormAccess:            formAccess,
+		ScheduledTime:         scheduledTime,
+		ClosingTime:           closingTime,
+		IsScheduled:           isScheduled,
+		InvitationScheduleGap: scheduleGap,
 	}, ctx)
 }
 

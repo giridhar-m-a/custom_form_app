@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/gin-gonic/gin"
+	"github.com/giridhar-m-a/custom_form_app/internal/cache"
 	"github.com/giridhar-m-a/custom_form_app/internal/db"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
@@ -50,6 +52,16 @@ func (h *usersHandler) GetMe(ctx *gin.Context) {
 		utils.HandleError(ctx, errors.New("user ID not found in context"))
 		return
 	}
+	var response dto.ApiResponse[dto.User]
+	key := "user:userID:" + userID.(string)
+	cachedUser, err := cache.Get(ctx, key)
+	if err == nil && cachedUser != "" {
+		if err := json.Unmarshal([]byte(cachedUser), &response); err == nil {
+			// ✅ Cache hit, return immediately
+			ctx.JSON(200, response)
+			return
+		}
+	}
 	user, err := h.userService.GetUserDetailsById(ctx, userID.(string))
 	if err != nil {
 		utils.HandleError(ctx, err)
@@ -66,7 +78,7 @@ func (h *usersHandler) GetMe(ctx *gin.Context) {
 
 	}
 
-	ctx.JSON(200, dto.ApiResponse[dto.User]{
+	response = dto.ApiResponse[dto.User]{
 		Status:  200,
 		Message: "User retrieved successfully",
 		Data: dto.User{
@@ -77,7 +89,11 @@ func (h *usersHandler) GetMe(ctx *gin.Context) {
 			UserUpdatedAt:  user.UserUpdatedAt.Time,
 			UserProfilePic: profilepic,
 		},
-	})
+	}
+
+	userJSON, _ := json.Marshal(response)
+	_ = cache.Set(ctx, key, string(userJSON))
+	ctx.JSON(200, response)
 }
 
 // @Summary      Update user details

@@ -4,12 +4,10 @@ package services
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
-	"github.com/giridhar-m-a/custom_form_app/internal/cache"
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
@@ -66,27 +64,12 @@ func (s *userService) GetUserDetailsByEmail(ctx context.Context, email string) (
 }
 
 func (s *userService) GetUserDetailsByGoogleId(ctx context.Context, googleID string) (sqlc.GetUserByGoogleIdRow, error) {
-	key := "user:google_id:" + googleID
-
-	// 1. Try cache
-	cachedUser, err := cache.Get(ctx, key)
-	if err == nil && cachedUser != "" {
-		var user sqlc.GetUserByGoogleIdRow
-		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
-			// ✅ Cache hit, return immediately
-			return user, nil
-		}
-	}
 
 	// 2. Fallback to DB
 	user, err := s.repo.GetByGoogleID(ctx, googleID)
 	if err != nil {
 		return sqlc.GetUserByGoogleIdRow{}, err
 	}
-
-	// 3. Save to cache (async or ignore error if you like)
-	userJSON, _ := json.Marshal(user)
-	_ = cache.Set(ctx, key, string(userJSON))
 
 	return user, nil
 }

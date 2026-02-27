@@ -7,12 +7,13 @@ import (
 )
 
 type CreateFormDTO struct {
-	Title         string          `json:"title" binding:"required" form:"title" message:"title is required"`
-	Description   *string         `json:"description,omitempty" form:"description"`
-	FormAccess    sqlc.FormAccess `json:"form_access,omitempty" form:"form_access"` // default 'restricted'
-	ScheduledTime *time.Time      `json:"scheduledTime,omitempty" form:"scheduled_time"`
-	ClosingTime   *time.Time      `json:"closingTime,omitempty" form:"closing_time"`
-	IsScheduled   *bool           `json:"isScheduled,omitempty" form:"is_scheduled"`
+	Title                 string          `json:"title" binding:"required" form:"title" message:"title is required"`
+	Description           *string         `json:"description,omitempty" form:"description"`
+	FormAccess            sqlc.FormAccess `json:"form_access,omitempty" form:"form_access"` // default 'restricted'
+	ScheduledTime         *time.Time      `json:"scheduledTime,omitempty" form:"scheduled_time"`
+	ClosingTime           *time.Time      `json:"closingTime,omitempty" form:"closing_time"`
+	IsScheduled           *bool           `json:"isScheduled,omitempty" form:"is_scheduled"`
+	InvitationScheduleGap *int32          `json:"invitationScheduleGap,omitempty" form:"invitation_schedule_gap"`
 }
 
 type FormResponse struct {

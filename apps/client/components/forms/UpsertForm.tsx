@@ -12,6 +12,7 @@ import { Switch } from '../ui/switch'
 import { Textarea } from '../ui/textarea'
 import { addHours } from 'date-fns'
 import { toDateTimeLocal } from '@/lib/date.utils'
+import { DEFAULT_INVITATION_SCHEDULE_GAP } from '@/lib/constants/constants'
 
 interface UpsertFormProps {
   formId?: string
@@ -107,12 +108,13 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
               <FormItem className="flex items-center justify-between">
                 <FormLabel>Should be scheduled</FormLabel>
                 <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  <Switch checked={field.value} onCheckedChange={(value) => {field.onChange(value); setValue('scheduledTime', undefined); setValue('invitationScheduleGap', undefined)}} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          {isScheduled && <div className="flex flex-col gap-4">
           <FormField
             name="scheduledTime"
             control={control}
@@ -120,7 +122,7 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
               <FormItem>
                 <FormLabel htmlFor="scheduledTime">Scheduled At</FormLabel>
                 <FormControl>
-                  <Input type="datetime-local" id="scheduledTime" {...field} disabled={isPending || !isScheduled} />
+                  <Input type="datetime-local" id="scheduledTime" {...field} value={field.value? toDateTimeLocal(new Date(field.value)) : undefined} onChange={(e) => {field.onChange(new Date(e.target.value).toISOString()); setValue('invitationScheduleGap', DEFAULT_INVITATION_SCHEDULE_GAP)}} disabled={isPending || !isScheduled} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -128,13 +130,28 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
             disabled={!isScheduled}
           />
           <FormField
+            name="invitationScheduleGap"
+            control={control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="invitationScheduleGap">Invitation Schedule Gap (in minutes)</FormLabel>
+                <FormControl>
+                  <Input type="number" id="invitationScheduleGap" {...field} onChange={(e) => field.onChange(Number(e.target.value))} disabled={isPending || !isScheduled} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+            disabled={!isScheduled}
+          />
+          </div>}
+          <FormField
             name="closingTime"
             control={control}
             render={({ field }) => (
               <FormItem>
                 <FormLabel htmlFor="closingTime">Closes At</FormLabel>
                 <FormControl>
-                  <Input type="datetime-local" id="closingTime" {...field} disabled={isPending} />
+                  <Input type="datetime-local" id="closingTime" {...field} value={field.value? toDateTimeLocal(new Date(field.value)) : undefined} onChange={(e) => field.onChange(new Date(e.target.value).toISOString())} disabled={isPending} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

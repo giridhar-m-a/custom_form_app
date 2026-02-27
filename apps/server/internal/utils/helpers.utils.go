@@ -162,3 +162,13 @@ func BoolPtrToNullBool(b *bool) sql.NullBool {
 		Valid: true,
 	}
 }
+
+func ConvertInt32PtrToNullInt32(v *int32) sql.NullInt32 {
+	if v == nil {
+		return sql.NullInt32{Valid: false}
+	}
+	return sql.NullInt32{
+		Int32: *v,
+		Valid: true,
+	}
+}
