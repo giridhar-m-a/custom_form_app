@@ -258,7 +258,21 @@ func (r *formHandler) GetSingleForm(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"status":  200,
 		"message": "Form retrieved successfully",
-		"data":    form,
+		"data": dto.FormResponse{
+			ID:                  form.FormID.String(),
+			Title:               form.FormTitle,
+			Description:         utils.NullStringToString(form.FormDescription),
+			CreatedBy:           utils.NullUUIDToString(form.CreatedBy),
+			Status:              string(form.FormStatus.FormStatus),
+			CreatedAt:           utils.NullTimeToString(form.FormCreatedAt),
+			UpdatedAt:           utils.NullTimeToString(form.FormUpdatedAt),
+			Access:              string(form.FormAccess.FormAccess),
+			SchedulingID:        utils.NullUUIDToString(form.SchedulingID),
+			ScheduledTime:       utils.NullTimeToString(form.ScheduledTime),
+			ClosingTime:         utils.NullTimeToString(form.ClosingTime),
+			IsScheduleCompleted: utils.NullBoolToBool(form.IsScheduleCompleted, false),
+			IsScheduled:         utils.NullBoolToBool(form.IsScheduled, false),
+		},
 	})
 }
 

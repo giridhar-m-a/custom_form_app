@@ -41,7 +41,7 @@ export function NavUser({ user }: { user: User }) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
                 {user.profilePic && user.fullName && (
-                  <AvatarImage src={getFileUrl(user.profilePic)} alt={user.fullName} />
+                  <AvatarImage src={user.profilePic} alt={user.fullName} />
                 )}
                 <AvatarFallback className="rounded-lg">{user?.fullName?.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>

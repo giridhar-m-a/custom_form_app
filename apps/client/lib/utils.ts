@@ -5,9 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const getFileUrl = (path: string) => {
+export const getFileUrl = (path?: string) => {
   // const minioServer = process.env.MINIO_SERVER || 'minio.custom-form-app.home'
-  return `http://minio.custom-form-app.home/custom-form-app/${path}`
+  return path ? `http://minio.custom-form-app.home/custom-form-app/${path}` : ''
 }
 
 export const validateFile = ({
