@@ -16,6 +16,7 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/db"
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
+	"github.com/giridhar-m-a/custom_form_app/internal/workers"
 
 	_ "github.com/giridhar-m-a/custom_form_app/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -61,6 +62,10 @@ func main() {
 	// Initialize MinIO
 	log.Println("Initializing MinIO...")
 	services.InitMinio()
+
+	// Initialize scheduler
+	log.Println("Initializing scheduler...")
+	workers.Start(1)
 
 	// Set Gin mode based on environment
 	if os.Getenv("GIN_MODE") == "release" {

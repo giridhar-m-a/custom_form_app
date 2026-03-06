@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
 import { unAuthorizedPages } from './lib/constants/constants'
 import { verifyRefreshToken, verifyToken } from './services/api/auth/route'
-import Cookies from 'js-cookie'
 
 async function isAuthenticated(
   accessToken: string,
@@ -39,12 +38,8 @@ async function isAuthenticated(
 
         return res
       } else {
-        Cookies.remove('accessToken')
-        Cookies.remove('refreshToken')
+        return null
       }
-
-      // Refresh failed
-      return null
     }
 
     // Token invalid
@@ -57,6 +52,10 @@ async function isAuthenticated(
 
 export default async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname
+
+  if (pathname === '/api/auth/refresh') {
+    return NextResponse.next()
+  }
 
   const accessToken = req.cookies.get('accessToken')?.value
   const refreshToken = req.cookies.get('refreshToken')?.value
@@ -74,9 +73,12 @@ export default async function proxy(req: NextRequest) {
     if (authResult) {
       // Token is valid (or refreshed) → redirect to dashboard
       return NextResponse.redirect(new URL('/dashboard', req.url))
+    } else {
+      const res = NextResponse.next()
+      res.cookies.delete('accessToken')
+      res.cookies.delete('refreshToken')
+      return res
     }
-    // Token invalid → let them stay on the public page
-    return NextResponse.next()
   }
 
   // ✔ Token check only on first (full) page load, not on client-side route changes.
@@ -90,7 +92,11 @@ export default async function proxy(req: NextRequest) {
       return authResult
     }
     // Token invalid/expired → send to login
-    return NextResponse.redirect(new URL('/', req.url))
+
+    const res = NextResponse.redirect(new URL('/', req.url))
+    res.cookies.delete('accessToken')
+    res.cookies.delete('refreshToken')
+    return res
   }
 
   return NextResponse.next()

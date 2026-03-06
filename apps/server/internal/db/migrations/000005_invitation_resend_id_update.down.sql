@@ -1,0 +1,1 @@
+DROP TYPE invitation_resend_input;

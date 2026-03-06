@@ -41,8 +41,8 @@ UPDATE invitations
 SET
     status = @status::invitation_status
 WHERE
-    invitation_id = @invitation_id::uuid
-RETURNING invitation_id, invited_email, invited_name, status;
+    resend_id = @resend_id::uuid
+RETURNING invitation_id, invited_email, invited_name, status, resend_id;
 
 -- name: DeleteInvitation :exec
 DELETE FROM invitations
@@ -97,3 +97,18 @@ WHERE form_id = @form_id::uuid
         sqlc.narg('exclude_status')::invitation_status IS NULL 
         OR status <> sqlc.narg('exclude_status')::invitation_status
       );
+
+-- name: UpdateInvitationsResend :exec
+UPDATE invitations i
+SET
+    resend_id = u.resend_id,
+    invited_at = NOW()
+FROM jsonb_to_recordset($1::jsonb)
+AS u(invitation_id uuid, resend_id uuid)
+WHERE i.invitation_id = u.invitation_id;
+
+-- name: InsertResendId :one
+UPDATE invitations
+SET resend_id = @resend_id::uuid
+WHERE invitation_id = @invitation_id::uuid
+RETURNING resend_id;

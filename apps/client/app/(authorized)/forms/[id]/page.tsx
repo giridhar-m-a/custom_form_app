@@ -47,7 +47,7 @@ const FormDataPage: React.FC<FormDataPageProps> = async ({ params }) => {
       <div className="flex gap-4">
         <div className="basis-3/4"></div>
         <div className="rounded-2xl border basis-1/4 bg-background w-full p-6 mt-8 ">
-          <InvitationTable formId={id} />
+          <InvitationTable formId={id} status={formData?.status || 'draft'} />
         </div>
       </div>
     </div>

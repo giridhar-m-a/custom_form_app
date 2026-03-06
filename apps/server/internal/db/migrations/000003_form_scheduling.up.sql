@@ -23,7 +23,7 @@ ALTER TABLE invitations
   USING status::text::invitation_status;
 
 ALTER TABLE invitations
-  ADD COLUMN IF NOT EXISTS resend_id UUID;
+  ADD COLUMN IF NOT EXISTS resend_id UUID UNIQUE;
 
 -- 5. Drop old enum
 DROP TYPE invitation_status_old;
@@ -45,8 +45,6 @@ CHECK (
     OR (
         scheduled_time IS NOT NULL
         AND invitation_schedule_gap IS NOT NULL
-        AND invitation_schedule_id IS NOT NULL
-        AND scheduling_id IS NOT NULL
     )
 );
 

@@ -16,17 +16,21 @@ import Link from 'next/link'
 import { User } from '@/types/user.types'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/navigation'
-import { getFileUrl } from '@/lib/utils'
+
+import { useDispatch } from 'react-redux'
+import { clearTokens } from '@/store/slices/auth.slice'
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar()
   const router = useRouter()
+  const dispatch = useDispatch()
 
   const logout = () => {
     const allCookies = Cookies.get()
     Object.keys(allCookies).forEach(cookieName => {
       Cookies.remove(cookieName)
     })
+    dispatch(clearTokens())
 
     router.push('/')
   }
@@ -40,9 +44,7 @@ export function NavUser({ user }: { user: User }) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
-                {user.profilePic && user.fullName && (
-                  <AvatarImage src={user.profilePic} alt={user.fullName} />
-                )}
+                {user.profilePic && user.fullName && <AvatarImage src={user.profilePic} alt={user.fullName} />}
                 <AvatarFallback className="rounded-lg">{user?.fullName?.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">

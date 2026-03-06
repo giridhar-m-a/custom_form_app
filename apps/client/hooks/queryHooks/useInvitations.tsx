@@ -23,9 +23,13 @@ export const useCreateInvitation = () => {
   return useMutation({
     mutationKey: ['createInvitation'],
     mutationFn: ({ data }: { data: InvitationType }) => createInvitation({ data }),
-    onSuccess: ({ message }) => {
-      toast.success(message)
-      queryClient.invalidateQueries({ queryKey: ['invitations'] })
+    onSuccess: ({ message, status }) => {
+      if (status == 200 || status == 201) {
+        toast.success(message)
+        queryClient.invalidateQueries({ queryKey: ['invitations'] })
+      } else {
+        throw new Error(message)
+      }
     },
     onError: ({ message }) => {
       toast.error(message)

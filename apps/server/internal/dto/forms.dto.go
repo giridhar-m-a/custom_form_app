@@ -47,13 +47,14 @@ type FormListResponse struct {
 }
 
 type UpdateFormDTO struct {
-	Title               *string          `json:"title,omitempty" form:"title"`
-	Description         *string          `json:"description,omitempty" form:"description"`
-	Access              *sqlc.FormAccess `json:"access,omitempty" form:"access"`
-	Status              *sqlc.FormStatus `json:"status,omitempty" form:"status"`
-	SchedulingID        *string          `json:"schedulingId,omitempty" form:"scheduling_id"`
-	ScheduledTime       *time.Time       `json:"scheduledTime,omitempty" form:"scheduled_time"`
-	ClosingTime         *time.Time       `json:"closingTime,omitempty" form:"closing_time"`
-	IsScheduleCompleted *bool            `json:"isScheduleCompleted,omitempty" form:"is_schedule_completed"`
-	IsScheduled         *bool            `json:"isScheduled,omitempty" form:"is_scheduled"`
+	Title                 *string          `json:"title,omitempty" form:"title"`
+	Description           *string          `json:"description,omitempty" form:"description"`
+	Access                *sqlc.FormAccess `json:"access,omitempty" form:"access"`
+	Status                *sqlc.FormStatus `json:"status,omitempty" form:"status"`
+	SchedulingID          *string          `json:"schedulingId,omitempty" form:"scheduling_id"`
+	ScheduledTime         *time.Time       `json:"scheduledTime,omitempty" form:"scheduled_time"`
+	ClosingTime           *time.Time       `json:"closingTime,omitempty" form:"closing_time"`
+	IsScheduleCompleted   *bool            `json:"isScheduleCompleted,omitempty" form:"is_schedule_completed"`
+	IsScheduled           *bool            `json:"isScheduled,omitempty" form:"is_scheduled"`
+	InvitationScheduleGap *int32           `json:"invitationScheduleGap,omitempty" form:"invitation_schedule_gap"`
 }

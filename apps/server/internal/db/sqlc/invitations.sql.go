@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -247,18 +248,37 @@ func (q *Queries) GetInvitationByFormId(ctx context.Context, arg GetInvitationBy
 	return items, nil
 }
 
+const insertResendId = `-- name: InsertResendId :one
+UPDATE invitations
+SET resend_id = $1::uuid
+WHERE invitation_id = $2::uuid
+RETURNING resend_id
+`
+
+type InsertResendIdParams struct {
+	ResendID     uuid.UUID `json:"resend_id"`
+	InvitationID uuid.UUID `json:"invitation_id"`
+}
+
+func (q *Queries) InsertResendId(ctx context.Context, arg InsertResendIdParams) (uuid.NullUUID, error) {
+	row := q.db.QueryRowContext(ctx, insertResendId, arg.ResendID, arg.InvitationID)
+	var resend_id uuid.NullUUID
+	err := row.Scan(&resend_id)
+	return resend_id, err
+}
+
 const updateInvitationStatus = `-- name: UpdateInvitationStatus :one
 UPDATE invitations
 SET
     status = $1::invitation_status
 WHERE
-    invitation_id = $2::uuid
-RETURNING invitation_id, invited_email, invited_name, status
+    resend_id = $2::uuid
+RETURNING invitation_id, invited_email, invited_name, status, resend_id
 `
 
 type UpdateInvitationStatusParams struct {
-	Status       InvitationStatus `json:"status"`
-	InvitationID uuid.UUID        `json:"invitation_id"`
+	Status   InvitationStatus `json:"status"`
+	ResendID uuid.UUID        `json:"resend_id"`
 }
 
 type UpdateInvitationStatusRow struct {
@@ -266,16 +286,33 @@ type UpdateInvitationStatusRow struct {
 	InvitedEmail string               `json:"invited_email"`
 	InvitedName  string               `json:"invited_name"`
 	Status       NullInvitationStatus `json:"status"`
+	ResendID     uuid.NullUUID        `json:"resend_id"`
 }
 
 func (q *Queries) UpdateInvitationStatus(ctx context.Context, arg UpdateInvitationStatusParams) (UpdateInvitationStatusRow, error) {
-	row := q.db.QueryRowContext(ctx, updateInvitationStatus, arg.Status, arg.InvitationID)
+	row := q.db.QueryRowContext(ctx, updateInvitationStatus, arg.Status, arg.ResendID)
 	var i UpdateInvitationStatusRow
 	err := row.Scan(
 		&i.InvitationID,
 		&i.InvitedEmail,
 		&i.InvitedName,
 		&i.Status,
+		&i.ResendID,
 	)
 	return i, err
+}
+
+const updateInvitationsResend = `-- name: UpdateInvitationsResend :exec
+UPDATE invitations i
+SET
+    resend_id = u.resend_id,
+    invited_at = NOW()
+FROM jsonb_to_recordset($1::jsonb)
+AS u(invitation_id uuid, resend_id uuid)
+WHERE i.invitation_id = u.invitation_id
+`
+
+func (q *Queries) UpdateInvitationsResend(ctx context.Context, dollar_1 json.RawMessage) error {
+	_, err := q.db.ExecContext(ctx, updateInvitationsResend, dollar_1)
+	return err
 }
