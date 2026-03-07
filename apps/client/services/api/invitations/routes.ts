@@ -17,7 +17,10 @@ export const getInvitationsByFormId = async ({
   params
 }: GetInvitationsByFormIdParams): Promise<ApiResponse<Invitation[]>> => {
   try {
-    const res = await GET<Invitation[]>(`${invitationsRoutes.base}`, { params: { ...params, formId } })
+    const exclude = params.exclude?.length ? params.exclude : []
+    const res = await GET<Invitation[]>(`${invitationsRoutes.base}`, {
+      params: { ...params, formId, exclude }
+    })
     return res
   } catch (e) {
     console.error(e)

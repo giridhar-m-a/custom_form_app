@@ -46,9 +46,14 @@ export const InvitationTable = ({ formId, status }: InvitationTableProps) => {
   )
 
   const statusOptions: { value: InvitationStatus; label: string }[] = [
-    { value: 'invited', label: 'Invited' },
     { value: 'pending', label: 'Pending' },
+    { value: 'delivered', label: 'Delivered' },
     { value: 'submitted', label: 'Submitted' },
+    { value: 'bounced', label: 'Bounced' },
+    { value: 'clicked', label: 'Clicked' },
+    { value: 'complained', label: 'Complained' },
+    { value: 'delayed', label: 'Delayed' },
+    { value: 'opened', label: 'Opened' },
     { value: 'failed', label: 'Failed' }
   ]
 
