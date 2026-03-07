@@ -16,7 +16,6 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
 	"github.com/giridhar-m-a/custom_form_app/internal/services/templates"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
-	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 	"github.com/resend/resend-go/v3"
 )
@@ -60,7 +59,7 @@ func (w *InvitationWorker) HandleInvitationsSchedule() asynq.HandlerFunc {
 		const pageSize = 50
 		baseParams := dto.InvitationListQueryDto{
 			FormId:  formId.String(),
-			Exclude: sqlc.InvitationStatusAccepted,
+			Exclude: []sqlc.InvitationStatus{sqlc.InvitationStatusBounced, sqlc.InvitationStatusClicked, sqlc.InvitationStatusOpened, sqlc.InvitationStatusComplained, sqlc.InvitationStatusDelayed, sqlc.InvitationStatusFailed, sqlc.InvitationStatusDelivered, sqlc.InvitationStatusSubmitted},
 			Query:   dto.Query{Limit: pageSize},
 		}
 
@@ -98,7 +97,6 @@ func (w *InvitationWorker) HandleInvitationsSchedule() asynq.HandlerFunc {
 			defer emailWg.Done()
 
 			emailPayloads := make([]*resend.SendEmailRequest, 0, len(invitations))
-			ids := make([]uuid.UUID, 0, len(invitations))
 
 			for _, inv := range invitations {
 				token, err := jwtService.GenerateInvitationToken(inv.InvitationID.String(), formId.String(), time.Until(closingTime))
@@ -131,15 +129,24 @@ func (w *InvitationWorker) HandleInvitationsSchedule() asynq.HandlerFunc {
 					To:      []string{inv.InvitedEmail},
 					Subject: fmt.Sprintf("Invitation to fill form: %s", form.FormTitle),
 					Html:    tmpl,
+					Tags: []resend.Tag{
+						{
+							Name:  "invitation",
+							Value: "true",
+						},
+						{
+							Name:  "invitation_id",
+							Value: inv.InvitationID.String(),
+						},
+					},
 				})
-				ids = append(ids, inv.InvitationID)
 			}
 
 			if len(emailPayloads) == 0 {
 				return
 			}
 
-			emailRes, err := mailService.SendBulk(ctx, emailPayloads)
+			_, err := mailService.SendBulk(ctx, emailPayloads)
 			if err != nil {
 				log.Printf("[Invitation Worker] Error sending bulk emails: %v", err)
 				errMu.Lock()
@@ -148,25 +155,6 @@ func (w *InvitationWorker) HandleInvitationsSchedule() asynq.HandlerFunc {
 				return
 			}
 
-			updatePayload := make([]dto.UpdateInvitationsResendParams, 0, len(emailRes))
-			for i, res := range emailRes {
-				resendID, err := utils.ConvertStringToUUID(res.Id)
-				if err != nil {
-					log.Printf("[Invitation Worker] Error converting string to uuid: %v", err)
-					continue
-				}
-				updatePayload = append(updatePayload, dto.UpdateInvitationsResendParams{
-					InvitationID: ids[i],
-					ResendID:     resendID,
-				})
-			}
-
-			if err := w.invitationService.InsertResendIds(updatePayload, ctx); err != nil {
-				log.Printf("[Invitation Worker] Error inserting resend ids: %v", err)
-				errMu.Lock()
-				errs = append(errs, fmt.Errorf("insert resend ids: %w", err))
-				errMu.Unlock()
-			}
 		}
 
 		// Send first page immediately

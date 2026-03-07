@@ -3,10 +3,8 @@ package repositories
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
-	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/google/uuid"
 )
 
@@ -18,8 +16,6 @@ type InvitationRepository interface {
 	CreateSingleInvitation(invitation sqlc.CreateInvitationParams, ctx context.Context) (sqlc.CreateInvitationRow, error)
 	InvitationRepositoryWithTx(tx *sql.Tx) InvitationRepository
 	CountInvitationsByFormId(params sqlc.CountInvitationsByFormIdParams, ctx context.Context) (int64, error)
-	UpdateInvitationsResend(updates []dto.UpdateInvitationsResendParams, ctx context.Context) error
-	InsertResendId(data sqlc.InsertResendIdParams, ctx context.Context) (uuid.NullUUID, error)
 }
 
 type invitationRepository struct {
@@ -58,16 +54,4 @@ func (r *invitationRepository) InvitationRepositoryWithTx(tx *sql.Tx) Invitation
 	return &invitationRepository{
 		q: r.q.WithTx(tx),
 	}
-}
-
-func (r *invitationRepository) UpdateInvitationsResend(updates []dto.UpdateInvitationsResendParams, ctx context.Context) error {
-	payload, err := json.Marshal(updates)
-	if err != nil {
-		return err
-	}
-	return r.q.UpdateInvitationsResend(ctx, payload)
-}
-
-func (r *invitationRepository) InsertResendId(data sqlc.InsertResendIdParams, ctx context.Context) (uuid.NullUUID, error) {
-	return r.q.InsertResendId(ctx, data)
 }

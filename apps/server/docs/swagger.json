@@ -1523,19 +1523,22 @@
                 "summary": "GetInvitationByFormId retrieves invitations by form ID",
                 "parameters": [
                     {
-                        "enum": [
-                            "pending",
-                            "accepted",
-                            "failed",
-                            "submitted"
-                        ],
-                        "type": "string",
-                        "x-enum-varnames": [
-                            "InvitationStatusPending",
-                            "InvitationStatusAccepted",
-                            "InvitationStatusFailed",
-                            "InvitationStatusSubmitted"
-                        ],
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "pending",
+                                "bounced",
+                                "clicked",
+                                "opened",
+                                "delivered",
+                                "complained",
+                                "delayed",
+                                "failed",
+                                "submitted"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "exclude",
                         "in": "query"
                     },
@@ -1567,14 +1570,24 @@
                     {
                         "enum": [
                             "pending",
-                            "accepted",
+                            "bounced",
+                            "clicked",
+                            "opened",
+                            "delivered",
+                            "complained",
+                            "delayed",
                             "failed",
                             "submitted"
                         ],
                         "type": "string",
                         "x-enum-varnames": [
                             "InvitationStatusPending",
-                            "InvitationStatusAccepted",
+                            "InvitationStatusBounced",
+                            "InvitationStatusClicked",
+                            "InvitationStatusOpened",
+                            "InvitationStatusDelivered",
+                            "InvitationStatusComplained",
+                            "InvitationStatusDelayed",
                             "InvitationStatusFailed",
                             "InvitationStatusSubmitted"
                         ],
@@ -2285,13 +2298,23 @@
             "type": "string",
             "enum": [
                 "pending",
-                "accepted",
+                "bounced",
+                "clicked",
+                "opened",
+                "delivered",
+                "complained",
+                "delayed",
                 "failed",
                 "submitted"
             ],
             "x-enum-varnames": [
                 "InvitationStatusPending",
-                "InvitationStatusAccepted",
+                "InvitationStatusBounced",
+                "InvitationStatusClicked",
+                "InvitationStatusOpened",
+                "InvitationStatusDelivered",
+                "InvitationStatusComplained",
+                "InvitationStatusDelayed",
                 "InvitationStatusFailed",
                 "InvitationStatusSubmitted"
             ]
@@ -2342,7 +2365,7 @@
                 "title"
             ],
             "properties": {
-                "closing_time": {
+                "closingTime": {
                     "type": "string"
                 },
                 "description": {
@@ -2356,10 +2379,13 @@
                         }
                     ]
                 },
-                "is_scheduled": {
+                "invitationScheduleGap": {
+                    "type": "integer"
+                },
+                "isScheduled": {
                     "type": "boolean"
                 },
-                "scheduled_time": {
+                "scheduledTime": {
                     "type": "string"
                 },
                 "title": {
@@ -2701,6 +2727,9 @@
                 },
                 "description": {
                     "type": "string"
+                },
+                "invitationScheduleGap": {
+                    "type": "integer"
                 },
                 "isScheduleCompleted": {
                     "type": "boolean"

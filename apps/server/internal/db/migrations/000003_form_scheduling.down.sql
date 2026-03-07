@@ -48,6 +48,6 @@ ALTER TABLE forms DROP COLUMN IF EXISTS invitation_schedule_id;
 ALTER TABLE forms DROP COLUMN IF EXISTS invitation_schedule_gap;
 
 -- 10. Drop resend_id
-ALTER TABLE invitations DROP COLUMN IF EXISTS resend_id;
+-- ALTER TABLE invitations DROP COLUMN IF EXISTS resend_id;
 
 COMMIT;

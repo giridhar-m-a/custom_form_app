@@ -6,7 +6,12 @@ ALTER TYPE invitation_status RENAME TO invitation_status_old;
 -- 2. Create new enum
 CREATE TYPE invitation_status AS ENUM (
   'pending',
-  'accepted',
+  'bounced',
+  'clicked',
+  'opened',
+  'delivered',
+  'complained',
+  'delayed',
   'failed',
   'submitted'
 );
@@ -21,9 +26,6 @@ ALTER TABLE invitations
   ALTER COLUMN status DROP DEFAULT,
   ALTER COLUMN status TYPE invitation_status
   USING status::text::invitation_status;
-
-ALTER TABLE invitations
-  ADD COLUMN IF NOT EXISTS resend_id UUID UNIQUE;
 
 -- 5. Drop old enum
 DROP TYPE invitation_status_old;

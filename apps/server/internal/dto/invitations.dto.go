@@ -24,9 +24,9 @@ type UpdateInvitationDTO struct {
 }
 
 type InvitationListQueryDto struct {
-	FormId  string                `form:"formId"`
-	Exclude sqlc.InvitationStatus `form:"exclude"`
-	Status  sqlc.InvitationStatus `form:"status"`
+	FormId  string                  `form:"formId"`
+	Exclude []sqlc.InvitationStatus `form:"exclude"`
+	Status  sqlc.InvitationStatus   `form:"status"`
 	Query
 }
 

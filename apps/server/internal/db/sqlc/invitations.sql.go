@@ -8,7 +8,6 @@ package sqlc
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -18,24 +17,21 @@ const countInvitationsByFormId = `-- name: CountInvitationsByFormId :one
 SELECT COUNT(*) AS total_records
 FROM invitations
 WHERE form_id = $1::uuid
-
   -- Search filter (Email or Name)
   AND (
         $2::text IS NULL 
         OR invited_name ILIKE '%' || $2::text || '%'
         OR invited_email ILIKE '%' || $2::text || '%'
       )
-
   -- Status Inclusion filter
   AND (
         $3::invitation_status IS NULL 
         OR status = $3::invitation_status
       )
-
   -- Status Exclusion filter
   AND (
-        $4::invitation_status IS NULL 
-        OR status <> $4::invitation_status
+        $4::invitation_status[] IS NULL 
+        OR status <> ALL($4::invitation_status[])
       )
 `
 
@@ -43,7 +39,7 @@ type CountInvitationsByFormIdParams struct {
 	FormID        uuid.UUID            `json:"form_id"`
 	Search        sql.NullString       `json:"search"`
 	Status        NullInvitationStatus `json:"status"`
-	ExcludeStatus NullInvitationStatus `json:"exclude_status"`
+	ExcludeStatus []InvitationStatus   `json:"exclude_status"`
 }
 
 func (q *Queries) CountInvitationsByFormId(ctx context.Context, arg CountInvitationsByFormIdParams) (int64, error) {
@@ -51,7 +47,7 @@ func (q *Queries) CountInvitationsByFormId(ctx context.Context, arg CountInvitat
 		arg.FormID,
 		arg.Search,
 		arg.Status,
-		arg.ExcludeStatus,
+		pq.Array(arg.ExcludeStatus),
 	)
 	var total_records int64
 	err := row.Scan(&total_records)
@@ -175,7 +171,7 @@ func (q *Queries) DeleteInvitation(ctx context.Context, invitationID uuid.UUID) 
 }
 
 const getInvitationByFormId = `-- name: GetInvitationByFormId :many
-SELECT invitation_id, form_id, invited_email, invited_at, invited_by, status, opened_at, submitted_at, invited_name, resend_id FROM invitations
+SELECT invitation_id, form_id, invited_email, invited_at, invited_by, status, opened_at, submitted_at, invited_name FROM invitations
 WHERE form_id = $1::uuid
   -- Search filter (Email or Name)
   AND (
@@ -190,8 +186,8 @@ WHERE form_id = $1::uuid
       )
   -- Status Exclusion filter
   AND (
-        $4::invitation_status IS NULL 
-        OR status <> $4::invitation_status
+        $4::invitation_status[] IS NULL 
+        OR status <> ALL($4::invitation_status[])
       )
 ORDER BY invited_at DESC
 LIMIT COALESCE($6::int, 10)
@@ -202,7 +198,7 @@ type GetInvitationByFormIdParams struct {
 	FormID        uuid.UUID            `json:"form_id"`
 	Search        sql.NullString       `json:"search"`
 	Status        NullInvitationStatus `json:"status"`
-	ExcludeStatus NullInvitationStatus `json:"exclude_status"`
+	ExcludeStatus []InvitationStatus   `json:"exclude_status"`
 	OffsetVal     sql.NullInt32        `json:"offset_val"`
 	LimitVal      sql.NullInt32        `json:"limit_val"`
 }
@@ -212,7 +208,7 @@ func (q *Queries) GetInvitationByFormId(ctx context.Context, arg GetInvitationBy
 		arg.FormID,
 		arg.Search,
 		arg.Status,
-		arg.ExcludeStatus,
+		pq.Array(arg.ExcludeStatus),
 		arg.OffsetVal,
 		arg.LimitVal,
 	)
@@ -233,7 +229,6 @@ func (q *Queries) GetInvitationByFormId(ctx context.Context, arg GetInvitationBy
 			&i.OpenedAt,
 			&i.SubmittedAt,
 			&i.InvitedName,
-			&i.ResendID,
 		); err != nil {
 			return nil, err
 		}
@@ -248,37 +243,18 @@ func (q *Queries) GetInvitationByFormId(ctx context.Context, arg GetInvitationBy
 	return items, nil
 }
 
-const insertResendId = `-- name: InsertResendId :one
-UPDATE invitations
-SET resend_id = $1::uuid
-WHERE invitation_id = $2::uuid
-RETURNING resend_id
-`
-
-type InsertResendIdParams struct {
-	ResendID     uuid.UUID `json:"resend_id"`
-	InvitationID uuid.UUID `json:"invitation_id"`
-}
-
-func (q *Queries) InsertResendId(ctx context.Context, arg InsertResendIdParams) (uuid.NullUUID, error) {
-	row := q.db.QueryRowContext(ctx, insertResendId, arg.ResendID, arg.InvitationID)
-	var resend_id uuid.NullUUID
-	err := row.Scan(&resend_id)
-	return resend_id, err
-}
-
 const updateInvitationStatus = `-- name: UpdateInvitationStatus :one
 UPDATE invitations
 SET
     status = $1::invitation_status
 WHERE
-    resend_id = $2::uuid
-RETURNING invitation_id, invited_email, invited_name, status, resend_id
+    invitation_id = $2::uuid
+RETURNING invitation_id, invited_email, invited_name, status
 `
 
 type UpdateInvitationStatusParams struct {
-	Status   InvitationStatus `json:"status"`
-	ResendID uuid.UUID        `json:"resend_id"`
+	Status       InvitationStatus `json:"status"`
+	InvitationID uuid.UUID        `json:"invitation_id"`
 }
 
 type UpdateInvitationStatusRow struct {
@@ -286,33 +262,16 @@ type UpdateInvitationStatusRow struct {
 	InvitedEmail string               `json:"invited_email"`
 	InvitedName  string               `json:"invited_name"`
 	Status       NullInvitationStatus `json:"status"`
-	ResendID     uuid.NullUUID        `json:"resend_id"`
 }
 
 func (q *Queries) UpdateInvitationStatus(ctx context.Context, arg UpdateInvitationStatusParams) (UpdateInvitationStatusRow, error) {
-	row := q.db.QueryRowContext(ctx, updateInvitationStatus, arg.Status, arg.ResendID)
+	row := q.db.QueryRowContext(ctx, updateInvitationStatus, arg.Status, arg.InvitationID)
 	var i UpdateInvitationStatusRow
 	err := row.Scan(
 		&i.InvitationID,
 		&i.InvitedEmail,
 		&i.InvitedName,
 		&i.Status,
-		&i.ResendID,
 	)
 	return i, err
-}
-
-const updateInvitationsResend = `-- name: UpdateInvitationsResend :exec
-UPDATE invitations i
-SET
-    resend_id = u.resend_id,
-    invited_at = NOW()
-FROM jsonb_to_recordset($1::jsonb)
-AS u(invitation_id uuid, resend_id uuid)
-WHERE i.invitation_id = u.invitation_id
-`
-
-func (q *Queries) UpdateInvitationsResend(ctx context.Context, dollar_1 json.RawMessage) error {
-	_, err := q.db.ExecContext(ctx, updateInvitationsResend, dollar_1)
-	return err
 }

@@ -29,7 +29,6 @@ type InvitationService interface {
 	UpdateInvitationStatus(status dto.UpdateInvitationDTO, resendID uuid.UUID, ctx context.Context) (sqlc.UpdateInvitationStatusRow, error)
 	DeleteInvitation(invitationID uuid.UUID, ctx context.Context) error
 	GetInvitationByFormId(query dto.InvitationListQueryDto, ctx context.Context) (dto.InvitationListDto, error)
-	InsertResendIds(updates []dto.UpdateInvitationsResendParams, ctx context.Context) error
 }
 
 type invitationService struct {
@@ -117,36 +116,32 @@ func (s *invitationService) CreateSingleInvitation(invitation dto.CreateInvitati
 			To:      []string{invitation.Email},
 			Subject: fmt.Sprintf("Invitation to fill form: %s", form.FormTitle),
 			Html:    template,
+			Tags: []resend.Tag{
+				{
+					Name:  "invitation",
+					Value: "true",
+				},
+				{
+					Name:  "invitation_id",
+					Value: createdInvitation.InvitationID.String(),
+				},
+			},
 		})
 		if err != nil {
 			log.Printf("[Invitation Service] Error sending email: %v", err)
 			return sqlc.CreateInvitationRow{}, err
 		}
-		log.Printf("[Invitation Service] email sent successfully: %v", resendRes.Id)
-		resendUUid, err := utils.ConvertStringToUUID(resendRes.Id)
-		if err != nil {
-			log.Printf("[Invitation Service] Error converting resend id to uuid: %v", err)
-			return sqlc.CreateInvitationRow{}, err
-		}
-		_, err = s.repo.InsertResendId(sqlc.InsertResendIdParams{
-			InvitationID: createdInvitation.InvitationID,
-			ResendID:     resendUUid,
-		}, ctx)
-		if err != nil {
-			log.Printf("[Invitation Service] Error inserting resend id: %v", err)
-			return sqlc.CreateInvitationRow{}, err
-		}
-		log.Printf("[Invitation Service] resend id inserted successfully: %v", resendUUid)
+		log.Printf("[Invitation Service] email sent successfully: %v, %v", resendRes.Id, createdInvitation.InvitationID.String())
 
 	}
 	return createdInvitation, nil
 }
 
-func (s *invitationService) UpdateInvitationStatus(status dto.UpdateInvitationDTO, resendID uuid.UUID, ctx context.Context) (sqlc.UpdateInvitationStatusRow, error) {
+func (s *invitationService) UpdateInvitationStatus(status dto.UpdateInvitationDTO, invitationID uuid.UUID, ctx context.Context) (sqlc.UpdateInvitationStatusRow, error) {
 
 	return s.repo.UpdateInvitationStatus(sqlc.UpdateInvitationStatusParams{
-		ResendID: resendID,
-		Status:   status.Status,
+		InvitationID: invitationID,
+		Status:       status.Status,
 	}, ctx)
 }
 
@@ -162,10 +157,7 @@ func (s *invitationService) GetInvitationByFormId(query dto.InvitationListQueryD
 		return dto.InvitationListDto{}, err
 	}
 	search := utils.ConvertStringToNullString(query.Search)
-	exclude := sqlc.NullInvitationStatus{
-		InvitationStatus: query.Exclude,
-		Valid:            query.Exclude != "",
-	}
+	exclude := query.Exclude
 	status := sqlc.NullInvitationStatus{
 		InvitationStatus: query.Status,
 		Valid:            query.Status != "",
@@ -397,14 +389,10 @@ ReadLoop: // This label allows us to break out of the for-loop from inside the s
 	} else if isScheduled && form.ScheduledTime.Valid && form.ScheduledTime.Time.After(now) {
 		log.Printf("[Invitation Service] Scheduling invitation in second block")
 		runAt := form.ScheduledTime.Time.Add(
-			-time.Duration(form.InvitationScheduleGap.Int32)*time.Minute,
+			-time.Duration(form.InvitationScheduleGap.Int32) * time.Minute,
 		)
 		scheduler.ScheduleInvitation(formID.String(), runAt)
 	}
 
 	return totalSuccess, totalFailed, nil
-}
-
-func (s *invitationService) InsertResendIds(updates []dto.UpdateInvitationsResendParams, ctx context.Context) error {
-	return s.repo.UpdateInvitationsResend(updates, ctx)
 }
