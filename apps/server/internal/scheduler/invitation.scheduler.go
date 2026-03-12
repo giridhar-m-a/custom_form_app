@@ -16,10 +16,13 @@ func ScheduleInvitation(formID string, scheduleTime time.Time) (*asynq.TaskInfo,
 	invitationPayload := scheduler_dto.InvitationSchedulerPayload{
 		FormID: formID,
 	}
-	payload, _ := json.Marshal(invitationPayload)
+	payload, err := json.Marshal(invitationPayload)
+	if err != nil {
+		log.Printf("[Invitation Scheduler] failed to parse json, %s", err.Error())
+	}
 	task := asynq.NewTask(constants.TaskTypeInvitationSchedule, payload)
 
-	info, err := client.Enqueue(task, asynq.ProcessAt(scheduleTime))
+	info, err := client.Enqueue(task, asynq.ProcessAt(scheduleTime), asynq.Queue(constants.QueueInvitations),  asynq.MaxRetry(0))
 	if err != nil {
 		log.Printf("Error scheduling invitation for form %s: %v", formID, err)
 		return nil, err
@@ -31,7 +34,7 @@ func ScheduleInvitation(formID string, scheduleTime time.Time) (*asynq.TaskInfo,
 
 func CancelInvitationSchedule(scheduleId string) error {
 	inspector := asynq.NewInspector(NewRedisClientOpt())
-	err := inspector.DeleteTask(constants.TaskTypeInvitationSchedule, scheduleId)
+	err := inspector.DeleteTask(constants.QueueInvitations, scheduleId)
 	if err != nil {
 		return err
 	}
@@ -42,7 +45,7 @@ func CancelInvitationSchedule(scheduleId string) error {
 func UpdateInvitationSchedule(scheduleID string, scheduleTime time.Time, formID string) (*asynq.TaskInfo, error) {
 	err := CancelInvitationSchedule(scheduleID)
 	if err != nil {
-		return nil, err
+		log.Printf("[form Schedular] error deleting old schedule %s", err.Error())
 	}
 	info, err := ScheduleInvitation(formID, scheduleTime)
 	if err != nil {

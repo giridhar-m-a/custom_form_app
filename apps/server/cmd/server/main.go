@@ -65,9 +65,7 @@ func main() {
 	log.Println("Initializing MinIO...")
 	services.InitMinio()
 
-	// Initialize scheduler
-	log.Println("Initializing scheduler...")
-	workers.Start(1)
+	
 
 	// Set Gin mode based on environment
 	if os.Getenv("GIN_MODE") == "release" {
@@ -124,6 +122,10 @@ func main() {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
+
+	// Initialize scheduler
+	log.Println("Initializing scheduler...")
+	workers.Start(1)
 
 	// Wait for interrupt signal to gracefully shutdown the server
 	quit := make(chan os.Signal, 1)

@@ -43,13 +43,13 @@ func (w *InvitationWorker) HandleInvitationsSchedule() asynq.HandlerFunc {
 		formId, err := utils.ConvertStringToUUID(payload.FormID)
 		if err != nil {
 			log.Printf("[Invitation Worker] Error converting string to uuid: %v", err)
-			return fmt.Errorf("cannot convert string to uuid: %w", err)
+			return nil
 		}
 
 		form, err := w.formService.GetSingleForm(ctx, formId.String())
 		if err != nil {
-			log.Printf("[Invitation Worker] Error getting form: %v", err)
-			return fmt.Errorf("cannot get form: %w", err)
+			log.Printf("[Invitation Worker] Error getting form %s: %v",formId, err)
+			return nil
 		}
 		if form.FormStatus.FormStatus == sqlc.FormStatusClosed || (form.ClosingTime.Valid && form.ClosingTime.Time.Before(time.Now())) {
 			log.Printf("[Invitation Worker] Form is closed or closing time is reached: %v", formId)

@@ -862,6 +862,11 @@ paths:
         name: file
         required: true
         type: file
+      - description: File path to upload shouldbe formid/invitationid
+        in: formData
+        name: path
+        required: true
+        type: string
       produces:
       - application/json
       responses:

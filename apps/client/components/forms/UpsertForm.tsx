@@ -27,8 +27,9 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
       title: data?.title || '',
       description: data?.description || '',
       isScheduled: data?.isScheduled ?? false,
-      scheduledTime: toDateTimeLocal(data?.scheduledTime),
-      closingTime: toDateTimeLocal(data?.closingTime)
+      scheduledTime: data?.scheduledTime ? new Date(data?.scheduledTime).toISOString() : '',
+      closingTime: data?.closingTime ? new Date(data?.closingTime).toISOString() : '',
+      invitationScheduleGap: data?.invitationScheduleGap
     },
     mode: 'onChange',
     reValidateMode: 'onChange'

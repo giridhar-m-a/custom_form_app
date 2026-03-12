@@ -31,7 +31,7 @@ func HandleInvitationWebhook(c *gin.Context) {
 
 	log.Printf("[Webhook: Invitation] Webhook received: %s\n", string(body))
 
-	secrete:= utils.GetEnv("RESEND_WEBHOOK_SIGNATURE","")
+	secrete := utils.GetEnv("RESEND_WEBHOOK_SIGNATURE", "")
 
 	er := utils.ResendClient.Webhooks.Verify(&resend.VerifyWebhookOptions{
 		Payload: string(body),
@@ -55,15 +55,15 @@ func HandleInvitationWebhook(c *gin.Context) {
 		return
 	}
 	log.Printf("[Webhook: Invitation] Webhook received: %+v\n", req)
-	invitationRepo:= repositories.NewInvitationRepository(db.Queries)
+	invitationRepo := repositories.NewInvitationRepository(db.Queries)
 
-	invitationId,err:= utils.ConvertStringToUUID(req.Data.Tags.InvitationId)
+	invitationId, err := utils.ConvertStringToUUID(req.Data.Tags.InvitationId)
 	if err != nil {
 		log.Printf("[Webhook: Invitation] Error converting invitation ID: %v", err)
 		return
 	}
 
-	resp,err:= invitationRepo.UpdateInvitationStatus(sqlc.UpdateInvitationStatusParams{
+	resp, err := invitationRepo.UpdateInvitationStatus(sqlc.UpdateInvitationStatusParams{
 		InvitationID: invitationId,
 		Status:       getInvitationStatus(req.Type),
 	}, c)
@@ -73,12 +73,11 @@ func HandleInvitationWebhook(c *gin.Context) {
 	}
 	log.Printf("[Webhook: Invitation] Invitation status updated successfully: %+v\n", resp)
 	c.JSON(200, gin.H{
-		"status": 200,
+		"status":  200,
 		"message": "Updated the invitation",
-		"data": resp,
+		"data":    resp,
 	})
 }
-
 
 func getInvitationStatus(event string) sqlc.InvitationStatus {
 	switch event {

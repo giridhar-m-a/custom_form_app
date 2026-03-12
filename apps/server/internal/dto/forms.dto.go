@@ -17,19 +17,20 @@ type CreateFormDTO struct {
 }
 
 type FormResponse struct {
-	ID                  string `json:"id"`
-	Title               string `json:"title"`
-	Description         string `json:"description,omitempty"`
-	CreatedBy           string `json:"createdBy,omitempty"`
-	Status              string `json:"status,omitempty"`
-	CreatedAt           string `json:"createdAt,omitempty"`
-	UpdatedAt           string `json:"updatedAt,omitempty"`
-	Access              string `json:"access,omitempty"`
-	SchedulingID        string `json:"schedulingId,omitempty"`
-	ScheduledTime       string `json:"scheduledTime,omitempty"`
-	ClosingTime         string `json:"closingTime,omitempty"`
-	IsScheduleCompleted bool   `json:"isScheduleCompleted,omitempty"`
-	IsScheduled         bool   `json:"isScheduled,omitempty"`
+	ID                    string `json:"id"`
+	Title                 string `json:"title"`
+	Description           string `json:"description,omitempty"`
+	CreatedBy             string `json:"createdBy,omitempty"`
+	Status                string `json:"status,omitempty"`
+	CreatedAt             string `json:"createdAt,omitempty"`
+	UpdatedAt             string `json:"updatedAt,omitempty"`
+	Access                string `json:"access,omitempty"`
+	SchedulingID          string `json:"schedulingId,omitempty"`
+	ScheduledTime         string `json:"scheduledTime,omitempty"`
+	ClosingTime           string `json:"closingTime,omitempty"`
+	IsScheduleCompleted   bool   `json:"isScheduleCompleted,omitempty"`
+	IsScheduled           bool   `json:"isScheduled,omitempty"`
+	InvitationScheduleGap *int32 `json:"invitationScheduleGap,omitempty"`
 }
 
 type ListFormQuery struct {

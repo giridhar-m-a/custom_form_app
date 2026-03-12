@@ -103,7 +103,7 @@ func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, dat
 		return sqlc.UpdateUserProfilePicRow{}, errors.New("invalid image")
 	}
 
-	path := fmt.Sprintf("%s/profile/%s", user, name)
+	path := fmt.Sprintf("users/%s/profile/%s", user, name)
 	userUUID, err := utils.ConvertStringToUUID(user)
 	if err != nil {
 		return sqlc.UpdateUserProfilePicRow{}, err

@@ -306,7 +306,6 @@ func (h *usersHandler) DeleteUserProfilePic(ctx *gin.Context) {
 // @type http
 // @scheme bearer
 func (h *usersHandler) UpdateProfilePic(ctx *gin.Context) {
-
 	// Parse the multipart form, with a max memory of 10MB
 	if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil {
 		utils.HandleError(ctx, err)
@@ -326,6 +325,7 @@ func (h *usersHandler) UpdateProfilePic(ctx *gin.Context) {
 		utils.HandleError(ctx, errors.New("user ID not found in context"))
 		return
 	}
+	key := "user:userID:" + userID.(string)
 	profile, err := h.userService.UpdateUserProfilePic(ctx, userID.(string), dto.FileUploadPayload{File: file, FileInfo: header})
 	if err != nil {
 		utils.HandleError(ctx, err)
@@ -342,4 +342,5 @@ func (h *usersHandler) UpdateProfilePic(ctx *gin.Context) {
 		Message: "Profile picture updated successfully",
 		Data:    userResponse,
 	})
+	cache.Del(ctx, key)
 }

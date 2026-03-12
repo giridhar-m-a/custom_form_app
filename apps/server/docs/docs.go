@@ -672,6 +672,13 @@ const docTemplate = `{
                         "name": "file",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "File path to upload shouldbe formid/invitationid",
+                        "name": "path",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {

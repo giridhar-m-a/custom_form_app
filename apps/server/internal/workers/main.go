@@ -20,22 +20,31 @@ func Start(concurrency int) {
 		},
 		asynq.Config{
 			Concurrency: concurrency,
+			Queues: map[string]int{
+				constants.QueueInvitations: 10,
+				constants.QueueFormStatus: 10,
+				"default":                  5,
+			},
 		},
 	)
 
 	mux := asynq.NewServeMux()
-
+	formRepo:=repositories.NewFormsRepository(db.Queries)
 	formService := services.NewFormService(
-		repositories.NewFormsRepository(db.Queries),
+		formRepo,
 		repositories.NewFormFieldsRepository(db.Queries),
 		repositories.NewFormFieldOptionsRepository(db.Queries),
 		db.Connection,
 	)
 
-	formWorker := NewFormWorker(formService)
+	formWorker := NewFormWorker(formRepo)
 
 	invitationWorker := NewInvitationWorker(
-		services.NewInvitationService(repositories.NewInvitationRepository(db.Queries), formService, db.Connection),
+		services.NewInvitationService(
+			repositories.NewInvitationRepository(db.Queries),
+			formService,
+			db.Connection,
+		),
 		formService,
 	)
 
@@ -43,15 +52,15 @@ func Start(concurrency int) {
 		constants.TaskTypeFormStatusUpdate,
 		formWorker.HandleFormStatusUpdate(),
 	)
+
 	mux.HandleFunc(
 		constants.TaskTypeInvitationSchedule,
 		invitationWorker.HandleInvitationsSchedule(),
 	)
 
-	go func() {
-		if err := srv.Run(mux); err != nil {
-			log.Fatal(err)
-		}
-		log.Println("Scheduler started successfully")
-	}()
+	log.Println("Asynq worker starting...")
+
+	if err := srv.Run(mux); err != nil {
+		log.Fatal(err)
+	}
 }

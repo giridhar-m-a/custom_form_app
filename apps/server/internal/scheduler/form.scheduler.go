@@ -16,10 +16,14 @@ func FormStatusUpdateSchedule(formID string, scheduleTime time.Time) (*asynq.Tas
 	formPayload := scheduler_dto.InvitationSchedulerPayload{
 		FormID: formID,
 	}
-	payload, _ := json.Marshal(formPayload)
+	payload, err := json.Marshal(formPayload)
+	if err !=nil{
+		log.Printf("[form scheduler] error parsing json, %s", err.Error())
+		return nil, err
+	}
 	task := asynq.NewTask(constants.TaskTypeFormStatusUpdate, payload)
 
-	info, err := client.Enqueue(task, asynq.ProcessAt(scheduleTime))
+	info, err := client.Enqueue(task, asynq.ProcessAt(scheduleTime), asynq.Queue(constants.QueueFormStatus), asynq.MaxRetry(0))
 	if err != nil {
 		log.Printf("Error scheduling form for form %s: %v", formID, err)
 		return nil, err
@@ -31,10 +35,12 @@ func FormStatusUpdateSchedule(formID string, scheduleTime time.Time) (*asynq.Tas
 
 func CancelFormStatusUpdateSchedule(scheduleId string) error {
 	inspector := asynq.NewInspector(NewRedisClientOpt())
-	err := inspector.DeleteTask(constants.TaskTypeFormStatusUpdate, scheduleId)
+
+	err := inspector.DeleteTask(constants.QueueFormStatus, scheduleId)
 	if err != nil {
 		return err
 	}
+
 	log.Printf("Form cancelled for schedule ID: %s", scheduleId)
 	return nil
 }
@@ -42,10 +48,11 @@ func CancelFormStatusUpdateSchedule(scheduleId string) error {
 func UpdateFormStatusUpdateSchedule(scheduleID string, scheduleTime time.Time, formID string) (*asynq.TaskInfo, error) {
 	err := CancelFormStatusUpdateSchedule(scheduleID)
 	if err != nil {
-		return nil, err
+		log.Printf("[form scheduler] error cancelling old schedule %s", err.Error())
 	}
 	info, err := FormStatusUpdateSchedule(formID, scheduleTime)
 	if err != nil {
+		log.Printf("[form scheduler] error scheduling new schedule %s", err.Error())
 		return nil, err
 	}
 	log.Printf("Form updated for schedule ID: %s, New Task ID: %s", scheduleID, info.ID)
