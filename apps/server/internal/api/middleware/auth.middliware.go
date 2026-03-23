@@ -12,9 +12,11 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		jwtSvc := services.NewJWTService()
 		authHeader := c.GetHeader("Authorization")
+
 		userID, err := jwtSvc.ValidateToken(authHeader)
 		if err != nil {
-			log.Printf("Authentication failedz`: %v", err)
+			log.Printf("[Middleware] auth header: %v", authHeader)
+			log.Printf("[Middleware] Authentication failed: %v", err)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.Error(), "status": http.StatusUnauthorized})
 			return
 		}

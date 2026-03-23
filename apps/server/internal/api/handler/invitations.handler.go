@@ -26,7 +26,13 @@ func NewInvitationHandler() InvitationHandler {
 	queries := db.Queries
 	repo := repositories.NewInvitationRepository(queries)
 	conn := db.Connection
-	return &invitationHandler{svc: services.NewInvitationService(repo, conn)}
+	formService := services.NewFormService(
+		repositories.NewFormsRepository(queries),
+		repositories.NewFormFieldsRepository(queries),
+		repositories.NewFormFieldOptionsRepository(queries),
+		conn,
+	)
+	return &invitationHandler{svc: services.NewInvitationService(repo, formService, conn)}
 }
 
 // NewInvitationHandler creates a new invitation handler

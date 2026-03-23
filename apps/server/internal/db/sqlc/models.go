@@ -161,10 +161,15 @@ func (ns NullFormStatus) Value() (driver.Value, error) {
 type InvitationStatus string
 
 const (
-	InvitationStatusPending   InvitationStatus = "pending"
-	InvitationStatusAccepted  InvitationStatus = "accepted"
-	InvitationStatusFailed    InvitationStatus = "failed"
-	InvitationStatusSubmitted InvitationStatus = "submitted"
+	InvitationStatusPending    InvitationStatus = "pending"
+	InvitationStatusBounced    InvitationStatus = "bounced"
+	InvitationStatusClicked    InvitationStatus = "clicked"
+	InvitationStatusOpened     InvitationStatus = "opened"
+	InvitationStatusDelivered  InvitationStatus = "delivered"
+	InvitationStatusComplained InvitationStatus = "complained"
+	InvitationStatusDelayed    InvitationStatus = "delayed"
+	InvitationStatusFailed     InvitationStatus = "failed"
+	InvitationStatusSubmitted  InvitationStatus = "submitted"
 )
 
 func (e *InvitationStatus) Scan(src interface{}) error {
@@ -267,7 +272,6 @@ type Invitation struct {
 	OpenedAt     sql.NullTime         `json:"opened_at"`
 	SubmittedAt  sql.NullTime         `json:"submitted_at"`
 	InvitedName  string               `json:"invited_name"`
-	ResendID     uuid.NullUUID        `json:"resend_id"`
 }
 
 type ResponseOption struct {

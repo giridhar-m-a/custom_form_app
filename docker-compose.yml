@@ -186,6 +186,14 @@ services:
       # - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.custom-form-app.home"
       # - "traefik.http.routers.traefik-secure.service=api@internal"
 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - traefik
+
 volumes:
   postgres_data:
   air_tmp:

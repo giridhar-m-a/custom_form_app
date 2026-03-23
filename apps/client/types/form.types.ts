@@ -61,6 +61,7 @@ export interface FormType {
   closingTime?: Date
   scheduledTime?: Date
   isScheduled: boolean
+  invitationScheduleGap?: number
 }
 
 export interface FormFilter {

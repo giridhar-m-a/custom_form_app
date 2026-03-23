@@ -672,6 +672,13 @@ const docTemplate = `{
                         "name": "file",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "File path to upload shouldbe formid/invitationid",
+                        "name": "path",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1525,19 +1532,22 @@ const docTemplate = `{
                 "summary": "GetInvitationByFormId retrieves invitations by form ID",
                 "parameters": [
                     {
-                        "enum": [
-                            "pending",
-                            "accepted",
-                            "failed",
-                            "submitted"
-                        ],
-                        "type": "string",
-                        "x-enum-varnames": [
-                            "InvitationStatusPending",
-                            "InvitationStatusAccepted",
-                            "InvitationStatusFailed",
-                            "InvitationStatusSubmitted"
-                        ],
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "pending",
+                                "bounced",
+                                "clicked",
+                                "opened",
+                                "delivered",
+                                "complained",
+                                "delayed",
+                                "failed",
+                                "submitted"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "exclude",
                         "in": "query"
                     },
@@ -1569,14 +1579,24 @@ const docTemplate = `{
                     {
                         "enum": [
                             "pending",
-                            "accepted",
+                            "bounced",
+                            "clicked",
+                            "opened",
+                            "delivered",
+                            "complained",
+                            "delayed",
                             "failed",
                             "submitted"
                         ],
                         "type": "string",
                         "x-enum-varnames": [
                             "InvitationStatusPending",
-                            "InvitationStatusAccepted",
+                            "InvitationStatusBounced",
+                            "InvitationStatusClicked",
+                            "InvitationStatusOpened",
+                            "InvitationStatusDelivered",
+                            "InvitationStatusComplained",
+                            "InvitationStatusDelayed",
                             "InvitationStatusFailed",
                             "InvitationStatusSubmitted"
                         ],
@@ -2287,13 +2307,23 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "pending",
-                "accepted",
+                "bounced",
+                "clicked",
+                "opened",
+                "delivered",
+                "complained",
+                "delayed",
                 "failed",
                 "submitted"
             ],
             "x-enum-varnames": [
                 "InvitationStatusPending",
-                "InvitationStatusAccepted",
+                "InvitationStatusBounced",
+                "InvitationStatusClicked",
+                "InvitationStatusOpened",
+                "InvitationStatusDelivered",
+                "InvitationStatusComplained",
+                "InvitationStatusDelayed",
                 "InvitationStatusFailed",
                 "InvitationStatusSubmitted"
             ]
@@ -2344,7 +2374,7 @@ const docTemplate = `{
                 "title"
             ],
             "properties": {
-                "closing_time": {
+                "closingTime": {
                     "type": "string"
                 },
                 "description": {
@@ -2358,10 +2388,13 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "is_scheduled": {
+                "invitationScheduleGap": {
+                    "type": "integer"
+                },
+                "isScheduled": {
                     "type": "boolean"
                 },
-                "scheduled_time": {
+                "scheduledTime": {
                     "type": "string"
                 },
                 "title": {
@@ -2703,6 +2736,9 @@ const docTemplate = `{
                 },
                 "description": {
                     "type": "string"
+                },
+                "invitationScheduleGap": {
+                    "type": "integer"
                 },
                 "isScheduleCompleted": {
                     "type": "boolean"

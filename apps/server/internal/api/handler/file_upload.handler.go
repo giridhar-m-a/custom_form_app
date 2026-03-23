@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "File to upload"
+// @Param path formData string true "File path to upload shouldbe formid/invitationid"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -32,6 +34,7 @@ func FileUploadHandler(c *gin.Context) {
 
 	// Retrieve the file from form data
 	file, header, err := c.Request.FormFile("file")
+	path := c.PostForm("path")
 	if err != nil {
 		c.JSON(400, gin.H{"message": "Failed to retrieve file", "status": http.StatusBadRequest})
 		return
@@ -43,7 +46,9 @@ func FileUploadHandler(c *gin.Context) {
 	objectName := header.Filename
 	contentType := header.Header.Get("Content-Type")
 
-	fileInfo, err := services.MinioUploadFile(bucketName, objectName, file, header.Size, contentType)
+	objectPath := fmt.Sprintf("%s/%s", path, objectName)
+
+	fileInfo, err := services.MinioUploadFile(bucketName, objectPath, file, header.Size, contentType)
 	if err != nil {
 		c.JSON(500, gin.H{"message": err.Error(), "status": http.StatusInternalServerError})
 		return

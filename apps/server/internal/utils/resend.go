@@ -9,7 +9,7 @@ import (
 var ResendClient *resend.Client
 
 func InitResend() {
-	apiKey := GetEnv("API_KEY", "")
+	apiKey := GetEnv("RESEND_API_KEY", "")
 	if apiKey == "" {
 		fmt.Println("Resend Credentials not found")
 	}

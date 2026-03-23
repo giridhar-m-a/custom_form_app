@@ -11,6 +11,7 @@ import (
 
 type JWTService interface {
 	GenerateToken(userID string, expiresIn time.Duration, audience string) (string, error)
+	GenerateInvitationToken(invitationID string, formID string, expiresIn time.Duration) (string, error)
 	ValidateToken(token string) (string, error)
 }
 
@@ -41,6 +42,21 @@ func (j *jwtService) GenerateToken(userID string, expiresIn time.Duration, audie
 		"sub": userID,
 		"exp": time.Now().Add(expiresIn).Unix(),
 		"iat": time.Now().Unix(),
+	})
+	tokenString, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func (j *jwtService) GenerateInvitationToken(invitationID string, formID string, expiresIn time.Duration) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss":    j.issuer,
+		"sub":    invitationID,
+		"formId": formID,
+		"exp":    time.Now().Add(expiresIn).Unix(),
+		"iat":    time.Now().Unix(),
 	})
 	tokenString, err := token.SignedString([]byte(j.secretKey))
 	if err != nil {

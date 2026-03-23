@@ -5,12 +5,16 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
+	"github.com/giridhar-m-a/custom_form_app/internal/scheduler"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 )
 
 type FormService interface {
@@ -22,6 +26,7 @@ type FormService interface {
 	DeleteForm(ctx context.Context, formID string) (sqlc.DeleteFormRow, error)
 	GetFormFieldsByFormId(ctx context.Context, formId string) ([]dto.CreatedFormFieldDTO, error)
 	UpdateFormFields(ctx context.Context, form dto.UpdateFormFieldsDTO) ([]dto.CreatedFormFieldDTO, error)
+	updateFormScheduleId(formID uuid.UUID, scheduleID uuid.NullUUID, invitationId uuid.NullUUID, ctx context.Context) (sqlc.Form, error)
 }
 
 type formService struct {
@@ -79,7 +84,7 @@ func (s *formService) CreateForm(ctx context.Context, form dto.CreateFormDTO, us
 
 	isScheduled := utils.BoolPtrToNullBool(form.IsScheduled)
 	scheduleGap := utils.ConvertInt32PtrToNullInt32(form.InvitationScheduleGap)
-	return s.formRepo.CreateForm(sqlc.CreateFormParams{
+	createdForm, err := s.formRepo.CreateForm(sqlc.CreateFormParams{
 		FormTitle:             form.Title,
 		FormDescription:       formDescription,
 		CreatedBy:             CreatedBy,
@@ -89,6 +94,42 @@ func (s *formService) CreateForm(ctx context.Context, form dto.CreateFormDTO, us
 		IsScheduled:           isScheduled,
 		InvitationScheduleGap: scheduleGap,
 	}, ctx)
+	if err != nil {
+		log.Printf("[Error Creating form] Failed to create form: %v", err)
+		return sqlc.Form{}, err
+	}
+	if form.IsScheduled != nil && *form.IsScheduled == true {
+		info, err := scheduler.FormStatusUpdateSchedule(createdForm.FormID.String(), *form.ScheduledTime)
+		if err != nil {
+			return sqlc.Form{}, err
+		}
+		scheduleID := utils.ConvertStringToNullUUID(info.ID)
+		log.Printf("[form service][Schedule ID] %s", scheduleID.UUID.String())
+		runAt := createdForm.ScheduledTime.Time.Add(-time.Duration(createdForm.InvitationScheduleGap.Int32) * time.Minute)
+		var invitationId uuid.NullUUID
+		invitationInfo, err := scheduler.ScheduleInvitation(createdForm.FormID.String(), runAt)
+		if err != nil {
+			log.Printf("[form service] error scheduling invitation: %s", err.Error())
+			if cancelErr := scheduler.CancelFormStatusUpdateSchedule(info.ID); cancelErr != nil {
+				log.Printf("[form service] failed to rollback form status schedule %s: %s", info.ID, cancelErr.Error())
+			}
+			return sqlc.Form{}, fmt.Errorf("failed to schedule invitation: %w", err)
+		}
+		invitationId = utils.ConvertStringToNullUUID(invitationInfo.ID)
+		_, err = s.updateFormScheduleId(createdForm.FormID, scheduleID, invitationId, ctx)
+		if err != nil {
+			log.Printf("[Error Updating schedule id] Failed to update form scheduling ID: %v", err)
+			if cancelErr := scheduler.CancelFormStatusUpdateSchedule(info.ID); cancelErr != nil {
+				log.Printf("[form service] failed to rollback form status schedule %s: %s", info.ID, cancelErr.Error())
+			}
+			if cancelErr := scheduler.CancelInvitationSchedule(invitationInfo.ID); cancelErr != nil {
+				log.Printf("[form service] failed to rollback invitation schedule %s: %s", invitationInfo.ID, cancelErr.Error())
+			}
+			return sqlc.Form{}, err
+		}
+	}
+
+	return createdForm, nil
 }
 
 func (s *formService) CreateFormFields(ctx context.Context, form dto.CreateFormFieldsDTO, userID string) ([]dto.CreatedFormFieldDTO, error) {
@@ -232,6 +273,11 @@ func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, fo
 		return sqlc.Form{}, err
 	}
 
+	oldForm, err := s.formRepo.GetFormByID(formID, ctx)
+	if err != nil {
+		return sqlc.Form{}, err
+	}
+
 	// Convert optional strings
 	formTitle := utils.ConvertStringToNullString(*form.Title)
 	formDescription := utils.ConvertStringToNullString(*form.Description)
@@ -282,25 +328,121 @@ func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, fo
 	if form.IsScheduled != nil {
 		isScheduled = sql.NullBool{Bool: *form.IsScheduled, Valid: true}
 	}
+	scheduleGap := sql.NullInt32{}
+	if form.InvitationScheduleGap != nil {
+		scheduleGap = utils.ConvertInt32PtrToNullInt32(form.InvitationScheduleGap)
+	}
 
 	// Prepare payload
 	formPayload := sqlc.UpdateFormParams{
-		FormID:              id,
-		FormTitle:           formTitle,
-		FormDescription:     formDescription,
-		FormStatus:          formStatus,
-		FormAccess:          formAccess,
-		SchedulingID:        schedulingID,
-		ScheduledTime:       scheduledTime,
-		ClosingTime:         closingTime,
-		IsScheduleCompleted: isScheduleCompleted,
-		IsScheduled:         isScheduled,
+		FormID:                id,
+		FormTitle:             formTitle,
+		FormDescription:       formDescription,
+		FormStatus:            formStatus,
+		FormAccess:            formAccess,
+		SchedulingID:          schedulingID,
+		ScheduledTime:         scheduledTime,
+		ClosingTime:           closingTime,
+		IsScheduleCompleted:   isScheduleCompleted,
+		IsScheduled:           isScheduled,
+		InvitationScheduleGap: scheduleGap,
 	}
 
-	return s.formRepo.UpdateForm(formPayload, ctx)
+	updatedForm, err := s.formRepo.UpdateForm(formPayload, ctx)
+	if err != nil {
+		return sqlc.Form{}, err
+	}
+	log.Printf("[form service] update form %s succeed", updatedForm.FormID.String())
+
+	timeChanged := form.ScheduledTime != nil &&
+		!oldForm.ScheduledTime.Time.Equal(*form.ScheduledTime)
+
+	gapChanged := form.InvitationScheduleGap != nil &&
+		oldForm.InvitationScheduleGap.Int32 != *form.InvitationScheduleGap
+
+	isOldScheduled := oldForm.IsScheduled.Valid && oldForm.IsScheduled.Bool
+	notPublished := oldForm.FormStatus.FormStatus != sqlc.FormStatusPublished && oldForm.FormStatus.FormStatus != sqlc.FormStatusClosed
+
+	if gapChanged {
+		runAt := updatedForm.ScheduledTime.Time.Add(-time.Duration(updatedForm.InvitationScheduleGap.Int32) * time.Minute)
+		var invitationSchedule *asynq.TaskInfo = &asynq.TaskInfo{}
+		var err error
+		if isOldScheduled && oldForm.InvitationScheduleID.Valid {
+			invitationSchedule, err = scheduler.UpdateInvitationSchedule(oldForm.InvitationScheduleID.UUID.String(), runAt, formID)
+		} else {
+			invitationSchedule, err = scheduler.ScheduleInvitation(formID, runAt)
+		}
+		if err != nil {
+			log.Printf("[formService] error scheduling invitation: %s", err.Error())
+			return sqlc.Form{}, err
+		}
+		invitationId := utils.ConvertStringToNullUUID(invitationSchedule.ID)
+		_, updateErr := s.formRepo.UpdateForm(sqlc.UpdateFormParams{
+			FormID:               id,
+			InvitationScheduleID: invitationId,
+		}, ctx)
+		if updateErr != nil {
+			log.Printf("[form service] Error updating form after scheduling invitation %s", updateErr.Error())
+		}
+		log.Printf("[Form Service] Updated invitation id for form %s", formID)
+	}
+
+	if form.IsScheduled != nil && *form.IsScheduled && timeChanged && notPublished {
+
+		// UPDATE existing schedule
+		if isOldScheduled {
+			log.Printf("[form service] updating old schedule for form %s", formID)
+			info, err := scheduler.UpdateFormStatusUpdateSchedule(
+				oldForm.SchedulingID.UUID.String(),
+				*form.ScheduledTime,
+				formID,
+			)
+			if err != nil {
+				return sqlc.Form{}, err
+			}
+			log.Printf("[form service] updated old schedule for form %s with schedule id %s", formID, info.ID)
+			schedulingID = utils.ConvertStringToNullUUID(info.ID)
+		}
+
+		// CREATE new schedule
+		if !isOldScheduled {
+			log.Printf("[form service] create new schedule for new Form %s", formID)
+			info, err := scheduler.FormStatusUpdateSchedule(
+				formID,
+				*form.ScheduledTime,
+			)
+			if err != nil {
+				return sqlc.Form{}, err
+			}
+			log.Printf("[form service] Created New schedule %s", info.ID)
+			schedulingID = utils.ConvertStringToNullUUID(info.ID)
+		}
+
+		_, err := s.formRepo.UpdateForm(sqlc.UpdateFormParams{
+			FormID:       id,
+			SchedulingID: schedulingID,
+		}, ctx)
+		if err != nil {
+			return sqlc.Form{}, err
+		}
+
+		log.Printf("[form service] schedule handled")
+	}
+
+	return updatedForm, nil
 }
 
 func (s *formService) DeleteForm(ctx context.Context, formID string) (sqlc.DeleteFormRow, error) {
+	form, err := s.formRepo.GetFormByID(formID, ctx)
+	if err != nil {
+		return sqlc.DeleteFormRow{}, err
+	}
+	if form.SchedulingID.Valid && form.IsScheduled.Bool == true && form.FormStatus.FormStatus == sqlc.FormStatusDraft {
+		err = scheduler.CancelInvitationSchedule(form.SchedulingID.UUID.String())
+		if err != nil {
+			log.Printf("[form service] deleting schedule %s", err.Error())
+		}
+	}
 	return s.formRepo.DeleteForm(formID, ctx)
 }
 
@@ -550,4 +692,12 @@ func (s *formService) deleteFormFieldOption(optionId string, tx *sql.Tx, ctx con
 func (s *formService) deleteFormField(fieldId string, tx *sql.Tx, ctx context.Context) (sqlc.DeleteFormFieldRow, error) {
 	fieldRepo := s.fieldRepo.FormFieldRepoWithTx(tx)
 	return fieldRepo.DeleteFormField(fieldId, ctx)
+}
+
+func (s *formService) updateFormScheduleId(formID uuid.UUID, scheduleID uuid.NullUUID, invitationId uuid.NullUUID, ctx context.Context) (sqlc.Form, error) {
+	return s.formRepo.UpdateForm(sqlc.UpdateFormParams{
+		FormID:       formID,
+		SchedulingID: scheduleID,
+		InvitationScheduleID: invitationId,
+	}, ctx)
 }

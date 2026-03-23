@@ -201,20 +201,26 @@ func (r *formHandler) GetForms(ctx *gin.Context) {
 
 	var formResponse []dto.FormResponse
 	for _, form := range forms.Forms {
+		var invitationScheduleGap *int32
+		if form.InvitationScheduleGap.Valid {
+			invitationScheduleGap = &form.InvitationScheduleGap.Int32
+		}
+
 		formResponse = append(formResponse, dto.FormResponse{
-			ID:                  form.FormID.String(),
-			Title:               form.FormTitle,
-			CreatedAt:           utils.NullTimeToString(form.FormCreatedAt),
-			UpdatedAt:           utils.NullTimeToString(form.FormUpdatedAt),
-			Description:         utils.NullStringToString(form.FormDescription),
-			CreatedBy:           utils.NullUUIDToString(form.CreatedBy),
-			Status:              string(form.FormStatus.FormStatus),
-			Access:              string(form.FormAccess.FormAccess),
-			SchedulingID:        utils.NullUUIDToString(form.SchedulingID),
-			ScheduledTime:       utils.NullTimeToString(form.ScheduledTime),
-			ClosingTime:         utils.NullTimeToString(form.ClosingTime),
-			IsScheduleCompleted: utils.NullBoolToBool(form.IsScheduleCompleted, false),
-			IsScheduled:         utils.NullBoolToBool(form.IsScheduled, false),
+			ID:                    form.FormID.String(),
+			Title:                 form.FormTitle,
+			CreatedAt:             utils.NullTimeToString(form.FormCreatedAt),
+			UpdatedAt:             utils.NullTimeToString(form.FormUpdatedAt),
+			Description:           utils.NullStringToString(form.FormDescription),
+			CreatedBy:             utils.NullUUIDToString(form.CreatedBy),
+			Status:                string(form.FormStatus.FormStatus),
+			Access:                string(form.FormAccess.FormAccess),
+			SchedulingID:          utils.NullUUIDToString(form.SchedulingID),
+			ScheduledTime:         utils.NullTimeToString(form.ScheduledTime),
+			ClosingTime:           utils.NullTimeToString(form.ClosingTime),
+			IsScheduleCompleted:   utils.NullBoolToBool(form.IsScheduleCompleted, false),
+			IsScheduled:           utils.NullBoolToBool(form.IsScheduled, false),
+			InvitationScheduleGap: invitationScheduleGap,
 		})
 	}
 
@@ -254,11 +260,30 @@ func (r *formHandler) GetSingleForm(ctx *gin.Context) {
 		utils.HandleError(ctx, err)
 		return
 	}
+	var invitationScheduleGap *int32
+	if form.InvitationScheduleGap.Valid {
+		invitationScheduleGap = &form.InvitationScheduleGap.Int32
+	}
 
 	ctx.JSON(200, gin.H{
 		"status":  200,
 		"message": "Form retrieved successfully",
-		"data":    form,
+		"data": dto.FormResponse{
+			ID:                    form.FormID.String(),
+			Title:                 form.FormTitle,
+			Description:           utils.NullStringToString(form.FormDescription),
+			CreatedBy:             utils.NullUUIDToString(form.CreatedBy),
+			Status:                string(form.FormStatus.FormStatus),
+			CreatedAt:             utils.NullTimeToString(form.FormCreatedAt),
+			UpdatedAt:             utils.NullTimeToString(form.FormUpdatedAt),
+			Access:                string(form.FormAccess.FormAccess),
+			SchedulingID:          utils.NullUUIDToString(form.SchedulingID),
+			ScheduledTime:         utils.NullTimeToString(form.ScheduledTime),
+			ClosingTime:           utils.NullTimeToString(form.ClosingTime),
+			IsScheduleCompleted:   utils.NullBoolToBool(form.IsScheduleCompleted, false),
+			IsScheduled:           utils.NullBoolToBool(form.IsScheduled, false),
+			InvitationScheduleGap: invitationScheduleGap,
+		},
 	})
 }
 
