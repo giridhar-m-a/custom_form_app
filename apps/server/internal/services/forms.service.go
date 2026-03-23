@@ -106,14 +106,25 @@ func (s *formService) CreateForm(ctx context.Context, form dto.CreateFormDTO, us
 		scheduleID := utils.ConvertStringToNullUUID(info.ID)
 		log.Printf("[form service][Schedule ID] %s", scheduleID.UUID.String())
 		runAt := createdForm.ScheduledTime.Time.Add(-time.Duration(createdForm.InvitationScheduleGap.Int32) * time.Minute)
-		invitationInfo, err:= scheduler.ScheduleInvitation(createdForm.FormID.String(), runAt)
-		if err!= nil {
-			log.Printf("[form service] error scheduling invitation")
+		var invitationId uuid.NullUUID
+		invitationInfo, err := scheduler.ScheduleInvitation(createdForm.FormID.String(), runAt)
+		if err != nil {
+			log.Printf("[form service] error scheduling invitation: %s", err.Error())
+			if cancelErr := scheduler.CancelFormStatusUpdateSchedule(info.ID); cancelErr != nil {
+				log.Printf("[form service] failed to rollback form status schedule %s: %s", info.ID, cancelErr.Error())
+			}
+			return sqlc.Form{}, fmt.Errorf("failed to schedule invitation: %w", err)
 		}
-		invitationId:= utils.ConvertStringToNullUUID(invitationInfo.ID)
+		invitationId = utils.ConvertStringToNullUUID(invitationInfo.ID)
 		_, err = s.updateFormScheduleId(createdForm.FormID, scheduleID, invitationId, ctx)
 		if err != nil {
 			log.Printf("[Error Updating schedule id] Failed to update form scheduling ID: %v", err)
+			if cancelErr := scheduler.CancelFormStatusUpdateSchedule(info.ID); cancelErr != nil {
+				log.Printf("[form service] failed to rollback form status schedule %s: %s", info.ID, cancelErr.Error())
+			}
+			if cancelErr := scheduler.CancelInvitationSchedule(invitationInfo.ID); cancelErr != nil {
+				log.Printf("[form service] failed to rollback invitation schedule %s: %s", invitationInfo.ID, cancelErr.Error())
+			}
 			return sqlc.Form{}, err
 		}
 	}
@@ -356,10 +367,10 @@ func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, fo
 		runAt := updatedForm.ScheduledTime.Time.Add(-time.Duration(updatedForm.InvitationScheduleGap.Int32) * time.Minute)
 		var invitationSchedule *asynq.TaskInfo = &asynq.TaskInfo{}
 		var err error
-		if isOldScheduled {
-			invitationSchedule, err = scheduler.ScheduleInvitation(formID, runAt)
-		} else {
+		if isOldScheduled && oldForm.InvitationScheduleID.Valid {
 			invitationSchedule, err = scheduler.UpdateInvitationSchedule(oldForm.InvitationScheduleID.UUID.String(), runAt, formID)
+		} else {
+			invitationSchedule, err = scheduler.ScheduleInvitation(formID, runAt)
 		}
 		if err != nil {
 			log.Printf("[formService] error scheduling invitation: %s", err.Error())
@@ -397,7 +408,7 @@ func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, fo
 		if !isOldScheduled {
 			log.Printf("[form service] create new schedule for new Form %s", formID)
 			info, err := scheduler.FormStatusUpdateSchedule(
-				oldForm.SchedulingID.UUID.String(),
+				formID,
 				*form.ScheduledTime,
 			)
 			if err != nil {

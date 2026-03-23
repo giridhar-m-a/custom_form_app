@@ -60,7 +60,9 @@ func Start(concurrency int) {
 
 	log.Println("Asynq worker starting...")
 
-	if err := srv.Run(mux); err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		if err := srv.Run(mux); err != nil {
+			log.Fatal(err)
+		}
+	}()
 }
