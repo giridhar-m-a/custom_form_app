@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/giridhar-m-a/custom_form_app/internal/db"
+	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
@@ -16,10 +19,14 @@ type InvitationHandler interface {
 	CreateSingleInvitation(c *gin.Context)
 	DeleteInvitation(c *gin.Context)
 	GetInvitationByFormId(c *gin.Context)
+	VerifyInvitation(ctx *gin.Context)
+	GenerateAnonymousInvitationToken(c *gin.Context)
 }
 
 type invitationHandler struct {
-	svc services.InvitationService
+	svc         services.InvitationService
+	jwtService  services.JWTService
+	formService services.FormService
 }
 
 func NewInvitationHandler() InvitationHandler {
@@ -32,7 +39,7 @@ func NewInvitationHandler() InvitationHandler {
 		repositories.NewFormFieldOptionsRepository(queries),
 		conn,
 	)
-	return &invitationHandler{svc: services.NewInvitationService(repo, formService, conn)}
+	return &invitationHandler{svc: services.NewInvitationService(repo, formService, conn), jwtService: services.NewJWTService(), formService: formService}
 }
 
 // NewInvitationHandler creates a new invitation handler
@@ -235,4 +242,96 @@ func (h *invitationHandler) GetInvitationByFormId(c *gin.Context) {
 		Data:       response,
 		Pagination: pagination,
 	})
+}
+
+// VerifyInvitation verifies an invitation
+// @Summary VerifyInvitation verifies an invitation
+// @Description VerifyInvitation verifies an invitation
+// @Tags Invitation
+// @Accept json
+// @Produce json
+// @Param data body dto.VerifyInvitationParams true "Invitation data"
+// @Success 200 {object} dto.ApiResponse[services.InvitationClaims] "Invitation verified successfully"
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /invitations/verify [post]
+// @type http
+func (h *invitationHandler) VerifyInvitation(c *gin.Context) {
+
+	var req dto.VerifyInvitationParams
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.HandleError(c, err)
+		return
+	}
+
+	claims, err := h.jwtService.ValidateInvitationToken(req.Token)
+	if err != nil {
+		utils.HandleError(c, err)
+		return
+	}
+
+	res := dto.ApiResponse[services.InvitationClaims]{
+		Message: "Invitation verified successfully",
+		Status:  http.StatusOK,
+		Data:    *claims,
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+// GenerateAnonymousInvitationToken generates an anonymous invitation token
+// @Summary GenerateAnonymousInvitationToken generates an anonymous invitation token
+// @Description GenerateAnonymousInvitationToken generates an anonymous invitation token
+// @Tags Invitation
+// @Accept json
+// @Produce json
+// @Param data body dto.GenerateAnonymousInvitationTokenParams true "Invitation data"
+// @Success 200 {object} dto.ApiResponse[dto.GenerateAnonymousInvitationTokenResponse] "Invitation token generated successfully"
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /invitations/anonymous [post]
+// @Security BearerAuth
+// @type http
+func (h *invitationHandler) GenerateAnonymousInvitationToken(c *gin.Context) {
+
+	var req dto.GenerateAnonymousInvitationTokenParams
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.HandleError(c, err)
+		return
+	}
+
+	form, err := h.formService.GetSingleForm(c, req.FormID)
+	if err != nil {
+		utils.HandleError(c, err)
+		return
+	}
+
+	if form.FormAccess.FormAccess == sqlc.FormAccessRestricted {
+		utils.HandleError(c, errors.New("Form is restricted"))
+		return
+	}
+	var expiresIn time.Duration
+
+	if form.ClosingTime.Valid {
+		expiresIn = time.Until(form.ClosingTime.Time)
+	} else {
+		expiresIn = 24 * time.Hour
+	}
+
+	token, err := h.jwtService.GenerateAnonymousInvitationToken(req.FormID, expiresIn)
+	if err != nil {
+		utils.HandleError(c, err)
+		return
+	}
+
+	res := dto.ApiResponse[dto.GenerateAnonymousInvitationTokenResponse]{
+		Message: "Invitation token generated successfully",
+		Status:  http.StatusOK,
+		Data: dto.GenerateAnonymousInvitationTokenResponse{
+			Token:     token,
+			ExpiresIn: time.Now().Add(expiresIn).String(),
+		},
+	}
+
+	c.JSON(http.StatusOK, res)
 }

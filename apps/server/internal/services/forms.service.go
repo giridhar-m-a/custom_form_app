@@ -696,8 +696,8 @@ func (s *formService) deleteFormField(fieldId string, tx *sql.Tx, ctx context.Co
 
 func (s *formService) updateFormScheduleId(formID uuid.UUID, scheduleID uuid.NullUUID, invitationId uuid.NullUUID, ctx context.Context) (sqlc.Form, error) {
 	return s.formRepo.UpdateForm(sqlc.UpdateFormParams{
-		FormID:       formID,
-		SchedulingID: scheduleID,
+		FormID:               formID,
+		SchedulingID:         scheduleID,
 		InvitationScheduleID: invitationId,
 	}, ctx)
 }

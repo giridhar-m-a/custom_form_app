@@ -22,7 +22,7 @@ func ScheduleInvitation(formID string, scheduleTime time.Time) (*asynq.TaskInfo,
 	}
 	task := asynq.NewTask(constants.TaskTypeInvitationSchedule, payload)
 
-	info, err := client.Enqueue(task, asynq.ProcessAt(scheduleTime), asynq.Queue(constants.QueueInvitations),  asynq.MaxRetry(0))
+	info, err := client.Enqueue(task, asynq.ProcessAt(scheduleTime), asynq.Queue(constants.QueueInvitations), asynq.MaxRetry(0))
 	if err != nil {
 		log.Printf("Error scheduling invitation for form %s: %v", formID, err)
 		return nil, err

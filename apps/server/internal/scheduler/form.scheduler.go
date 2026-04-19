@@ -17,7 +17,7 @@ func FormStatusUpdateSchedule(formID string, scheduleTime time.Time) (*asynq.Tas
 		FormID: formID,
 	}
 	payload, err := json.Marshal(formPayload)
-	if err !=nil{
+	if err != nil {
 		log.Printf("[form scheduler] error parsing json, %s", err.Error())
 		return nil, err
 	}

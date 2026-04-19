@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -13,11 +14,18 @@ type JWTService interface {
 	GenerateToken(userID string, expiresIn time.Duration, audience string) (string, error)
 	GenerateInvitationToken(invitationID string, formID string, expiresIn time.Duration) (string, error)
 	ValidateToken(token string) (string, error)
+	ValidateInvitationToken(token string) (*InvitationClaims, error)
+	GenerateAnonymousInvitationToken(formId string, expiresIn time.Duration) (string, error)
 }
 
 type jwtService struct {
 	secretKey string
 	issuer    string
+}
+
+type InvitationClaims struct {
+	InvitationID *string `json:"invitationId"`
+	FormID       string  `json:"formId"`
 }
 
 func NewJWTService() JWTService {
@@ -93,4 +101,57 @@ func (j *jwtService) ValidateToken(tokenString string) (string, error) {
 	}
 
 	return "", fmt.Errorf("invalid token claims")
+}
+
+func (j *jwtService) ValidateInvitationToken(tokenString string) (*InvitationClaims, error) {
+	if tokenString == "" {
+		return nil, errors.New("token is empty")
+	}
+
+	tokenString = strings.ReplaceAll(tokenString, "Bearer", "")
+	tokenString = strings.TrimSpace(tokenString)
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(j.secretKey), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		var invitationClaims InvitationClaims
+
+		// ✅ optional invitationId (from "sub")
+		if invitationID, ok := claims["sub"].(string); ok && invitationID != "" {
+			invitationClaims.InvitationID = &invitationID
+		}
+
+		// ✅ required formId
+		if formID, ok := claims["formId"].(string); ok {
+			invitationClaims.FormID = formID
+		} else {
+			return nil, errors.New("formId missing in token")
+		}
+
+		return &invitationClaims, nil
+	}
+
+	return nil, errors.New("invalid token claims")
+}
+
+func (j *jwtService) GenerateAnonymousInvitationToken(formId string, expiresIn time.Duration) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss":    j.issuer,
+		"formId": formId,
+		"exp":    time.Now().Add(expiresIn).Unix(),
+		"iat":    time.Now().Unix(),
+	})
+	tokenString, err := token.SignedString([]byte(j.secretKey))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }

@@ -72,9 +72,9 @@ func (h *usersHandler) GetMe(ctx *gin.Context) {
 
 	if user.FileName.Valid {
 		// signed, err := services.GetMinioSignedURL(h.bucket, user.FileName.String, time.Hour*24, "")
-		if err == nil {
-			profilepic = user.FileName.String
-		}
+		// if err == nil {
+		profilepic = user.FileName.String
+		// }
 
 	}
 

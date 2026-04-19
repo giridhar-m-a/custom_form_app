@@ -67,3 +67,16 @@ type InvitationEmailParams struct {
 	Year           int
 	CompanyAddress string
 }
+
+type VerifyInvitationParams struct {
+	Token string `json:"token"`
+}
+
+type GenerateAnonymousInvitationTokenParams struct {
+	FormID string `json:"formId"`
+}
+
+type GenerateAnonymousInvitationTokenResponse struct {
+	Token     string `json:"token"`
+	ExpiresIn string `json:"expiresIn"`
+}

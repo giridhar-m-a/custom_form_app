@@ -9,6 +9,8 @@ dev:
 	@echo "Waiting for database to be ready..."
 	@sleep 5
 	$(MAKE) migrate-up
+	$(MAKE) logs-server &
+	$(MAKE) logs-client 
 
 exec-client:
 	docker compose exec custom_form_client sh

@@ -13,7 +13,8 @@ type PaginationResponse struct {
 }
 
 type ApiResponse[T any] struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-	Data    T      `json:"data"`
+	Status     int                `json:"status"`
+	Message    string             `json:"message"`
+	Data       T                  `json:"data"`
+	Pagination PaginationResponse `json:"pagination"`
 }
