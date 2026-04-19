@@ -1,4 +1,5 @@
 import { InvitationTable } from '@/components/forms/Invitations/InvitationTable'
+import { ResponseTable } from '@/components/forms/Responses/ResponseTable'
 import { Button } from '@/components/ui/button'
 import { getFormById } from '@/services/api/forms/routes'
 import { FormType } from '@/types/form.types'
@@ -45,7 +46,9 @@ const FormDataPage: React.FC<FormDataPageProps> = async ({ params }) => {
         </div>
       </div>
       <div className="flex gap-4">
-        <div className="basis-3/4"></div>
+        <div className="basis-3/4 rounded-2xl border bg-background w-full p-6 mt-8 ">
+          <ResponseTable formId={id} />
+        </div>
         <div className="rounded-2xl border basis-1/4 bg-background w-full p-6 mt-8 ">
           <InvitationTable formId={id} status={formData?.status || 'draft'} />
         </div>

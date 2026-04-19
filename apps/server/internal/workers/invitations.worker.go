@@ -48,7 +48,7 @@ func (w *InvitationWorker) HandleInvitationsSchedule() asynq.HandlerFunc {
 
 		form, err := w.formService.GetSingleForm(ctx, formId.String())
 		if err != nil {
-			log.Printf("[Invitation Worker] Error getting form %s: %v",formId, err)
+			log.Printf("[Invitation Worker] Error getting form %s: %v", formId, err)
 			return nil
 		}
 		if form.FormStatus.FormStatus == sqlc.FormStatusClosed || (form.ClosingTime.Valid && form.ClosingTime.Time.Before(time.Now())) {

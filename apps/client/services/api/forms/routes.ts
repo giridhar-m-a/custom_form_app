@@ -90,3 +90,31 @@ export const getFormFields = async ({ id }: { id: string }) => {
     return errorHandler<FormField[]>(e)
   }
 }
+
+export const getFieldsForResponse = async ({ token }: { token: string }) => {
+  try {
+    const res = await GET<FormField[]>(`${formsRoutes.fieldResponse}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    return res
+  } catch (e) {
+    console.error(e)
+    return errorHandler<FormField[]>(e)
+  }
+}
+
+export const getFormForResponse = async ({ token }: { token: string }) => {
+  try {
+    const res = await GET<FormType>(`${formsRoutes.response}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    return res
+  } catch (e) {
+    console.error(e)
+    return errorHandler<FormType>(e)
+  }
+}

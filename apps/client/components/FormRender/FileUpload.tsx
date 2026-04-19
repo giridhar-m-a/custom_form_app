@@ -11,17 +11,17 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
+import { ApiResponse } from '@/types/api.types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface UploadParams {
   file: File
   onProgress: (pct: number) => void
   path: string
+  token: string
 }
 
-interface UploadResponse {
-  filePath: string
-}
+type UploadResponse = ApiResponse<FileUploadResponse>
 
 interface MutationParams {
   file: File
@@ -33,11 +33,10 @@ interface ApiErrorResponse {
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-const uploadFile = async ({ file, onProgress, path }: UploadParams): Promise<UploadResponse> => {
+const uploadFile = async ({ file, onProgress, path, token }: UploadParams): Promise<UploadResponse> => {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('path', path)
-  const token = Cookies.get('accessToken')
 
   const { data } = await axios.post<UploadResponse>(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/files/file-upload`,
@@ -103,19 +102,20 @@ const getFileIcon = (name: string): LucideIcon => {
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface FileUploadProps {
   /** Server-side destination path passed along with the upload */
-  uploadPath?: string
+  uploadPath: string
   /** Callback called with the returned file path on success */
-  handlePath?: (val: string) => void
+  handleResponse?: (val: FileInfo) => void
   /**
    * When true, the upload starts automatically as soon as a file is selected.
    * The manual "Upload File" button is hidden.
    * Defaults to false.
    */
   autoUpload?: boolean
+  token: string
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function FileUpload({ uploadPath = '', handlePath, autoUpload = false }: FileUploadProps) {
+export default function FileUpload({ uploadPath, token, handleResponse, autoUpload = false }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null)
   const [progress, setProgress] = useState(0)
   const [dragOver, setDragOver] = useState(false)
@@ -127,10 +127,10 @@ export default function FileUpload({ uploadPath = '', handlePath, autoUpload = f
     AxiosError<ApiErrorResponse>,
     MutationParams
   >({
-    mutationFn: ({ file, path }) => uploadFile({ file, onProgress: setProgress, path }),
-    onSuccess: () => {
+    mutationFn: ({ file, path }) => uploadFile({ file, onProgress: setProgress, path, token }),
+    onSuccess: data => {
       setProgress(100)
-      handlePath?.(`${uploadPath}/${file?.name}`)
+      handleResponse?.(data.data?.fileInfo as FileInfo)
     },
     onError: () => setProgress(0)
   })
@@ -171,8 +171,8 @@ export default function FileUpload({ uploadPath = '', handlePath, autoUpload = f
   }
 
   const handleCopy = () => {
-    if (!data?.filePath) return
-    navigator.clipboard.writeText(data.filePath)
+    if (!data?.data?.fileInfo?.filePath) return
+    navigator.clipboard.writeText(data.data.fileInfo.filePath)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -294,7 +294,7 @@ export default function FileUpload({ uploadPath = '', handlePath, autoUpload = f
           )}
 
           {/* Success */}
-          {isSuccess && data?.filePath && (
+          {isSuccess && data?.data?.fileInfo.filePath && (
             <div className="rounded-lg bg-emerald-950/40 border border-emerald-800/50 p-3.5 space-y-2">
               <div className="flex items-center gap-1.5">
                 <Badge
@@ -306,7 +306,7 @@ export default function FileUpload({ uploadPath = '', handlePath, autoUpload = f
               </div>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs text-emerald-300 bg-zinc-900/60 rounded px-2.5 py-1.5 truncate font-mono">
-                  {data.filePath}
+                  {data.data?.fileInfo.filePath}
                 </code>
                 <Button
                   variant="ghost"

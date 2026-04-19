@@ -47,7 +47,7 @@ func (w *FormWorker) HandleFormStatusUpdate() asynq.HandlerFunc {
 			FormID: formId,
 		}, ctx)
 		if err != nil {
-			log.Printf("cannot update form status for %s: %v", formId,err)
+			log.Printf("cannot update form status for %s: %v", formId, err)
 			return err
 		}
 		log.Printf("[form worker] form status updated for %s", formId.String())

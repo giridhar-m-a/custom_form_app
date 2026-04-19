@@ -62,10 +62,7 @@ func ConvertIntToNullInt32(i int) sql.NullInt32 {
 }
 
 func ConvertBoolToNullBool(b bool) sql.NullBool {
-	if !b {
-		return sql.NullBool{Bool: false, Valid: false}
-	}
-	return sql.NullBool{Bool: true, Valid: true}
+	return sql.NullBool{Bool: b, Valid: true}
 }
 
 func ConvertIntToInt32(i int) int32 {

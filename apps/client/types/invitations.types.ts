@@ -31,3 +31,8 @@ export interface BulkInvitationResponse {
   success_count: number
   total_rows: number
 }
+
+export interface VerifyInvitationResponse {
+  formId: string
+  invitationId?: string
+}

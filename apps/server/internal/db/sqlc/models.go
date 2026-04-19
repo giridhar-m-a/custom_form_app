@@ -244,9 +244,7 @@ type FormFieldOption struct {
 
 type FormResponse struct {
 	ResponseID   uuid.UUID      `json:"response_id"`
-	FormID       uuid.UUID      `json:"form_id"`
-	SubmittedAt  sql.NullTime   `json:"submitted_at"`
-	RespondentID uuid.NullUUID  `json:"respondent_id"`
+	SubmissionID uuid.UUID      `json:"submission_id"`
 	FormFieldID  uuid.UUID      `json:"form_field_id"`
 	ResponseText sql.NullString `json:"response_text"`
 }
@@ -260,6 +258,13 @@ type FormResponseFile struct {
 	FileUploadedAt sql.NullTime `json:"file_uploaded_at"`
 	ResponseID     uuid.UUID    `json:"response_id"`
 	FormID         uuid.UUID    `json:"form_id"`
+}
+
+type FormSubmission struct {
+	SubmissionID uuid.UUID     `json:"submission_id"`
+	FormID       uuid.UUID     `json:"form_id"`
+	SubmittedAt  sql.NullTime  `json:"submitted_at"`
+	RespondentID uuid.NullUUID `json:"respondent_id"`
 }
 
 type Invitation struct {

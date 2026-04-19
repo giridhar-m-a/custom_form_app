@@ -65,8 +65,6 @@ func main() {
 	log.Println("Initializing MinIO...")
 	services.InitMinio()
 
-	
-
 	// Set Gin mode based on environment
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)

@@ -5,7 +5,12 @@ import { DELETE, GET, POST, POST_FORM_DATA } from '@/lib/api.config'
 import { invitationsRoutes } from '@/lib/constants/apiRoutes/invitations.routes'
 import { errorHandler } from '@/lib/errorHandler'
 import { ApiResponse } from '@/types/api.types'
-import { BulkInvitationResponse, Invitation, InvitationFilter } from '@/types/invitations.types'
+import {
+  BulkInvitationResponse,
+  Invitation,
+  InvitationFilter,
+  VerifyInvitationResponse
+} from '@/types/invitations.types'
 
 interface GetInvitationsByFormIdParams {
   formId: string
@@ -61,5 +66,19 @@ export const deleteInvitation = async ({ invitationId }: { invitationId: string 
   } catch (e) {
     console.error(e)
     return errorHandler<undefined>(e)
+  }
+}
+
+export const verifyInvitation = async ({
+  token
+}: {
+  token: string
+}): Promise<ApiResponse<VerifyInvitationResponse>> => {
+  try {
+    const res = await POST<VerifyInvitationResponse>(`${invitationsRoutes.verify}`, { token })
+    return res
+  } catch (e) {
+    console.error(e)
+    return errorHandler<VerifyInvitationResponse>(e)
   }
 }

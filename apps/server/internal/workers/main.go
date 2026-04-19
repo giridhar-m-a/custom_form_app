@@ -22,14 +22,14 @@ func Start(concurrency int) {
 			Concurrency: concurrency,
 			Queues: map[string]int{
 				constants.QueueInvitations: 10,
-				constants.QueueFormStatus: 10,
+				constants.QueueFormStatus:  10,
 				"default":                  5,
 			},
 		},
 	)
 
 	mux := asynq.NewServeMux()
-	formRepo:=repositories.NewFormsRepository(db.Queries)
+	formRepo := repositories.NewFormsRepository(db.Queries)
 	formService := services.NewFormService(
 		formRepo,
 		repositories.NewFormFieldsRepository(db.Queries),
