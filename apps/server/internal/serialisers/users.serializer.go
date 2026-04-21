@@ -9,7 +9,7 @@ import (
 func MapUser(u sqlc.User) dto.User {
 	return dto.User{
 		UserID:        u.UserID.String(),
-		UserEmail:     u.UserEmail,
+		UserEmail:     u.UserEmail.String,
 		UserFullName:  u.UserFullName,
 		UserCreatedAt: u.UserCreatedAt.Time,
 		UserUpdatedAt: u.UserUpdatedAt.Time,
@@ -20,7 +20,7 @@ func MapUser(u sqlc.User) dto.User {
 func MapGetUserByEmailRow(u sqlc.GetUserByEmailRow) dto.User {
 	return dto.User{
 		UserID:        u.UserID.String(),
-		UserEmail:     u.UserEmail,
+		UserEmail:     u.UserEmail.String,
 		UserFullName:  u.UserFullName,
 		UserCreatedAt: u.UserCreatedAt.Time,
 		UserUpdatedAt: u.UserUpdatedAt.Time,
@@ -31,7 +31,7 @@ func MapGetUserByEmailRow(u sqlc.GetUserByEmailRow) dto.User {
 func MapGetUserByGoogleIdRow(u sqlc.GetUserByGoogleIdRow) dto.User {
 	return dto.User{
 		UserID:        u.UserID.String(),
-		UserEmail:     u.UserEmail,
+		UserEmail:     u.UserEmail.String,
 		UserFullName:  u.UserFullName,
 		UserCreatedAt: u.UserCreatedAt.Time,
 		UserUpdatedAt: u.UserUpdatedAt.Time,
@@ -42,7 +42,7 @@ func MapGetUserByGoogleIdRow(u sqlc.GetUserByGoogleIdRow) dto.User {
 func MapGetUserByIDRow(u sqlc.GetUserByIDRow) dto.User {
 	return dto.User{
 		UserID:        u.UserID.String(),
-		UserEmail:     u.UserEmail,
+		UserEmail:     u.UserEmail.String,
 		UserFullName:  u.UserFullName,
 		UserCreatedAt: u.UserCreatedAt.Time,
 		UserUpdatedAt: u.UserUpdatedAt.Time,

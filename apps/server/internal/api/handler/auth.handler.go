@@ -24,6 +24,7 @@ type AuthHandler interface {
 	RefreshTokenHandler(c *gin.Context)
 	PasswordResetRequestHandler(c *gin.Context)
 	ResetPasswordHandler(c *gin.Context)
+	TempUserAuthHandler(c *gin.Context)
 }
 
 type authHandler struct {
@@ -333,4 +334,51 @@ func (a *authHandler) ResetPasswordHandler(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Password reset successfully", "status": http.StatusOK})
+}
+
+//@Summary      Temp User Auth
+//@Description  Temp User Auth
+//@Tags         Authentication
+//@Accept       json
+//@Produce      json
+//@Param        form  body      dto.TempUserPayload  true  "Form data"
+//@Success      200  {object}  object{status=int,message=string,data=object{accessToken=string,refreshToken=string,user=object{userID=string,userEmail=string,userFullName=string,userCreatedAt=string,userUpdatedAt=string}}}  "Temp user auth successful"
+//@Failure      400  {object}  object{status=int,message=string}  "Invalid request"
+//@Failure      401  {object}  object{status=int,message=string}  "Unauthorized"
+//@Failure      500  {object}  object{status=int,message=string}  "Internal server error"
+//@Router       /auth/temp-user-auth [post]
+//@Schemes      https
+func (a *authHandler) TempUserAuthHandler(ctx *gin.Context) {
+	var data dto.TempUserPayload
+	if err := ctx.ShouldBindJSON(&data); err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	user, err := a.userService.CreateTempUser(ctx, data.Name)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	audience := ctx.Request.Header.Get("Origin")
+	if audience == "" {
+		audience = ctx.Request.Host // fallback if Origin is not set
+	}
+
+	token, refreshToken, err := a.authService.GenerateTokens(user.UserID.String(), audience)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to generate tokens", "status": http.StatusInternalServerError})
+		log.Printf("Error generating tokens: %v", err)
+		return
+	}
+
+	serializedUser := serializers.MapUser(user)
+
+	ctx.JSON(http.StatusOK, gin.H{"data": dto.TempUserResponse{
+		AccessToken:  token,
+		RefreshToken: refreshToken,
+		User:         serializedUser,
+	}, "status": http.StatusOK, "message": "Authentication successful"})
 }

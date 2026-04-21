@@ -348,7 +348,7 @@ func (r *formHandler) UpdateForm(ctx *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        formID  path      string  true  "Form ID"
-// @Success      200     {object}  object{status=string,message=string,data=dto.FormResponse}  "Form deleted successfully"
+// @Success      200     {object}  object{status=string,message=string}  "Form deleted successfully"
 // @Failure      400     {object}  object{status=string,message=string}  "Invalid request payload"
 // @Failure      401     {object}  object{status=string,message=string}  "Unauthorized"
 // @Failure      500     {object}  object{status=string,message=string}  "Internal server error"
@@ -360,7 +360,7 @@ func (r *formHandler) DeleteForm(ctx *gin.Context) {
 		utils.HandleError(ctx, errors.New("form id is required"))
 		return
 	}
-	deletedForm, err := r.formService.DeleteForm(ctx, formID)
+	err := r.formService.SoftDeleteForm(formID, ctx)
 	if err != nil {
 		utils.HandleError(ctx, err)
 		return
@@ -369,16 +369,6 @@ func (r *formHandler) DeleteForm(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"status":  200,
 		"message": "Form deleted successfully",
-		"data": dto.FormResponse{
-			ID:          deletedForm.FormID.String(),
-			Title:       deletedForm.FormTitle,
-			Description: deletedForm.FormDescription.String,
-			CreatedBy:   deletedForm.CreatedBy.UUID.String(),
-			Status:      string(deletedForm.FormStatus.FormStatus),
-			CreatedAt:   deletedForm.FormCreatedAt.Time.String(),
-			UpdatedAt:   deletedForm.FormUpdatedAt.Time.String(),
-			Access:      string(deletedForm.FormAccess.FormAccess),
-		},
 	})
 }
 

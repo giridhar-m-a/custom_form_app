@@ -10,17 +10,19 @@ SELECT
     u.user_email,
     u.user_created_at,
     u.user_updated_at,
-    i.file_name
-FROM users u
+    i.file_name,
+    u.is_temp,
+    u.is_deleted
+FROM users u 
 LEFT JOIN user_images i
     ON u.user_id = i.user_id
-WHERE u.user_id = $1;
+WHERE u.user_id = $1 AND u.is_deleted = FALSE;
 
 -- name: GetUserPassword :one
 SELECT
     u.user_password
 FROM users u
-WHERE u.user_id = $1;
+WHERE u.user_id = $1 AND u.is_deleted = FALSE AND u.is_temp = FALSE;
 
 -- name: GetUserByGoogleId :one
 SELECT
@@ -33,7 +35,7 @@ SELECT
 FROM users u
 LEFT JOIN user_images i
     ON u.user_id = i.user_id
-WHERE u.user_google_id = $1;
+WHERE u.user_google_id = $1 AND u.is_deleted = FALSE AND u.is_temp = FALSE;
 
 -- name: GetUserByEmail :one
 SELECT
@@ -47,7 +49,7 @@ SELECT
 FROM users u
 LEFT JOIN user_images i
     ON u.user_id = i.user_id
-WHERE u.user_email = $1;
+WHERE u.user_email = $1 AND u.is_deleted = FALSE AND u.is_temp = FALSE;
 
 -- name: UpdateUser :one
 UPDATE users
@@ -56,7 +58,7 @@ SET
   user_email = COALESCE(sqlc.narg('user_email'), user_email),
   user_password = COALESCE(sqlc.narg('user_password'), user_password),
   user_google_id = COALESCE(sqlc.narg('user_google_id'), user_google_id)
-WHERE user_id = sqlc.arg('user_id')
+WHERE user_id = sqlc.arg('user_id') AND is_deleted = FALSE AND is_temp = FALSE
 RETURNING user_id, user_full_name, user_email, user_created_at, user_updated_at;
 
 -- name: DeleteUser :exec
@@ -87,4 +89,14 @@ RETURNING file_id, file_name, file_size, file_type, user_id;
 -- name: GetUserProfilePic :one
 SELECT *
 FROM user_images
-WHERE user_id = $1;
+WHERE user_id = $1 AND is_deleted = FALSE AND is_temp = FALSE;
+
+-- name: CreateTempUser :one
+INSERT INTO users (is_temp, user_full_name)
+VALUES (TRUE, sqlc.arg('user_full_name'))
+RETURNING *;
+
+-- name: SoftDeleteUser :exec
+UPDATE users
+SET is_deleted = TRUE
+WHERE user_id = sqlc.arg('user_id');

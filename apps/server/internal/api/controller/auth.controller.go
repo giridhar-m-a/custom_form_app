@@ -23,4 +23,6 @@ func Auth(rg *gin.RouterGroup) {
 	auth.POST("/request-password-reset", authHandler.PasswordResetRequestHandler)
 
 	auth.POST("/reset-password", authHandler.ResetPasswordHandler)
+
+	auth.POST("/temp-user-auth", authHandler.TempUserAuthHandler)
 }

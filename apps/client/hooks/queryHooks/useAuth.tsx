@@ -7,6 +7,7 @@ import {
 } from '@/app/schemas/auth.schemas'
 import { LOGIN_KEYS } from '@/lib/constants/queryKeys/login.keys'
 import {
+  createTempUser,
   loginWithCredentials,
   loginWithGoogle,
   register,
@@ -28,6 +29,31 @@ export const useCredentialAuth = () => {
     mutationKey: LOGIN_KEYS.loginWithCredential,
     mutationFn: async (data: SignInSchemaType) => {
       const res = await loginWithCredentials(data)
+      if (res.status === 200 || res.status === 201) {
+        return res
+      }
+      throw new Error(res.message)
+    },
+    onSuccess: ({ message, data }) => {
+      if (data) {
+        dispatch(setTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken }))
+      }
+      toast.success(message)
+      router.push('/dashboard')
+    },
+    onError: ({ message }) => {
+      toast.error(message)
+    }
+  })
+}
+
+export const useTempAuth = () => {
+  const router = useRouter()
+  const dispatch = useDispatch()
+  return useMutation({
+    mutationKey: LOGIN_KEYS.loginWithCredential,
+    mutationFn: async (data: { name: string }) => {
+      const res = await createTempUser(data.name)
       if (res.status === 200 || res.status === 201) {
         return res
       }

@@ -72,14 +72,16 @@ export function NavUser({ user }: { user: User }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <Link href={'/account'}>
-                <DropdownMenuItem>
-                  <BadgeCheck />
-                  Account
-                </DropdownMenuItem>
-              </Link>
-            </DropdownMenuGroup>
+            {!user.isTemp && (
+              <DropdownMenuGroup>
+                <Link href={'/account'}>
+                  <DropdownMenuItem>
+                    <BadgeCheck />
+                    Account
+                  </DropdownMenuItem>
+                </Link>
+              </DropdownMenuGroup>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="bg-red-600 hover:bg-red-700! hover:cursor-pointer">
               <LogOut />

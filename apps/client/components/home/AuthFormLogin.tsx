@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import AuthFormSignUp from './AuthFormSignUp'
 import { useGoogleLogin } from '@react-oauth/google'
 import AuthFormReset from './AuthFormReset'
+import TempUser from './TempUser'
 
 const AuthFormLogin = () => {
   const [isSignUp, setIsSignUp] = useState<'login' | 'signup' | 'forget'>('login')
@@ -153,6 +154,7 @@ const AuthFormLogin = () => {
         )}
         {isSignUp === 'signup' && <AuthFormSignUp />}
         {isSignUp === 'forget' && <AuthFormReset />}
+        <TempUser />
         <p className="mt-4 text-center text-sm text-gray-500">
           {isSignUp === 'login' || isSignUp === 'forget' ? 'Already have an account? ' : "Don't have an account? "}
           <button

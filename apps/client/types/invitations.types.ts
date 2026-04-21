@@ -36,3 +36,12 @@ export interface VerifyInvitationResponse {
   formId: string
   invitationId?: string
 }
+
+export type AnonymousInvitationPayload = {
+  formId: string
+}
+
+export type AnonymousInvitationResponse = {
+  token: string
+  expiresIn: string
+}

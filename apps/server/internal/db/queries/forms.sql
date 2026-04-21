@@ -51,7 +51,7 @@ RETURNING *;
 -- name: GetFormByID :one
 SELECT *
 FROM forms
-WHERE form_id = $1;
+WHERE form_id = $1 AND is_deleted = FALSE;
 
 -- name: ListForms :many
 SELECT
@@ -59,7 +59,8 @@ SELECT
     COUNT(*) OVER() as total_count
 FROM forms
 WHERE
-    created_by = sqlc.arg('created_by')
+    is_deleted = FALSE
+    AND created_by = sqlc.arg('created_by')
     AND (
         sqlc.narg('search')::text IS NULL
         OR form_title ILIKE '%' || sqlc.narg('search')::text || '%'
@@ -177,3 +178,8 @@ SELECT COALESCE(
 FROM form_field_options fo
 JOIN form_fields ff ON ff.field_id = fo.field_id
 WHERE ff.form_id = $1;
+
+-- name: SoftDeleteForm :exec
+UPDATE forms
+SET is_deleted = TRUE
+WHERE form_id = sqlc.arg('form_id');

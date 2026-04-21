@@ -83,11 +83,12 @@ func (h *usersHandler) GetMe(ctx *gin.Context) {
 		Message: "User retrieved successfully",
 		Data: dto.User{
 			UserID:         user.UserID.String(),
-			UserEmail:      user.UserEmail,
+			UserEmail:      user.UserEmail.String,
 			UserFullName:   user.UserFullName,
 			UserCreatedAt:  user.UserCreatedAt.Time,
 			UserUpdatedAt:  user.UserUpdatedAt.Time,
 			UserProfilePic: profilepic,
+			IsTemp: user.IsTemp.Bool,
 		},
 	}
 
@@ -136,7 +137,7 @@ func (h *usersHandler) UpdateUser(ctx *gin.Context) {
 		Message: "User retrieved successfully",
 		Data: dto.User{
 			UserID:        user.UserID.String(),
-			UserEmail:     user.UserEmail,
+			UserEmail:     user.UserEmail.String,
 			UserFullName:  user.UserFullName,
 			UserCreatedAt: user.UserCreatedAt.Time,
 			UserUpdatedAt: user.UserUpdatedAt.Time,
@@ -223,8 +224,8 @@ func (h *usersHandler) UpdatePassword(ctx *gin.Context) {
 		Message: "User password updated successfully",
 		Data: dto.User{
 			UserID:        user.UserID.String(),
-			UserEmail:     user.UserEmail,
-			UserFullName:  user.UserEmail,
+			UserEmail:     user.UserEmail.String,
+			UserFullName:  user.UserFullName,
 			UserCreatedAt: user.UserCreatedAt.Time,
 			UserUpdatedAt: user.UserUpdatedAt.Time,
 		},
@@ -251,7 +252,7 @@ func (h *usersHandler) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := h.userService.DeleteUser(ctx, userID.(string))
+	err := h.userService.SoftDeleteUser(ctx, userID.(string))
 	if err != nil {
 		utils.HandleError(ctx, err)
 		return
