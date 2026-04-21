@@ -223,6 +223,7 @@ type Form struct {
 	IsScheduled           sql.NullBool   `json:"is_scheduled"`
 	InvitationScheduleGap sql.NullInt32  `json:"invitation_schedule_gap"`
 	InvitationScheduleID  uuid.NullUUID  `json:"invitation_schedule_id"`
+	IsDeleted             sql.NullBool   `json:"is_deleted"`
 }
 
 type FormField struct {
@@ -288,11 +289,13 @@ type ResponseOption struct {
 type User struct {
 	UserID        uuid.UUID      `json:"user_id"`
 	UserFullName  string         `json:"user_full_name"`
-	UserEmail     string         `json:"user_email"`
+	UserEmail     sql.NullString `json:"user_email"`
 	UserGoogleID  sql.NullString `json:"user_google_id"`
 	UserCreatedAt sql.NullTime   `json:"user_created_at"`
 	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
 	UserPassword  sql.NullString `json:"user_password"`
+	IsTemp        sql.NullBool   `json:"is_temp"`
+	IsDeleted     sql.NullBool   `json:"is_deleted"`
 }
 
 type UserImage struct {

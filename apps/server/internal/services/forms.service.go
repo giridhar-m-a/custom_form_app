@@ -27,6 +27,7 @@ type FormService interface {
 	GetFormFieldsByFormId(ctx context.Context, formId string) ([]dto.CreatedFormFieldDTO, error)
 	UpdateFormFields(ctx context.Context, form dto.UpdateFormFieldsDTO) ([]dto.CreatedFormFieldDTO, error)
 	updateFormScheduleId(formID uuid.UUID, scheduleID uuid.NullUUID, invitationId uuid.NullUUID, ctx context.Context) (sqlc.Form, error)
+	SoftDeleteForm(formID string, ctx context.Context) error
 }
 
 type formService struct {
@@ -723,4 +724,16 @@ func (s *formService) updateFormScheduleId(formID uuid.UUID, scheduleID uuid.Nul
 		SchedulingID:         scheduleID,
 		InvitationScheduleID: invitationId,
 	}, ctx)
+}
+
+func (s *formService) SoftDeleteForm(formID string, ctx context.Context) error {
+	uuidFormId, err := utils.ConvertStringToUUID(formID)
+	if err != nil {
+		return err
+	}
+	err= s.formRepo.SoftDeleteForm(uuidFormId, ctx)
+	if err == nil {
+		scheduler.DeleteFormByIdScheduler(formID, time.Now())
+	}
+	return err
 }

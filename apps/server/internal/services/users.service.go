@@ -11,6 +11,7 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
+	"github.com/giridhar-m-a/custom_form_app/internal/scheduler"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
 )
@@ -26,6 +27,8 @@ type UserService interface {
 	DeleteUser(ctx context.Context, user string) error
 	DeleteUserProfilePic(ctx context.Context, user string) error
 	GetUserPassword(ctx context.Context, userID string) (string, error)
+	CreateTempUser(ctx context.Context, name string) (sqlc.User, error)
+	SoftDeleteUser(ctx context.Context, user string) error
 }
 
 type userService struct {
@@ -44,7 +47,7 @@ func (s *userService) CreateUser(ctx context.Context, data map[string]any) (sqlc
 
 	newUser, err := s.repo.Create(ctx, sqlc.CreateUserParams{
 		UserFullName: data["name"].(string),
-		UserEmail:    data["email"].(string),
+		UserEmail:    utils.ConvertStringToNullString(data["email"].(string)),
 		UserGoogleID: utils.ConvertStringToNullString(data["id"].(string)),
 		UserPassword: utils.ConvertStringToNullString(password),
 	})
@@ -221,4 +224,24 @@ func (s *userService) GetUserPassword(ctx context.Context, userID string) (strin
 
 	return userPassword.String, nil
 
+}
+
+func (s *userService) CreateTempUser(ctx context.Context, name string) (sqlc.User, error) {
+	user, err := s.repo.CreateTempUser(ctx, name)
+	if err == nil {
+		scheduler.ScheduleDeleteUser(user.UserID.String(), time.Now().Add(time.Hour*24))
+	}
+	return user, err
+}
+
+func (s *userService) SoftDeleteUser(ctx context.Context, user string) error {
+	userUUID, err := utils.ConvertStringToUUID(user)
+	if err != nil {
+		return err
+	}
+	err= s.repo.SoftDeleteUser(ctx, userUUID)
+	if err == nil {
+		scheduler.ScheduleDeleteUser(user, time.Now())
+	}
+	return err
 }

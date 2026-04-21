@@ -79,7 +79,7 @@ VALUES (
   $10,
   $11
 )
-RETURNING form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id
+RETURNING form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id, is_deleted
 `
 
 type CreateFormParams struct {
@@ -127,6 +127,7 @@ func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (Form, e
 		&i.IsScheduled,
 		&i.InvitationScheduleGap,
 		&i.InvitationScheduleID,
+		&i.IsDeleted,
 	)
 	return i, err
 }
@@ -264,9 +265,9 @@ func (q *Queries) DeleteFormField(ctx context.Context, fieldID uuid.UUID) (Delet
 }
 
 const getFormByID = `-- name: GetFormByID :one
-SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id
+SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id, is_deleted
 FROM forms
-WHERE form_id = $1
+WHERE form_id = $1 AND is_deleted = FALSE
 `
 
 func (q *Queries) GetFormByID(ctx context.Context, formID uuid.UUID) (Form, error) {
@@ -288,6 +289,7 @@ func (q *Queries) GetFormByID(ctx context.Context, formID uuid.UUID) (Form, erro
 		&i.IsScheduled,
 		&i.InvitationScheduleGap,
 		&i.InvitationScheduleID,
+		&i.IsDeleted,
 	)
 	return i, err
 }
@@ -387,11 +389,12 @@ func (q *Queries) GetFormFieldsWithOptions(ctx context.Context, formID uuid.UUID
 
 const listForms = `-- name: ListForms :many
 SELECT
-    form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id,
+    form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id, is_deleted,
     COUNT(*) OVER() as total_count
 FROM forms
 WHERE
-    created_by = $1
+    is_deleted = FALSE
+    AND created_by = $1
     AND (
         $2::text IS NULL
         OR form_title ILIKE '%' || $2::text || '%'
@@ -446,6 +449,7 @@ type ListFormsRow struct {
 	IsScheduled           sql.NullBool   `json:"is_scheduled"`
 	InvitationScheduleGap sql.NullInt32  `json:"invitation_schedule_gap"`
 	InvitationScheduleID  uuid.NullUUID  `json:"invitation_schedule_id"`
+	IsDeleted             sql.NullBool   `json:"is_deleted"`
 	TotalCount            int64          `json:"total_count"`
 }
 
@@ -482,6 +486,7 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFor
 			&i.IsScheduled,
 			&i.InvitationScheduleGap,
 			&i.InvitationScheduleID,
+			&i.IsDeleted,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -495,6 +500,17 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFor
 		return nil, err
 	}
 	return items, nil
+}
+
+const softDeleteForm = `-- name: SoftDeleteForm :exec
+UPDATE forms
+SET is_deleted = TRUE
+WHERE form_id = $1
+`
+
+func (q *Queries) SoftDeleteForm(ctx context.Context, formID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, softDeleteForm, formID)
+	return err
 }
 
 const updateFieldOption = `-- name: UpdateFieldOption :one
@@ -555,7 +571,7 @@ SET
   invitation_schedule_id = COALESCE($10, invitation_schedule_id),
   invitation_schedule_gap = COALESCE($11, invitation_schedule_gap)
 WHERE form_id = $12
-RETURNING form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id
+RETURNING form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id, is_deleted
 `
 
 type UpdateFormParams struct {
@@ -605,6 +621,7 @@ func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (Form, e
 		&i.IsScheduled,
 		&i.InvitationScheduleGap,
 		&i.InvitationScheduleID,
+		&i.IsDeleted,
 	)
 	return i, err
 }

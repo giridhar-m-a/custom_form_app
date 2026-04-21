@@ -22,6 +22,8 @@ type UserRepository interface {
 	DeleteUser(ctx context.Context, user uuid.UUID) error
 	GetProfilePic(ctx context.Context, userID uuid.UUID) (sqlc.UserImage, error)
 	GetUserPassword(ctx context.Context, userID uuid.UUID) (sql.NullString, error)
+	SoftDeleteUser(ctx context.Context, userID uuid.UUID) error
+	CreateTempUser(ctx context.Context, userFullName string) (sqlc.User, error)
 }
 
 // SQLCUserRepository implements UserRepository using sqlc.
@@ -38,7 +40,7 @@ func (r *SQLCUserRepository) GetByGoogleID(ctx context.Context, googleID string)
 }
 
 func (r *SQLCUserRepository) GetByEmail(ctx context.Context, email string) (sqlc.GetUserByEmailRow, error) {
-	return r.q.GetUserByEmail(ctx, email)
+	return r.q.GetUserByEmail(ctx, utils.ConvertStringToNullString(email))
 }
 
 func (r *SQLCUserRepository) GetByID(ctx context.Context, userID uuid.UUID) (sqlc.GetUserByIDRow, error) {
@@ -96,4 +98,12 @@ func (r *SQLCUserRepository) GetProfilePic(ctx context.Context, userID uuid.UUID
 
 func (r *SQLCUserRepository) GetUserPassword(ctx context.Context, userID uuid.UUID) (sql.NullString, error) {
 	return r.q.GetUserPassword(ctx, userID)
+}
+
+func (r *SQLCUserRepository) SoftDeleteUser(ctx context.Context, userID uuid.UUID) error {
+	return r.q.SoftDeleteUser(ctx, userID)
+}
+
+func (r *SQLCUserRepository) CreateTempUser(ctx context.Context, userFullName string) (sqlc.User, error) {
+	return r.q.CreateTempUser(ctx, userFullName)
 }

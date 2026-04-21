@@ -56,3 +56,9 @@ export const ResetPasswordSchema = z
   })
 
 export type ResetPasswordSchemaType = z.infer<typeof ResetPasswordSchema>
+
+export const TempUserSchema = z.object({
+  name: z.string().min(1, 'Name is required')
+})
+
+export type TempUserSchemaType = z.infer<typeof TempUserSchema>

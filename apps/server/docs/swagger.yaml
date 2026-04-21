@@ -651,6 +651,14 @@ definitions:
       totalSubmissions:
         type: integer
     type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.TempUserPayload:
+    properties:
+      name:
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO:
     properties:
       closingTime:
@@ -1107,6 +1115,80 @@ paths:
       summary: Reset User Password
       tags:
       - Authentication
+  /auth/temp-user-auth:
+    post:
+      consumes:
+      - application/json
+      description: Temp User Auth
+      parameters:
+      - description: Form data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.TempUserPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Temp user auth successful
+          schema:
+            properties:
+              data:
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  user:
+                    properties:
+                      userCreatedAt:
+                        type: string
+                      userEmail:
+                        type: string
+                      userFullName:
+                        type: string
+                      userID:
+                        type: string
+                      userUpdatedAt:
+                        type: string
+                    type: object
+                type: object
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              message:
+                type: string
+              status:
+                type: integer
+            type: object
+      summary: Temp User Auth
+      tags:
+      - Authentication
   /auth/verify:
     get:
       consumes:
@@ -1443,8 +1525,6 @@ paths:
           description: Form deleted successfully
           schema:
             properties:
-              data:
-                $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse'
               message:
                 type: string
               status:

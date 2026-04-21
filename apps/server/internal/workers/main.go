@@ -23,6 +23,8 @@ func Start(concurrency int) {
 			Queues: map[string]int{
 				constants.QueueInvitations: 10,
 				constants.QueueFormStatus:  10,
+				constants.QueueFormDelete:  10,
+				constants.QueueDeleteUser:  10,
 				"default":                  5,
 			},
 		},
@@ -36,6 +38,8 @@ func Start(concurrency int) {
 		repositories.NewFormFieldOptionsRepository(db.Queries),
 		db.Connection,
 	)
+	userRepo := repositories.NewSQLCUserRepository(db.Queries)
+	userService := services.UserServiceProvider(userRepo)
 
 	formWorker := NewFormWorker(formRepo)
 
@@ -48,6 +52,11 @@ func Start(concurrency int) {
 		formService,
 	)
 
+	userWorker := NewUserWorker(
+		userService,
+		formService,
+	)
+
 	mux.HandleFunc(
 		constants.TaskTypeFormStatusUpdate,
 		formWorker.HandleFormStatusUpdate(),
@@ -56,6 +65,16 @@ func Start(concurrency int) {
 	mux.HandleFunc(
 		constants.TaskTypeInvitationSchedule,
 		invitationWorker.HandleInvitationsSchedule(),
+	)
+
+	mux.HandleFunc(
+		constants.TaskTypeFormDelete,
+		formWorker.HandleFormDelete(),
+	)
+
+	mux.HandleFunc(
+		constants.TaskTypeDeleteUser,
+		userWorker.HandleDeleteUserAccount(),
 	)
 
 	log.Println("Asynq worker starting...")
