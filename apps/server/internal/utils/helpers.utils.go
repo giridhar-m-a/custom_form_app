@@ -62,10 +62,7 @@ func ConvertIntToNullInt32(i int) sql.NullInt32 {
 }
 
 func ConvertBoolToNullBool(b bool) sql.NullBool {
-	if !b {
-		return sql.NullBool{Bool: false, Valid: false}
-	}
-	return sql.NullBool{Bool: true, Valid: true}
+	return sql.NullBool{Bool: b, Valid: true}
 }
 
 func ConvertIntToInt32(i int) int32 {
@@ -159,6 +156,16 @@ func BoolPtrToNullBool(b *bool) sql.NullBool {
 	}
 	return sql.NullBool{
 		Bool:  *b,
+		Valid: true,
+	}
+}
+
+func ConvertInt32PtrToNullInt32(v *int32) sql.NullInt32 {
+	if v == nil {
+		return sql.NullInt32{Valid: false}
+	}
+	return sql.NullInt32{
+		Int32: *v,
 		Valid: true,
 	}
 }

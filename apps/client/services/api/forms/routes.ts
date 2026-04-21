@@ -5,6 +5,7 @@ import { DELETE, GET, PATCH, POST } from '@/lib/api.config'
 import { formsRoutes } from '@/lib/constants/apiRoutes/forms.routes'
 import { errorHandler } from '@/lib/errorHandler'
 import { FormField, FormFilter, FormType, FormUpdateType } from '@/types/form.types'
+import { revalidatePath } from 'next/cache'
 
 export const getForms = async ({ query }: { query?: FormFilter }) => {
   try {
@@ -39,6 +40,7 @@ export const createForm = async (data: CreateFormSchemaType) => {
 export const updateForm = async ({ id, data }: { id: string; data: FormUpdateType }) => {
   try {
     const res = await PATCH<FormType>(`${formsRoutes.base}/${id}`, data)
+    revalidatePath('/', 'layout')
     return res
   } catch (e) {
     console.error(e)
@@ -88,5 +90,33 @@ export const getFormFields = async ({ id }: { id: string }) => {
   } catch (e) {
     console.error(e)
     return errorHandler<FormField[]>(e)
+  }
+}
+
+export const getFieldsForResponse = async ({ token }: { token: string }) => {
+  try {
+    const res = await GET<FormField[]>(`${formsRoutes.fieldResponse}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    return res
+  } catch (e) {
+    console.error(e)
+    return errorHandler<FormField[]>(e)
+  }
+}
+
+export const getFormForResponse = async ({ token }: { token: string }) => {
+  try {
+    const res = await GET<FormType>(`${formsRoutes.response}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    return res
+  } catch (e) {
+    console.error(e)
+    return errorHandler<FormType>(e)
   }
 }

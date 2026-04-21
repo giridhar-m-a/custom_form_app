@@ -7,12 +7,21 @@ export interface Invitation {
   invitedName: string
 }
 
-export type InvitationStatus = 'pending' | 'submitted' | 'invited' | 'failed'
+export type InvitationStatus =
+  | 'pending'
+  | 'bounced'
+  | 'clicked'
+  | 'opened'
+  | 'delivered'
+  | 'complained'
+  | 'delayed'
+  | 'failed'
+  | 'submitted'
 
 export interface InvitationFilter {
   search?: string
   status?: InvitationStatus
-  excludeStatus?: InvitationStatus
+  exclude?: InvitationStatus[]
   page?: number
   limit?: number
 }
@@ -21,4 +30,9 @@ export interface BulkInvitationResponse {
   failed_count: number
   success_count: number
   total_rows: number
+}
+
+export interface VerifyInvitationResponse {
+  formId: string
+  invitationId?: string
 }

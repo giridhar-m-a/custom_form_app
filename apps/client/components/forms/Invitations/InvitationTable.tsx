@@ -1,25 +1,27 @@
 'use client'
 
-import { DataTable } from '@/components/common/DataTable'
-import { useInvitations } from '@/hooks/queryHooks/useInvitations'
-import { Invitation, InvitationFilter, InvitationStatus } from '@/types/invitations.types'
-import { useMemo, useState } from 'react'
-import { InvitationsColumn } from './invitations.config'
-import { Pagination } from '@/types/api.types'
-import { Search } from '@/components/common/Search'
 import { CommonSelect } from '@/components/common/CommonSelect'
-import { Button } from '@/components/ui/button'
-import { RxReset } from 'react-icons/rx'
+import { DataTable } from '@/components/common/DataTable'
 import { Modal } from '@/components/common/Modal'
-import { InvitationForm } from './InvitationForm'
+import { Search } from '@/components/common/Search'
+import { Button } from '@/components/ui/button'
+import { useInvitations } from '@/hooks/queryHooks/useInvitations'
+import { Pagination } from '@/types/api.types'
+import { status } from '@/types/form.types'
+import { InvitationFilter, InvitationStatus } from '@/types/invitations.types'
 import { Mail } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { RxReset } from 'react-icons/rx'
 import BulkInvitationForm from './BulkInvitationForm'
+import { InvitationForm } from './InvitationForm'
+import { InvitationsColumn } from './invitations.config'
 
 interface InvitationTableProps {
   formId: string
+  status: status
 }
 
-export const InvitationTable = ({ formId }: InvitationTableProps) => {
+export const InvitationTable = ({ formId, status }: InvitationTableProps) => {
   const [params, setParams] = useState<InvitationFilter>({
     page: 1,
     limit: 15,
@@ -44,9 +46,14 @@ export const InvitationTable = ({ formId }: InvitationTableProps) => {
   )
 
   const statusOptions: { value: InvitationStatus; label: string }[] = [
-    { value: 'invited', label: 'Invited' },
     { value: 'pending', label: 'Pending' },
+    { value: 'delivered', label: 'Delivered' },
     { value: 'submitted', label: 'Submitted' },
+    { value: 'bounced', label: 'Bounced' },
+    { value: 'clicked', label: 'Clicked' },
+    { value: 'complained', label: 'Complained' },
+    { value: 'delayed', label: 'Delayed' },
+    { value: 'opened', label: 'Opened' },
     { value: 'failed', label: 'Failed' }
   ]
 
@@ -75,14 +82,16 @@ export const InvitationTable = ({ formId }: InvitationTableProps) => {
             }>
             <InvitationForm formId={formId} setInviteOpen={setInviteOpen} />
           </Modal>
-          <Modal
-            description="Invite new users to fill the form"
-            title="Invite Users"
-            open={bulkInviteOpen}
-            onOpenChange={setBulkInviteOpen}
-            trigger={<Button variant={'outline'}>Bulk Invite</Button>}>
-            <BulkInvitationForm formId={formId} setInviteOpen={setBulkInviteOpen} />
-          </Modal>
+          {status !== 'closed' && (
+            <Modal
+              description="Invite new users to fill the form"
+              title="Invite Users"
+              open={bulkInviteOpen}
+              onOpenChange={setBulkInviteOpen}
+              trigger={<Button variant={'outline'}>Bulk Invite</Button>}>
+              <BulkInvitationForm formId={formId} setInviteOpen={setBulkInviteOpen} />
+            </Modal>
+          )}
         </div>
       </div>
       <DataTable

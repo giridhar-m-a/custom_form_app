@@ -78,14 +78,13 @@ export const useGetFormById = (id: string) => {
   })
 }
 
-export const useGetFormFields = (id: string, initialData: FormField[]) => {
+export const useGetFormFields = (id: string, initialData?: FormField[]) => {
   return useQuery({
     queryKey: formsKeys.fields(id),
     queryFn: () => getFormFields({ id }),
-    initialData: {
+    initialData: initialData && {
       data: initialData,
-      status: 200,
-      message: 'Form fields loaded successfully'
+      status: 200,      message: 'Form fields loaded successfully'
     }
   })
 }

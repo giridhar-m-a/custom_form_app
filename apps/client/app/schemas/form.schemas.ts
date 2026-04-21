@@ -1,12 +1,63 @@
 import * as z from 'zod'
 
-export const CreateFormSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters long'),
-  description: z
-    .string()
-    .min(10, 'Description must be at least 10 characters long')
-    .max(100, 'Description must be at most 100 characters long')
-})
+export const CreateFormSchema = z
+  .object({
+    title: z.string().min(3, 'Title must be at least 3 characters long'),
+    description: z
+      .string()
+      .min(10, 'Description must be at least 10 characters long')
+      .max(100, 'Description must be at most 100 characters long'),
+    isScheduled: z.boolean(),
+    scheduledTime: z.iso.datetime().optional(),
+    closingTime: z.iso.datetime().optional(),
+    invitationScheduleGap: z.number().optional(),
+    formAccess: z.enum(['public', 'restricted']).default('restricted'),
+    formStatus: z.enum(['draft', 'published', 'archived', 'closed']).default('draft')
+  })
+  .superRefine((data, ctx) => {
+    if (data.isScheduled && !data.scheduledTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Scheduled time is required when form is scheduled',
+        path: ['scheduledTime']
+      })
+    }
+    if (!data.isScheduled && data.scheduledTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Scheduled time is not allowed when form is not scheduled',
+        path: ['scheduledTime']
+      })
+    }
+    if (data.scheduledTime && new Date(data.scheduledTime) <= new Date()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Scheduled time must be in the future',
+        path: ['scheduledTime']
+      })
+    }
+    if (data.closingTime && new Date(data.closingTime) <= new Date()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Closing time must be in the future',
+        path: ['closingTime']
+      })
+    }
+    if (data.isScheduled && !data.invitationScheduleGap) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invitation schedule gap is required when form is scheduled',
+        path: ['invitationScheduleGap']
+      })
+    }
+    if (data.isScheduled && data.invitationScheduleGap && data.invitationScheduleGap <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invitation schedule gap must be a positive number',
+        path: ['invitationScheduleGap']
+      })
+    }
+  })
 
 export type CreateFormSchemaType = z.infer<typeof CreateFormSchema>
 

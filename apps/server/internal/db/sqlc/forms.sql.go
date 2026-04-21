@@ -60,7 +60,11 @@ INSERT INTO forms (
   form_access,
   scheduled_time,
   closing_time,
-  is_scheduled
+  is_scheduled,
+  invitation_schedule_id,
+  invitation_schedule_gap,
+  scheduling_id,
+  form_status
 )
 VALUES (
   $1,
@@ -69,32 +73,27 @@ VALUES (
   $4,
   $5,
   $6,
-  $7
+  $7,
+  $8,
+  $9,
+  $10,
+  $11
 )
-RETURNING
-  form_id,
-  form_title,
-  form_description,
-  form_status,
-  form_access,
-  form_created_at,
-  form_updated_at,
-  created_by,
-  scheduling_id,
-  scheduled_time,
-  closing_time,
-  is_schedule_completed,
-  is_scheduled
+RETURNING form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id
 `
 
 type CreateFormParams struct {
-	FormTitle       string         `json:"form_title"`
-	FormDescription sql.NullString `json:"form_description"`
-	CreatedBy       uuid.NullUUID  `json:"created_by"`
-	FormAccess      NullFormAccess `json:"form_access"`
-	ScheduledTime   sql.NullTime   `json:"scheduled_time"`
-	ClosingTime     sql.NullTime   `json:"closing_time"`
-	IsScheduled     sql.NullBool   `json:"is_scheduled"`
+	FormTitle             string         `json:"form_title"`
+	FormDescription       sql.NullString `json:"form_description"`
+	CreatedBy             uuid.NullUUID  `json:"created_by"`
+	FormAccess            NullFormAccess `json:"form_access"`
+	ScheduledTime         sql.NullTime   `json:"scheduled_time"`
+	ClosingTime           sql.NullTime   `json:"closing_time"`
+	IsScheduled           sql.NullBool   `json:"is_scheduled"`
+	InvitationScheduleID  uuid.NullUUID  `json:"invitation_schedule_id"`
+	InvitationScheduleGap sql.NullInt32  `json:"invitation_schedule_gap"`
+	SchedulingID          uuid.NullUUID  `json:"scheduling_id"`
+	FormStatus            NullFormStatus `json:"form_status"`
 }
 
 func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (Form, error) {
@@ -106,6 +105,10 @@ func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (Form, e
 		arg.ScheduledTime,
 		arg.ClosingTime,
 		arg.IsScheduled,
+		arg.InvitationScheduleID,
+		arg.InvitationScheduleGap,
+		arg.SchedulingID,
+		arg.FormStatus,
 	)
 	var i Form
 	err := row.Scan(
@@ -122,6 +125,8 @@ func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (Form, e
 		&i.ClosingTime,
 		&i.IsScheduleCompleted,
 		&i.IsScheduled,
+		&i.InvitationScheduleGap,
+		&i.InvitationScheduleID,
 	)
 	return i, err
 }
@@ -259,7 +264,7 @@ func (q *Queries) DeleteFormField(ctx context.Context, fieldID uuid.UUID) (Delet
 }
 
 const getFormByID = `-- name: GetFormByID :one
-SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled
+SELECT form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id
 FROM forms
 WHERE form_id = $1
 `
@@ -281,6 +286,8 @@ func (q *Queries) GetFormByID(ctx context.Context, formID uuid.UUID) (Form, erro
 		&i.ClosingTime,
 		&i.IsScheduleCompleted,
 		&i.IsScheduled,
+		&i.InvitationScheduleGap,
+		&i.InvitationScheduleID,
 	)
 	return i, err
 }
@@ -380,7 +387,7 @@ func (q *Queries) GetFormFieldsWithOptions(ctx context.Context, formID uuid.UUID
 
 const listForms = `-- name: ListForms :many
 SELECT
-    form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled,
+    form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id,
     COUNT(*) OVER() as total_count
 FROM forms
 WHERE
@@ -424,20 +431,22 @@ type ListFormsParams struct {
 }
 
 type ListFormsRow struct {
-	FormID              uuid.UUID      `json:"form_id"`
-	FormTitle           string         `json:"form_title"`
-	FormDescription     sql.NullString `json:"form_description"`
-	FormStatus          NullFormStatus `json:"form_status"`
-	FormAccess          NullFormAccess `json:"form_access"`
-	FormCreatedAt       sql.NullTime   `json:"form_created_at"`
-	FormUpdatedAt       sql.NullTime   `json:"form_updated_at"`
-	CreatedBy           uuid.NullUUID  `json:"created_by"`
-	SchedulingID        uuid.NullUUID  `json:"scheduling_id"`
-	ScheduledTime       sql.NullTime   `json:"scheduled_time"`
-	ClosingTime         sql.NullTime   `json:"closing_time"`
-	IsScheduleCompleted sql.NullBool   `json:"is_schedule_completed"`
-	IsScheduled         sql.NullBool   `json:"is_scheduled"`
-	TotalCount          int64          `json:"total_count"`
+	FormID                uuid.UUID      `json:"form_id"`
+	FormTitle             string         `json:"form_title"`
+	FormDescription       sql.NullString `json:"form_description"`
+	FormStatus            NullFormStatus `json:"form_status"`
+	FormAccess            NullFormAccess `json:"form_access"`
+	FormCreatedAt         sql.NullTime   `json:"form_created_at"`
+	FormUpdatedAt         sql.NullTime   `json:"form_updated_at"`
+	CreatedBy             uuid.NullUUID  `json:"created_by"`
+	SchedulingID          uuid.NullUUID  `json:"scheduling_id"`
+	ScheduledTime         sql.NullTime   `json:"scheduled_time"`
+	ClosingTime           sql.NullTime   `json:"closing_time"`
+	IsScheduleCompleted   sql.NullBool   `json:"is_schedule_completed"`
+	IsScheduled           sql.NullBool   `json:"is_scheduled"`
+	InvitationScheduleGap sql.NullInt32  `json:"invitation_schedule_gap"`
+	InvitationScheduleID  uuid.NullUUID  `json:"invitation_schedule_id"`
+	TotalCount            int64          `json:"total_count"`
 }
 
 func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFormsRow, error) {
@@ -471,6 +480,8 @@ func (q *Queries) ListForms(ctx context.Context, arg ListFormsParams) ([]ListFor
 			&i.ClosingTime,
 			&i.IsScheduleCompleted,
 			&i.IsScheduled,
+			&i.InvitationScheduleGap,
+			&i.InvitationScheduleID,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -540,35 +551,26 @@ SET
   scheduled_time = COALESCE($6, scheduled_time),
   closing_time = COALESCE($7, closing_time),
   is_schedule_completed = COALESCE($8, is_schedule_completed),
-  is_scheduled = COALESCE($9, is_scheduled)
-WHERE form_id = $10
-RETURNING
-  form_id,
-  form_title,
-  form_description,
-  form_status,
-  form_access,
-  form_created_at,
-  form_updated_at,
-  created_by,
-  scheduling_id,
-  scheduled_time,
-  closing_time,
-  is_schedule_completed,
-  is_scheduled
+  is_scheduled = COALESCE($9, is_scheduled),
+  invitation_schedule_id = COALESCE($10, invitation_schedule_id),
+  invitation_schedule_gap = COALESCE($11, invitation_schedule_gap)
+WHERE form_id = $12
+RETURNING form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id
 `
 
 type UpdateFormParams struct {
-	FormTitle           sql.NullString `json:"form_title"`
-	FormDescription     sql.NullString `json:"form_description"`
-	FormStatus          NullFormStatus `json:"form_status"`
-	FormAccess          NullFormAccess `json:"form_access"`
-	SchedulingID        uuid.NullUUID  `json:"scheduling_id"`
-	ScheduledTime       sql.NullTime   `json:"scheduled_time"`
-	ClosingTime         sql.NullTime   `json:"closing_time"`
-	IsScheduleCompleted sql.NullBool   `json:"is_schedule_completed"`
-	IsScheduled         sql.NullBool   `json:"is_scheduled"`
-	FormID              uuid.UUID      `json:"form_id"`
+	FormTitle             sql.NullString `json:"form_title"`
+	FormDescription       sql.NullString `json:"form_description"`
+	FormStatus            NullFormStatus `json:"form_status"`
+	FormAccess            NullFormAccess `json:"form_access"`
+	SchedulingID          uuid.NullUUID  `json:"scheduling_id"`
+	ScheduledTime         sql.NullTime   `json:"scheduled_time"`
+	ClosingTime           sql.NullTime   `json:"closing_time"`
+	IsScheduleCompleted   sql.NullBool   `json:"is_schedule_completed"`
+	IsScheduled           sql.NullBool   `json:"is_scheduled"`
+	InvitationScheduleID  uuid.NullUUID  `json:"invitation_schedule_id"`
+	InvitationScheduleGap sql.NullInt32  `json:"invitation_schedule_gap"`
+	FormID                uuid.UUID      `json:"form_id"`
 }
 
 func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (Form, error) {
@@ -582,6 +584,8 @@ func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (Form, e
 		arg.ClosingTime,
 		arg.IsScheduleCompleted,
 		arg.IsScheduled,
+		arg.InvitationScheduleID,
+		arg.InvitationScheduleGap,
 		arg.FormID,
 	)
 	var i Form
@@ -599,6 +603,8 @@ func (q *Queries) UpdateForm(ctx context.Context, arg UpdateFormParams) (Form, e
 		&i.ClosingTime,
 		&i.IsScheduleCompleted,
 		&i.IsScheduled,
+		&i.InvitationScheduleGap,
+		&i.InvitationScheduleID,
 	)
 	return i, err
 }

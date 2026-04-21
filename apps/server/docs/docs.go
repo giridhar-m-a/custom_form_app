@@ -647,6 +647,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get dashboard data for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard data",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard data fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_DashboardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any"
+                        }
+                    }
+                }
+            }
+        },
         "/files/file-upload": {
             "post": {
                 "security": [
@@ -672,14 +718,20 @@ const docTemplate = `{
                         "name": "file",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "File path to upload shouldbe formid/invitationid",
+                        "name": "path",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "file uploaded successful",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_FileUploadResponse"
                         }
                     },
                     "400": {
@@ -697,6 +749,87 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/files/get-signed-url": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get signed url of file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Get signed url of file",
+                "parameters": [
+                    {
+                        "description": "Form data",
+                        "name": "form",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.GetSignedUrlPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Form created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_GetSignedUrlResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
                             }
                         }
                     }
@@ -1114,6 +1247,90 @@ const docTemplate = `{
                 }
             }
         },
+        "/forms/fields/response": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets form fields for the response submission",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Forms"
+                ],
+                "summary": "Get form fields for response",
+                "responses": {
+                    "200": {
+                        "description": "Form fields retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto"
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/forms/fields/{formID}": {
             "get": {
                 "security": [
@@ -1152,6 +1369,87 @@ const docTemplate = `{
                                     "items": {
                                         "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormFieldResponseDto"
                                     }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/forms/response": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Gets a single form for response submission",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Forms"
+                ],
+                "summary": "Get form by ID for response",
+                "responses": {
+                    "200": {
+                        "description": "Form retrieved successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FormResponse"
                                 },
                                 "message": {
                                     "type": "string"
@@ -1525,19 +1823,22 @@ const docTemplate = `{
                 "summary": "GetInvitationByFormId retrieves invitations by form ID",
                 "parameters": [
                     {
-                        "enum": [
-                            "pending",
-                            "accepted",
-                            "failed",
-                            "submitted"
-                        ],
-                        "type": "string",
-                        "x-enum-varnames": [
-                            "InvitationStatusPending",
-                            "InvitationStatusAccepted",
-                            "InvitationStatusFailed",
-                            "InvitationStatusSubmitted"
-                        ],
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "pending",
+                                "bounced",
+                                "clicked",
+                                "opened",
+                                "delivered",
+                                "complained",
+                                "delayed",
+                                "failed",
+                                "submitted"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
                         "name": "exclude",
                         "in": "query"
                     },
@@ -1569,14 +1870,24 @@ const docTemplate = `{
                     {
                         "enum": [
                             "pending",
-                            "accepted",
+                            "bounced",
+                            "clicked",
+                            "opened",
+                            "delivered",
+                            "complained",
+                            "delayed",
                             "failed",
                             "submitted"
                         ],
                         "type": "string",
                         "x-enum-varnames": [
                             "InvitationStatusPending",
-                            "InvitationStatusAccepted",
+                            "InvitationStatusBounced",
+                            "InvitationStatusClicked",
+                            "InvitationStatusOpened",
+                            "InvitationStatusDelivered",
+                            "InvitationStatusComplained",
+                            "InvitationStatusDelayed",
                             "InvitationStatusFailed",
                             "InvitationStatusSubmitted"
                         ],
@@ -1645,6 +1956,115 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/invitations/anonymous": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GenerateAnonymousInvitationToken generates an anonymous invitation token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invitation"
+                ],
+                "summary": "GenerateAnonymousInvitationToken generates an anonymous invitation token",
+                "parameters": [
+                    {
+                        "description": "Invitation data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.GenerateAnonymousInvitationTokenParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation token generated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_GenerateAnonymousInvitationTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/invitations/verify": {
+            "post": {
+                "description": "VerifyInvitation verifies an invitation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invitation"
+                ],
+                "summary": "VerifyInvitation verifies an invitation",
+                "parameters": [
+                    {
+                        "description": "Invitation data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.VerifyInvitationParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation verified successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_services_InvitationClaims"
                         }
                     },
                     "400": {
@@ -1782,6 +2202,188 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/response": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "CreateSubmission creates a new submission",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Response"
+                ],
+                "summary": "CreateSubmission creates a new submission",
+                "parameters": [
+                    {
+                        "description": "Submission data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.CreateSubmissionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Submission created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_SubmissionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/response/submission/{submissionId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GetSingleSubmission retrieves a single submission by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Response"
+                ],
+                "summary": "GetSingleSubmission retrieves a single submission by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Submission ID",
+                        "name": "submissionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Submission retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_SubmissionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/response/{formId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "GetSubmissions retrieves submissions by form ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Response"
+                ],
+                "summary": "GetSubmissions retrieves submissions by form ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Form ID",
+                        "name": "formId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Submissions retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-array_github_com_giridhar-m-a_custom_form_app_internal_dto_SubmissionList"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2287,13 +2889,23 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "pending",
-                "accepted",
+                "bounced",
+                "clicked",
+                "opened",
+                "delivered",
+                "complained",
+                "delayed",
                 "failed",
                 "submitted"
             ],
             "x-enum-varnames": [
                 "InvitationStatusPending",
-                "InvitationStatusAccepted",
+                "InvitationStatusBounced",
+                "InvitationStatusClicked",
+                "InvitationStatusOpened",
+                "InvitationStatusDelivered",
+                "InvitationStatusComplained",
+                "InvitationStatusDelayed",
                 "InvitationStatusFailed",
                 "InvitationStatusSubmitted"
             ]
@@ -2304,6 +2916,114 @@ const docTemplate = `{
                 "data": {},
                 "message": {
                     "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-array_github_com_giridhar-m-a_custom_form_app_internal_dto_SubmissionList": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionList"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.DashboardResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_FileUploadResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FileUploadResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_GenerateAnonymousInvitationTokenResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.GenerateAnonymousInvitationTokenResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_GetSignedUrlResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.GetSignedUrlResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_SubmissionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
                 },
                 "status": {
                     "type": "integer"
@@ -2319,6 +3039,9 @@ const docTemplate = `{
                 "message": {
                     "type": "string"
                 },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
                 "status": {
                     "type": "integer"
                 }
@@ -2333,6 +3056,26 @@ const docTemplate = `{
                 "message": {
                     "type": "string"
                 },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_services_InvitationClaims": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_services.InvitationClaims"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
                 "status": {
                     "type": "integer"
                 }
@@ -2344,13 +3087,13 @@ const docTemplate = `{
                 "title"
             ],
             "properties": {
-                "closing_time": {
+                "closingTime": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
-                "form_access": {
+                "formAccess": {
                     "description": "default 'restricted'",
                     "allOf": [
                         {
@@ -2358,10 +3101,16 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "is_scheduled": {
+                "formStatus": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus"
+                },
+                "invitationScheduleGap": {
+                    "type": "integer"
+                },
+                "isScheduled": {
                     "type": "boolean"
                 },
-                "scheduled_time": {
+                "scheduledTime": {
                     "type": "string"
                 },
                 "title": {
@@ -2456,6 +3205,53 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.CreateSubmissionRequest": {
+            "type": "object",
+            "required": [
+                "formId",
+                "responses"
+            ],
+            "properties": {
+                "formId": {
+                    "type": "string"
+                },
+                "respondentId": {
+                    "type": "string"
+                },
+                "responses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ResponseRequest"
+                    }
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "submissionsByMonth": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionsByMonth"
+                    }
+                },
+                "totalActiveForms": {
+                    "type": "integer"
+                },
+                "totalClosedForms": {
+                    "type": "integer"
+                },
+                "totalForms": {
+                    "type": "integer"
+                },
+                "totalInvitations": {
+                    "type": "integer"
+                },
+                "totalSubmissions": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest": {
             "type": "object",
             "required": [
@@ -2502,6 +3298,34 @@ const docTemplate = `{
                 "status": {
                     "type": "integer",
                     "example": 400
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.FileResponse": {
+            "type": "object",
+            "properties": {
+                "fileName": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "fileType": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.FileUploadResponse": {
+            "type": "object",
+            "properties": {
+                "fileInfo": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.FileResponse"
+                },
+                "signedUrl": {
+                    "type": "string"
                 }
             }
         },
@@ -2575,6 +3399,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "invitationScheduleGap": {
+                    "type": "integer"
+                },
                 "isScheduleCompleted": {
                     "type": "boolean"
                 },
@@ -2594,6 +3421,41 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.GenerateAnonymousInvitationTokenParams": {
+            "type": "object",
+            "properties": {
+                "formId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.GenerateAnonymousInvitationTokenResponse": {
+            "type": "object",
+            "properties": {
+                "expiresIn": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.GetSignedUrlPayload": {
+            "type": "object",
+            "properties": {
+                "filePath": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.GetSignedUrlResponse": {
+            "type": "object",
+            "properties": {
+                "signedUrl": {
                     "type": "string"
                 }
             }
@@ -2692,17 +3554,230 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ResponseFileRequest": {
+            "type": "object",
+            "required": [
+                "fileName",
+                "filePath",
+                "fileSize",
+                "fileType"
+            ],
+            "properties": {
+                "fileName": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "fileType": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ResponseOptionRequest": {
+            "type": "object",
+            "required": [
+                "optionId"
+            ],
+            "properties": {
+                "optionId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ResponseRequest": {
+            "type": "object",
+            "required": [
+                "formFieldId"
+            ],
+            "properties": {
+                "formFieldId": {
+                    "type": "string"
+                },
+                "responseFiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ResponseFileRequest"
+                    }
+                },
+                "responseOptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ResponseOptionRequest"
+                    }
+                },
+                "responseText": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionList": {
+            "type": "object",
+            "required": [
+                "invitedEmail",
+                "invitedName",
+                "respondentId",
+                "submissionId",
+                "submittedAt"
+            ],
+            "properties": {
+                "invitedEmail": {
+                    "type": "string"
+                },
+                "invitedName": {
+                    "type": "string"
+                },
+                "respondentId": {
+                    "type": "string"
+                },
+                "submissionId": {
+                    "type": "string"
+                },
+                "submittedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionResponse": {
+            "type": "object",
+            "required": [
+                "formId",
+                "respondentId",
+                "responses",
+                "submissionId",
+                "submittedAt"
+            ],
+            "properties": {
+                "formId": {
+                    "type": "string"
+                },
+                "respondentId": {
+                    "type": "string"
+                },
+                "responses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionResponseField"
+                    }
+                },
+                "submissionId": {
+                    "type": "string"
+                },
+                "submittedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionResponseField": {
+            "type": "object",
+            "required": [
+                "formFieldId",
+                "responseFiles",
+                "responseId",
+                "responseOptions",
+                "responseText"
+            ],
+            "properties": {
+                "formFieldId": {
+                    "type": "string"
+                },
+                "responseFiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionResponseFile"
+                    }
+                },
+                "responseId": {
+                    "type": "string"
+                },
+                "responseOptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionResponseOption"
+                    }
+                },
+                "responseText": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionResponseFile": {
+            "type": "object",
+            "required": [
+                "fileId",
+                "fileName",
+                "filePath",
+                "fileSize",
+                "fileType",
+                "fileUploadedAt"
+            ],
+            "properties": {
+                "fileId": {
+                    "type": "string"
+                },
+                "fileName": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "fileType": {
+                    "type": "string"
+                },
+                "fileUploadedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionResponseOption": {
+            "type": "object",
+            "required": [
+                "formOptionId",
+                "id"
+            ],
+            "properties": {
+                "formOptionId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionsByMonth": {
+            "type": "object",
+            "properties": {
+                "month": {
+                    "type": "string"
+                },
+                "totalSubmissions": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO": {
             "type": "object",
             "properties": {
-                "access": {
-                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess"
-                },
                 "closingTime": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
+                },
+                "formAccess": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess"
+                },
+                "formStatus": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus"
+                },
+                "invitationScheduleGap": {
+                    "type": "integer"
                 },
                 "isScheduleCompleted": {
                     "type": "boolean"
@@ -2715,9 +3790,6 @@ const docTemplate = `{
                 },
                 "schedulingId": {
                     "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus"
                 },
                 "title": {
                     "type": "string"
@@ -2817,6 +3889,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.VerifyInvitationParams": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_services.InvitationClaims": {
+            "type": "object",
+            "properties": {
+                "formId": {
+                    "type": "string"
+                },
+                "invitationId": {
                     "type": "string"
                 }
             }

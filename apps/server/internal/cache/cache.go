@@ -10,11 +10,13 @@ import (
 )
 
 type RedisCache struct {
-	client     *redis.Client
+	Client     *redis.Client
 	defaultTTL time.Duration
 }
 
 var instance *RedisCache
+
+var Client *redis.Client
 
 // Init initializes the Redis cache
 func Init() {
@@ -32,7 +34,7 @@ func Init() {
 	redisPassword := utils.GetEnv("REDIS_PASSWORD", "")
 
 	instance = &RedisCache{
-		client: redis.NewClient(&redis.Options{
+		Client: redis.NewClient(&redis.Options{
 			Addr:         addr,
 			Username:     user,
 			Password:     redisPassword,
@@ -44,10 +46,12 @@ func Init() {
 		defaultTTL: time.Duration(maxTTL) * time.Second,
 	}
 
+	Client = instance.Client
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := instance.client.Ping(ctx).Err(); err != nil {
+	if err := instance.Client.Ping(ctx).Err(); err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
 
@@ -57,7 +61,7 @@ func Init() {
 // Close closes the redis client
 func Close() {
 	if instance != nil {
-		if err := instance.client.Close(); err != nil {
+		if err := instance.Client.Close(); err != nil {
 			log.Printf("Error closing Redis: %v", err)
 		}
 	}
@@ -68,13 +72,14 @@ func Close() {
 // ----------------------------
 
 func Get(ctx context.Context, key string) (string, error) {
-	return instance.client.Get(ctx, key).Result()
+	return instance.Client.Get(ctx, key).Result()
 }
 
 func Set(ctx context.Context, key string, value interface{}) error {
-	return instance.client.Set(ctx, key, value, instance.defaultTTL).Err()
+	log.Printf("Setting Cache %s with %v", key, value)
+	return instance.Client.Set(ctx, key, value, instance.defaultTTL).Err()
 }
 
 func Del(ctx context.Context, key string) error {
-	return instance.client.Del(ctx, key).Err()
+	return instance.Client.Del(ctx, key).Err()
 }

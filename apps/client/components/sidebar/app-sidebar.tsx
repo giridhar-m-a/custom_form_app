@@ -37,34 +37,36 @@ const data: SideBarData = {
     {
       title: 'Dashboard',
       icon: Home,
-      items: [
-        {
-          title: 'Dashboard',
-          url: '/dashboard',
-          icon: Home
-        },
-        {
-          title: 'Ai Insights',
-          url: '/dashboard/ai-insights',
-          icon: Bot
-        }
-      ]
+      url: '/dashboard'
+      // items: [
+      //   {
+      //     title: 'Dashboard',
+      //     url: '/dashboard',
+      //     icon: Home
+      //   },
+      //   {
+      //     title: 'Ai Insights',
+      //     url: '/dashboard/ai-insights',
+      //     icon: Bot
+      //   }
+      // ]
     },
     {
       title: 'Forms',
       icon: FileQuestionMarkIcon,
-      items: [
-        {
-          title: 'Forms',
-          url: '/forms',
-          icon: FileQuestionMarkIcon
-        },
-        {
-          title: 'Form Report',
-          url: '/forms/reports',
-          icon: Bot
-        }
-      ]
+      url: '/forms'
+      // items: [
+      //   {
+      //     title: 'Forms',
+      //     url: '/forms',
+      //     icon: FileQuestionMarkIcon
+      //   },
+      //   {
+      //     title: 'Form Report',
+      //     url: '/forms/reports',
+      //     icon: Bot
+      //   }
+      // ]
     }
   ]
 }

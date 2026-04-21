@@ -33,12 +33,21 @@ ALTER TABLE invitations
 
 -- 7. Drop index
 DROP INDEX IF EXISTS idx_forms_scheduling_id;
+DROP INDEX IF EXISTS idx_forms_invitation_schedule_id;
 
--- 8. Drop scheduling columns
+-- 8. Drop constraints
+ALTER TABLE forms DROP CONSTRAINT invitation_schedule_gap_constraint;
+
+-- 9. Drop scheduling columns
 ALTER TABLE forms DROP COLUMN IF EXISTS scheduling_id;
 ALTER TABLE forms DROP COLUMN IF EXISTS scheduled_time;
 ALTER TABLE forms DROP COLUMN IF EXISTS closing_time;
 ALTER TABLE forms DROP COLUMN IF EXISTS is_schedule_completed;
 ALTER TABLE forms DROP COLUMN IF EXISTS is_scheduled;
+ALTER TABLE forms DROP COLUMN IF EXISTS invitation_schedule_id;
+ALTER TABLE forms DROP COLUMN IF EXISTS invitation_schedule_gap;
+
+-- 10. Drop resend_id
+-- ALTER TABLE invitations DROP COLUMN IF EXISTS resend_id;
 
 COMMIT;

@@ -285,11 +285,6 @@ func (a *authHandler) PasswordResetRequestHandler(ctx *gin.Context) {
 		return
 	}
 
-	if err != nil {
-		utils.HandleError(ctx, err)
-		return
-	}
-
 	if sent.Id != "" {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Password reset email sent successfully", "status": http.StatusOK})
 	} else {

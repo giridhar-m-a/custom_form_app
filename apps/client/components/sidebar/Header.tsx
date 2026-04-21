@@ -24,9 +24,13 @@ const Header = () => {
             <Fragment key={i}>
               {i < path.length - 1 && (
                 <BreadcrumbItem className="hidden md:block text-xl font-semibold capitalize">
-                  <BreadcrumbLink href={`/${path.slice(0, i + 1).join('/')}`}>
-                    {item.replaceAll('-', ' ')}
-                  </BreadcrumbLink>
+                  {item !== 'edit' && item !== 'new' ? (
+                    <BreadcrumbLink href={`/${path.slice(0, i + 1).join('/')}`}>
+                      {item.replaceAll('-', ' ')}
+                    </BreadcrumbLink>
+                  ) : (
+                    <BreadcrumbPage>{item.replaceAll('-', ' ')}</BreadcrumbPage>
+                  )}
                 </BreadcrumbItem>
               )}
               {i < path.length - 1 && <BreadcrumbSeparator className="hidden md:block" />}

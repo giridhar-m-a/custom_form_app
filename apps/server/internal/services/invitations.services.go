@@ -4,34 +4,41 @@ import (
 	"context"
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
 	"sync"
+	"time"
 
+	"github.com/giridhar-m-a/custom_form_app/constants"
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
+	"github.com/giridhar-m-a/custom_form_app/internal/scheduler"
+	"github.com/giridhar-m-a/custom_form_app/internal/services/templates"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
+	"github.com/resend/resend-go/v3"
 )
 
 type InvitationService interface {
 	CreateInvitation(fileHeader *multipart.FileHeader, formID, userID uuid.UUID, ctx context.Context) (successCount int, failedCount int, err error)
 	CreateSingleInvitation(invitation dto.CreateInvitationDTO, userID string, ctx context.Context) (sqlc.CreateInvitationRow, error)
-	UpdateInvitationStatus(status dto.UpdateInvitationDTO, invitationID uuid.UUID, ctx context.Context) (sqlc.UpdateInvitationStatusRow, error)
+	UpdateInvitationStatus(status dto.UpdateInvitationDTO, resendID uuid.UUID, ctx context.Context) (sqlc.UpdateInvitationStatusRow, error)
 	DeleteInvitation(invitationID uuid.UUID, ctx context.Context) error
 	GetInvitationByFormId(query dto.InvitationListQueryDto, ctx context.Context) (dto.InvitationListDto, error)
 }
 
 type invitationService struct {
 	repo repositories.InvitationRepository
+	form FormService
 	db   *sql.DB
 }
 
-func NewInvitationService(repo repositories.InvitationRepository, db *sql.DB) InvitationService {
-	return &invitationService{repo: repo, db: db}
+func NewInvitationService(repo repositories.InvitationRepository, form FormService, db *sql.DB) InvitationService {
+	return &invitationService{repo: repo, form: form, db: db}
 }
 
 func (s *invitationService) CreateSingleInvitation(invitation dto.CreateInvitationDTO, userID string, ctx context.Context) (sqlc.CreateInvitationRow, error) {
@@ -45,12 +52,89 @@ func (s *invitationService) CreateSingleInvitation(invitation dto.CreateInvitati
 		return sqlc.CreateInvitationRow{}, err
 	}
 
-	return s.repo.CreateSingleInvitation(sqlc.CreateInvitationParams{
+	form, err := s.form.GetSingleForm(ctx, invitation.FormID)
+	if form.FormStatus.FormStatus == sqlc.FormStatusClosed {
+		return sqlc.CreateInvitationRow{}, errors.New("form is closed")
+	}
+	if err != nil {
+		log.Printf("[Invitation Service] Error getting form: %v", err)
+		return sqlc.CreateInvitationRow{}, err
+	}
+	if form.FormStatus.FormStatus == sqlc.FormStatusClosed || (form.ClosingTime.Valid && form.ClosingTime.Time.Before(time.Now())) {
+		return sqlc.CreateInvitationRow{}, errors.New("form is closed")
+	}
+
+	createdInvitation, err := s.repo.CreateSingleInvitation(sqlc.CreateInvitationParams{
 		FormID:    formId,
 		Email:     invitation.Email,
 		Name:      invitation.Name,
 		InvitedBy: user,
 	}, ctx)
+	if err != nil {
+		log.Printf("[Invitation Service] Error creating invitation: %v", err)
+		return sqlc.CreateInvitationRow{}, err
+	}
+	now := time.Now()
+
+	isScheduled := form.IsScheduled.Valid && form.IsScheduled.Bool
+
+	shouldInviteNow := false
+
+	if isScheduled && form.ScheduledTime.Valid && form.ScheduledTime.Time.Before(now) {
+		shouldInviteNow = true
+	} else if isScheduled && form.ScheduledTime.Valid && form.InvitationScheduleGap.Valid &&
+		time.Since(form.ScheduledTime.Time) < time.Duration(form.InvitationScheduleGap.Int32)*time.Minute {
+		shouldInviteNow = true
+	}
+
+	if (form.IsScheduled.Valid && !form.IsScheduled.Bool) || shouldInviteNow {
+		mail := NewMailService(utils.ResendClient)
+		templateService := templates.NewService()
+		jwtService := NewJWTService()
+		token, err := jwtService.GenerateInvitationToken(createdInvitation.InvitationID.String(), formId.String(), time.Until(form.ClosingTime.Time))
+		if err != nil {
+			log.Printf("[Invitation Service] Error generating invitation token: %v", err)
+			return sqlc.CreateInvitationRow{}, err
+		}
+		frontendURL := utils.GetEnv("FRONTEND_URL", "")
+		fromEmail := utils.GetEnv("SENDER_EMAIL_ADDRESS", "form-genius-no-reply@giridhar.dev")
+		sender := fmt.Sprintf("Form Genius <%s>", fromEmail)
+		template, err := templateService.Render(constants.InvitationTemplate, dto.InvitationEmailParams{
+			PlatformName:   "Form Genius",
+			UserName:       invitation.Name,
+			Title:          form.FormTitle,
+			InvitationURL:  fmt.Sprintf("%s/user-response?token=%s", frontendURL, token),
+			Year:           time.Now().Year(),
+			CompanyAddress: "Form Genius Inc",
+		})
+		if err != nil {
+			log.Printf("[Invitation Service] Error generating invitation template: %v", err)
+			return sqlc.CreateInvitationRow{}, err
+		}
+		resendRes, err := mail.SendEmail(resend.SendEmailRequest{
+			From:    sender,
+			To:      []string{invitation.Email},
+			Subject: fmt.Sprintf("Invitation to fill form: %s", form.FormTitle),
+			Html:    template,
+			Tags: []resend.Tag{
+				{
+					Name:  "invitation",
+					Value: "true",
+				},
+				{
+					Name:  "invitation_id",
+					Value: createdInvitation.InvitationID.String(),
+				},
+			},
+		})
+		if err != nil {
+			log.Printf("[Invitation Service] Error sending email: %v", err)
+			return sqlc.CreateInvitationRow{}, err
+		}
+		log.Printf("[Invitation Service] email sent successfully: %v, %v", resendRes.Id, createdInvitation.InvitationID.String())
+
+	}
+	return createdInvitation, nil
 }
 
 func (s *invitationService) UpdateInvitationStatus(status dto.UpdateInvitationDTO, invitationID uuid.UUID, ctx context.Context) (sqlc.UpdateInvitationStatusRow, error) {
@@ -73,10 +157,7 @@ func (s *invitationService) GetInvitationByFormId(query dto.InvitationListQueryD
 		return dto.InvitationListDto{}, err
 	}
 	search := utils.ConvertStringToNullString(query.Search)
-	exclude := sqlc.NullInvitationStatus{
-		InvitationStatus: query.Exclude,
-		Valid:            query.Exclude != "",
-	}
+	exclude := query.Exclude
 	status := sqlc.NullInvitationStatus{
 		InvitationStatus: query.Status,
 		Valid:            query.Status != "",
@@ -115,7 +196,6 @@ func (s *invitationService) GetInvitationByFormId(query dto.InvitationListQueryD
 		return dto.InvitationListDto{}, err
 	}
 
-	log.Println("Count: ", count)
 	var limitInt int
 	if limit.Valid {
 		limitInt = int(limit.Int32)
@@ -154,6 +234,20 @@ func (s *invitationService) CreateInvitation(
 	formID, userID uuid.UUID,
 	ctx context.Context,
 ) (successCount int, failedCount int, err error) {
+
+	form, err := s.form.GetSingleForm(ctx, formID.String())
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if form.FormStatus.FormStatus == sqlc.FormStatusClosed {
+		return 0, 0, errors.New("form is closed")
+	}
+
+	if form.ClosingTime.Valid && form.ClosingTime.Time.Before(time.Now()) {
+		return 0, 0, errors.New("form is closed")
+	}
+
 	// 1. Open the CSV file
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -272,6 +366,32 @@ ReadLoop: // This label allows us to break out of the for-loop from inside the s
 	case fatalErr := <-errChan:
 		return 0, 0, fatalErr
 	default:
+	}
+
+	isScheduled := form.IsScheduled.Valid && form.IsScheduled.Bool
+	now := time.Now()
+
+	shouldInviteNow := false
+
+	if form.FormStatus.FormStatus == sqlc.FormStatusPublished {
+		shouldInviteNow = true
+	} else if isScheduled && form.ScheduledTime.Valid && form.ScheduledTime.Time.Before(now) {
+		shouldInviteNow = true
+	} else if isScheduled && form.ScheduledTime.Valid && form.InvitationScheduleGap.Valid &&
+		time.Since(form.ScheduledTime.Time) < time.Duration(form.InvitationScheduleGap.Int32) {
+		shouldInviteNow = true
+	}
+
+	if shouldInviteNow || !isScheduled {
+		log.Printf("[Invitation Service] Scheduling invitation in first block")
+		scheduler.ScheduleInvitation(formID.String(), now.Add(5*time.Minute))
+
+	} else if isScheduled && form.ScheduledTime.Valid && form.ScheduledTime.Time.After(now) {
+		log.Printf("[Invitation Service] Scheduling invitation in second block")
+		runAt := form.ScheduledTime.Time.Add(
+			-time.Duration(form.InvitationScheduleGap.Int32) * time.Minute,
+		)
+		scheduler.ScheduleInvitation(formID.String(), runAt)
 	}
 
 	return totalSuccess, totalFailed, nil

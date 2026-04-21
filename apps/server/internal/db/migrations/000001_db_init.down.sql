@@ -6,10 +6,11 @@
 DROP INDEX IF EXISTS idx_form_response_files_response_id;
 DROP INDEX IF EXISTS idx_form_response_files_form_id;
 
-DROP INDEX IF EXISTS idx_form_responses_form_id;
-DROP INDEX IF EXISTS idx_form_responses_respondent_id;
-DROP INDEX IF EXISTS idx_form_responses_field_id;
-DROP INDEX IF EXISTS idx_form_responses_option_id;
+DROP INDEX IF EXISTS idx_form_responses_submission_id;
+DROP INDEX IF EXISTS idx_form_responses_form_field_id;
+
+DROP INDEX IF EXISTS idx_form_submissions_form_id;
+DROP INDEX IF EXISTS idx_form_submissions_respondent_id;
 
 DROP INDEX IF EXISTS idx_invitations_form_id;
 DROP INDEX IF EXISTS idx_invitations_email;
@@ -34,6 +35,7 @@ DROP FUNCTION IF EXISTS update_form_updated_at();
 -- Drop tables in dependency order
 DROP TABLE IF EXISTS form_response_files CASCADE;
 DROP TABLE IF EXISTS form_responses CASCADE;
+DROP TABLE IF EXISTS form_submissions CASCADE;
 DROP TABLE IF EXISTS invitations CASCADE;
 DROP TABLE IF EXISTS form_field_options CASCADE;
 DROP TABLE IF EXISTS form_fields CASCADE;
