@@ -9,7 +9,8 @@ INSERT INTO forms (
   is_scheduled,
   invitation_schedule_id,
   invitation_schedule_gap,
-  scheduling_id
+  scheduling_id,
+  form_status
 )
 VALUES (
   sqlc.arg('form_title'),
@@ -21,7 +22,8 @@ VALUES (
   sqlc.narg('is_scheduled'),
   sqlc.narg('invitation_schedule_id'),
   sqlc.narg('invitation_schedule_gap'),
-  sqlc.narg('scheduling_id')
+  sqlc.narg('scheduling_id'),
+  sqlc.narg('form_status')
 )
 RETURNING *;
 

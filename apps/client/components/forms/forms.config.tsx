@@ -1,3 +1,4 @@
+'use client'
 import { FormType, access, status } from '@/types/form.types'
 import { ColumnDef } from '@tanstack/react-table'
 import { FormAction } from './FormAction'

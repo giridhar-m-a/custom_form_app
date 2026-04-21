@@ -1,18 +1,18 @@
 'use client'
 import { CreateFormSchema, CreateFormSchemaType } from '@/app/schemas/form.schemas'
 import { useCreateForm, useUpdateForm } from '@/hooks/queryHooks/useFormApp'
+import { DEFAULT_INVITATION_SCHEDULE_GAP } from '@/lib/constants/constants'
+import { toDateTimeLocal } from '@/lib/date.utils'
 import { FormType } from '@/types/form.types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { CommonSelect } from '../common/CommonSelect'
 import { SubmitButton } from '../common/SubmitButton'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form'
 import { Input } from '../ui/input'
 import { Switch } from '../ui/switch'
 import { Textarea } from '../ui/textarea'
-import { addHours } from 'date-fns'
-import { toDateTimeLocal } from '@/lib/date.utils'
-import { DEFAULT_INVITATION_SCHEDULE_GAP } from '@/lib/constants/constants'
 
 interface UpsertFormProps {
   formId?: string
@@ -29,7 +29,9 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
       isScheduled: data?.isScheduled ?? false,
       scheduledTime: data?.scheduledTime ? new Date(data?.scheduledTime).toISOString() : '',
       closingTime: data?.closingTime ? new Date(data?.closingTime).toISOString() : '',
-      invitationScheduleGap: data?.invitationScheduleGap
+      invitationScheduleGap: data?.invitationScheduleGap,
+      formAccess: data?.access,
+      formStatus: data?.status
     },
     mode: 'onChange',
     reValidateMode: 'onChange'
@@ -40,7 +42,13 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
   const isPending = useMemo(() => createIsPending || updateIsPending, [createIsPending, updateIsPending])
 
   const { control, handleSubmit, reset, setValue } = form
-  const { isScheduled, closingTime, scheduledTime } = useWatch({ control })
+  const { isScheduled } = useWatch({ control })
+  const formStatusList = [
+    { label: 'Draft', value: 'draft' },
+    { label: 'Published', value: 'published' },
+    { label: 'Closed', value: 'closed' },
+    { label: 'Archived', value: 'archived' }
+  ]
 
   useEffect(() => {
     if (!isScheduled) {
@@ -102,6 +110,47 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
               </FormItem>
             )}
           />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              name="formAccess"
+              control={control}
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <FormLabel>Form Access</FormLabel>
+                  <FormControl>
+                    <CommonSelect
+                      options={[
+                        { label: 'Public', value: 'public' },
+                        { label: 'Restricted', value: 'restricted' }
+                      ]}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select form access"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="formStatus"
+              control={control}
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <FormLabel>Form Status</FormLabel>
+                  <FormControl>
+                    <CommonSelect
+                      options={formStatusList}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select form status"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           <FormField
             name="isScheduled"
             control={control}

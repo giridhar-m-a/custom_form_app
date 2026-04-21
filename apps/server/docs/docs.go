@@ -647,6 +647,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get dashboard data for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard data",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard data fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_DashboardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any"
+                        }
+                    }
+                }
+            }
+        },
         "/files/file-upload": {
             "post": {
                 "security": [
@@ -2899,6 +2945,23 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.DashboardResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_FileUploadResponse": {
             "type": "object",
             "properties": {
@@ -3030,13 +3093,16 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "form_access": {
+                "formAccess": {
                     "description": "default 'restricted'",
                     "allOf": [
                         {
                             "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess"
                         }
                     ]
+                },
+                "formStatus": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus"
                 },
                 "invitationScheduleGap": {
                     "type": "integer"
@@ -3157,6 +3223,32 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ResponseRequest"
                     }
+                }
+            }
+        },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "submissionsByMonth": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionsByMonth"
+                    }
+                },
+                "totalActiveForms": {
+                    "type": "integer"
+                },
+                "totalClosedForms": {
+                    "type": "integer"
+                },
+                "totalForms": {
+                    "type": "integer"
+                },
+                "totalInvitations": {
+                    "type": "integer"
+                },
+                "totalSubmissions": {
+                    "type": "integer"
                 }
             }
         },
@@ -3658,17 +3750,31 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionsByMonth": {
+            "type": "object",
+            "properties": {
+                "month": {
+                    "type": "string"
+                },
+                "totalSubmissions": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO": {
             "type": "object",
             "properties": {
-                "access": {
-                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess"
-                },
                 "closingTime": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
+                },
+                "formAccess": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess"
+                },
+                "formStatus": {
+                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus"
                 },
                 "invitationScheduleGap": {
                     "type": "integer"
@@ -3684,9 +3790,6 @@ const docTemplate = `{
                 },
                 "schedulingId": {
                     "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus"
                 },
                 "title": {
                     "type": "string"
