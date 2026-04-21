@@ -109,6 +109,17 @@ definitions:
       status:
         type: integer
     type: object
+  ? github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_DashboardResponse
+  : properties:
+      data:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.DashboardResponse'
+      message:
+        type: string
+      pagination:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.PaginationResponse'
+      status:
+        type: integer
+    type: object
   ? github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_FileUploadResponse
   : properties:
       data:
@@ -192,10 +203,12 @@ definitions:
         type: string
       description:
         type: string
-      form_access:
+      formAccess:
         allOf:
         - $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess'
         description: default 'restricted'
+      formStatus:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus'
       invitationScheduleGap:
         type: integer
       isScheduled:
@@ -278,6 +291,23 @@ definitions:
     required:
     - formId
     - responses
+    type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.DashboardResponse:
+    properties:
+      submissionsByMonth:
+        items:
+          $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionsByMonth'
+        type: array
+      totalActiveForms:
+        type: integer
+      totalClosedForms:
+        type: integer
+      totalForms:
+        type: integer
+      totalInvitations:
+        type: integer
+      totalSubmissions:
+        type: integer
     type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.EmailPasswordAuthRequest:
     properties:
@@ -614,14 +644,23 @@ definitions:
     - formOptionId
     - id
     type: object
+  github_com_giridhar-m-a_custom_form_app_internal_dto.SubmissionsByMonth:
+    properties:
+      month:
+        type: string
+      totalSubmissions:
+        type: integer
+    type: object
   github_com_giridhar-m-a_custom_form_app_internal_dto.UpdateFormDTO:
     properties:
-      access:
-        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess'
       closingTime:
         type: string
       description:
         type: string
+      formAccess:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormAccess'
+      formStatus:
+        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus'
       invitationScheduleGap:
         type: integer
       isScheduleCompleted:
@@ -632,8 +671,6 @@ definitions:
         type: string
       schedulingId:
         type: string
-      status:
-        $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_db_sqlc.FormStatus'
       title:
         type: string
     type: object
@@ -1128,6 +1165,35 @@ paths:
       summary: Verify Access Token
       tags:
       - Authentication
+  /dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Get dashboard data for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard data fetched successfully
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-github_com_giridhar-m-a_custom_form_app_internal_dto_DashboardResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_giridhar-m-a_custom_form_app_internal_dto.ApiResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard data
+      tags:
+      - Dashboard
   /files/file-upload:
     post:
       consumes:

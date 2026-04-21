@@ -10,7 +10,9 @@ export const CreateFormSchema = z
     isScheduled: z.boolean(),
     scheduledTime: z.iso.datetime().optional(),
     closingTime: z.iso.datetime().optional(),
-    invitationScheduleGap: z.number().optional()
+    invitationScheduleGap: z.number().optional(),
+    formAccess: z.enum(['public', 'restricted']).default('restricted'),
+    formStatus: z.enum(['draft', 'published', 'archived', 'closed']).default('draft')
   })
   .superRefine((data, ctx) => {
     if (data.isScheduled && !data.scheduledTime) {
@@ -41,14 +43,14 @@ export const CreateFormSchema = z
         path: ['closingTime']
       })
     }
-    if(data.isScheduled && !data.invitationScheduleGap){
+    if (data.isScheduled && !data.invitationScheduleGap) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Invitation schedule gap is required when form is scheduled',
         path: ['invitationScheduleGap']
       })
     }
-    if(data.isScheduled && data.invitationScheduleGap && data.invitationScheduleGap <= 0){
+    if (data.isScheduled && data.invitationScheduleGap && data.invitationScheduleGap <= 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Invitation schedule gap must be a positive number',

@@ -63,7 +63,8 @@ INSERT INTO forms (
   is_scheduled,
   invitation_schedule_id,
   invitation_schedule_gap,
-  scheduling_id
+  scheduling_id,
+  form_status
 )
 VALUES (
   $1,
@@ -75,7 +76,8 @@ VALUES (
   $7,
   $8,
   $9,
-  $10
+  $10,
+  $11
 )
 RETURNING form_id, form_title, form_description, form_status, form_access, form_created_at, form_updated_at, created_by, scheduling_id, scheduled_time, closing_time, is_schedule_completed, is_scheduled, invitation_schedule_gap, invitation_schedule_id
 `
@@ -91,6 +93,7 @@ type CreateFormParams struct {
 	InvitationScheduleID  uuid.NullUUID  `json:"invitation_schedule_id"`
 	InvitationScheduleGap sql.NullInt32  `json:"invitation_schedule_gap"`
 	SchedulingID          uuid.NullUUID  `json:"scheduling_id"`
+	FormStatus            NullFormStatus `json:"form_status"`
 }
 
 func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (Form, error) {
@@ -105,6 +108,7 @@ func (q *Queries) CreateForm(ctx context.Context, arg CreateFormParams) (Form, e
 		arg.InvitationScheduleID,
 		arg.InvitationScheduleGap,
 		arg.SchedulingID,
+		arg.FormStatus,
 	)
 	var i Form
 	err := row.Scan(

@@ -82,6 +82,18 @@ func (s *formService) CreateForm(ctx context.Context, form dto.CreateFormDTO, us
 		}
 	}
 
+	formStatus := sqlc.NullFormStatus{
+		FormStatus: form.FormStatus,
+		Valid:      form.FormStatus != "",
+	}
+
+	if form.FormStatus == "" {
+		formStatus = sqlc.NullFormStatus{
+			FormStatus: sqlc.FormStatusDraft,
+			Valid:      true,
+		}
+	}
+
 	isScheduled := utils.BoolPtrToNullBool(form.IsScheduled)
 	scheduleGap := utils.ConvertInt32PtrToNullInt32(form.InvitationScheduleGap)
 	createdForm, err := s.formRepo.CreateForm(sqlc.CreateFormParams{
@@ -93,6 +105,7 @@ func (s *formService) CreateForm(ctx context.Context, form dto.CreateFormDTO, us
 		ClosingTime:           closingTime,
 		IsScheduled:           isScheduled,
 		InvitationScheduleGap: scheduleGap,
+		FormStatus:            formStatus,
 	}, ctx)
 	if err != nil {
 		log.Printf("[Error Creating form] Failed to create form: %v", err)
@@ -289,7 +302,7 @@ func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, fo
 			FormStatus: *form.Status,
 			Valid:      true,
 		}
-	}
+	} 
 
 	// Convert optional FormAccess
 	var formAccess sqlc.NullFormAccess
@@ -353,6 +366,16 @@ func (s *formService) UpdateForm(ctx context.Context, form dto.UpdateFormDTO, fo
 		return sqlc.Form{}, err
 	}
 	log.Printf("[form service] update form %s succeed", updatedForm.FormID.String())
+
+	if *form.Status == sqlc.FormStatusClosed {
+		if cancelErr := scheduler.CancelFormStatusUpdateSchedule(updatedForm.FormID.String()); cancelErr != nil {
+			log.Printf("[form service] failed to rollback form status schedule %s: %s", updatedForm.FormID.String(), cancelErr.Error())
+		}
+		if cancelErr := scheduler.CancelInvitationSchedule(updatedForm.InvitationScheduleID.UUID.String()); cancelErr != nil {
+			log.Printf("[form service] failed to rollback invitation schedule %s: %s", updatedForm.InvitationScheduleID.UUID.String(), cancelErr.Error())
+		}
+		return updatedForm, nil
+	}
 
 	timeChanged := form.ScheduledTime != nil &&
 		!oldForm.ScheduledTime.Time.Equal(*form.ScheduledTime)

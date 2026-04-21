@@ -9,11 +9,12 @@ import (
 type CreateFormDTO struct {
 	Title                 string          `json:"title" binding:"required" form:"title" message:"title is required"`
 	Description           *string         `json:"description,omitempty" form:"description"`
-	FormAccess            sqlc.FormAccess `json:"form_access,omitempty" form:"form_access"` // default 'restricted'
+	FormAccess            sqlc.FormAccess `json:"formAccess,omitempty" form:"form_access"` // default 'restricted'
 	ScheduledTime         *time.Time      `json:"scheduledTime,omitempty" form:"scheduled_time"`
 	ClosingTime           *time.Time      `json:"closingTime,omitempty" form:"closing_time"`
 	IsScheduled           *bool           `json:"isScheduled,omitempty" form:"is_scheduled"`
 	InvitationScheduleGap *int32          `json:"invitationScheduleGap,omitempty" form:"invitation_schedule_gap"`
+	FormStatus            sqlc.FormStatus `json:"formStatus,omitempty" form:"form_status"`
 }
 
 type FormResponse struct {
@@ -50,8 +51,8 @@ type FormListResponse struct {
 type UpdateFormDTO struct {
 	Title                 *string          `json:"title,omitempty" form:"title"`
 	Description           *string          `json:"description,omitempty" form:"description"`
-	Access                *sqlc.FormAccess `json:"access,omitempty" form:"access"`
-	Status                *sqlc.FormStatus `json:"status,omitempty" form:"status"`
+	Access                *sqlc.FormAccess `json:"formAccess,omitempty" form:"form_access"`
+	Status                *sqlc.FormStatus `json:"formStatus,omitempty" form:"form_status"`
 	SchedulingID          *string          `json:"schedulingId,omitempty" form:"scheduling_id"`
 	ScheduledTime         *time.Time       `json:"scheduledTime,omitempty" form:"scheduled_time"`
 	ClosingTime           *time.Time       `json:"closingTime,omitempty" form:"closing_time"`

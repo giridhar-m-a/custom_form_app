@@ -18,4 +18,5 @@ func RegisterRoutes(r *gin.Engine) {
 	api.Use(middleware.AuthMiddleware())
 
 	controller.Users(api)
+	controller.GetDashboardData(api)
 }

@@ -1,11 +1,7 @@
-'use client'
+import Dashboard from '@/components/dashboard/Dashboard'
 
-const Dashboard = () => {
-  return (
-    <div>
-      <h1>Dashboard</h1>
-    </div>
-  )
+const DashboardPage = () => {
+  return <Dashboard />
 }
 
-export default Dashboard
+export default DashboardPage
