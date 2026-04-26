@@ -87,7 +87,7 @@ export const FormRender = ({ fields, formId, respondentId, onSubmit, token }: Fo
     <div>
       <ScrollArea className="h-[calc(100vh-20rem)]">
         <Form {...form}>
-          <form className="space-y-4 px-4" onSubmit={handleFormSubmit}>
+          <form className="space-y-4 px-4" onSubmit={handleFormSubmit} noValidate>
             {fields.map((field, index) => (
               <FormInputWrapper key={field.fieldId} formField={field} control={control as any} index={index} />
             ))}

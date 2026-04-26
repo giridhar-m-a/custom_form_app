@@ -112,14 +112,23 @@ interface FileUploadProps {
    */
   autoUpload?: boolean
   token: string
+  /** Accepted file types (e.g. "image/*") */
+  accept?: string
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function FileUpload({ uploadPath, token, handleResponse, autoUpload = false }: FileUploadProps) {
+export default function FileUpload({
+  uploadPath,
+  token,
+  handleResponse,
+  autoUpload = false,
+  accept
+}: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null)
   const [progress, setProgress] = useState(0)
   const [dragOver, setDragOver] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const { mutate, data, isPending, isSuccess, isError, error, reset } = useMutation<
@@ -143,14 +152,40 @@ export default function FileUpload({ uploadPath, token, handleResponse, autoUplo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file])
 
+  const validateFile = (f: File): boolean => {
+    if (!accept) return true
+    
+    const acceptedTypes = accept.split(',').map(t => t.trim())
+    const fileType = f.type
+    const fileName = f.name.toLowerCase()
+
+    return acceptedTypes.some(type => {
+      if (type.endsWith('/*')) {
+        const baseType = type.replace('/*', '')
+        return fileType.startsWith(baseType)
+      }
+      if (type.startsWith('.')) {
+        return fileName.endsWith(type.toLowerCase())
+      }
+      return fileType === type
+    })
+  }
+
   const handleFile = useCallback(
     (f: File | null | undefined) => {
       if (!f) return
+      
+      setLocalError(null)
+      if (!validateFile(f)) {
+        setLocalError(`Invalid file type. Expected: ${accept}`)
+        return
+      }
+
       setFile(f)
       setProgress(0)
       reset()
     },
-    [reset]
+    [reset, accept]
   )
 
   const handleDrop = useCallback(
@@ -166,6 +201,7 @@ export default function FileUpload({ uploadPath, token, handleResponse, autoUplo
   const handleRemove = () => {
     setFile(null)
     setProgress(0)
+    setLocalError(null)
     reset()
     if (inputRef.current) inputRef.current.value = ''
   }
@@ -220,7 +256,13 @@ export default function FileUpload({ uploadPath, token, handleResponse, autoUplo
                   ? 'border-zinc-700 bg-zinc-800/30 cursor-default'
                   : 'border-zinc-700 bg-zinc-800/20 hover:border-zinc-600 hover:bg-zinc-800/40'
             ].join(' ')}>
-            <input ref={inputRef} type="file" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
+            <input
+              ref={inputRef}
+              type="file"
+              accept={accept}
+              className="hidden"
+              onChange={e => handleFile(e.target.files?.[0])}
+            />
 
             {file ? (
               <div className="flex items-center gap-3 text-left">
@@ -253,7 +295,7 @@ export default function FileUpload({ uploadPath, token, handleResponse, autoUplo
                     <span className="text-zinc-200 underline underline-offset-2 font-medium">browse</span>
                   </p>
                   <p className="text-xs text-zinc-600 mt-1">
-                    {autoUpload ? 'Upload begins immediately on selection' : 'Any file format accepted'}
+                    {accept ? `Accepted: ${accept}` : autoUpload ? 'Upload begins immediately on selection' : 'Any file format accepted'}
                   </p>
                 </div>
               </div>
@@ -320,10 +362,10 @@ export default function FileUpload({ uploadPath, token, handleResponse, autoUplo
           )}
 
           {/* Error */}
-          {isError && (
+          {(isError || localError) && (
             <Alert className="bg-red-950/30 border-red-800/50 text-red-300 py-3">
               <AlertDescription className="text-xs">
-                {error?.response?.data?.message ?? error?.message ?? 'Upload failed. Please try again.'}
+                {localError || error?.response?.data?.message || error?.message || 'Upload failed. Please try again.'}
               </AlertDescription>
             </Alert>
           )}

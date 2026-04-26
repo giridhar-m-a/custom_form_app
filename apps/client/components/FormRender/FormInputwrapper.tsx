@@ -253,6 +253,7 @@ const RenderFormInput = ({ fieldType, field, id, ariaLabel, formField, token }: 
         <FileUpload
           autoUpload={true}
           uploadPath={`forms/${formField.formId}/${formField.fieldId}`}
+          accept="image/*"
           handleResponse={data => {
             const current: any[] = Array.isArray(field.value) ? field.value : []
             field.onChange([
@@ -274,6 +275,7 @@ const RenderFormInput = ({ fieldType, field, id, ariaLabel, formField, token }: 
         <FileUpload
           autoUpload={true}
           uploadPath={`forms/${formField.formId}/${formField.fieldId}`}
+          accept="video/*"
           handleResponse={data => {
             const current: any[] = Array.isArray(field.value) ? field.value : []
             field.onChange([
@@ -295,6 +297,7 @@ const RenderFormInput = ({ fieldType, field, id, ariaLabel, formField, token }: 
         <FileUpload
           autoUpload={true}
           uploadPath={`forms/${formField.formId}/${formField.fieldId}`}
+          accept="audio/*"
           handleResponse={data => {
             const current: any[] = Array.isArray(field.value) ? field.value : []
             field.onChange([
