@@ -48,7 +48,7 @@ export const ResponseItemSchema = ({
 
   // EMAIL
   if (type === 'email') {
-    const base = z.email('Invalid email')
+    const base = z.string().email('Invalid email')
     responseText = isRequired ? base : base.optional()
   }
 
@@ -114,13 +114,9 @@ export const ResponseItemSchema = ({
     }
 
     if (!isMultiple) {
-      const refined = base.refine(files => files.length > 1, {
-        error: 'Only one file allowed'
-      })
-      responseFiles = isRequired ? base : base.optional()
-    } else {
-      responseFiles = isRequired ? base : base.optional()
+      base = base.max(1, 'Only one file allowed')
     }
+    responseFiles = isRequired ? base : base.optional()
   }
 
   return z.object({

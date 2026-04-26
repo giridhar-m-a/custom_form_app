@@ -19,13 +19,13 @@ import {
   CalendarClock
 } from 'lucide-react'
 import { format, isValid, parseISO } from 'date-fns'
+import { DownloadButton } from './DownloadButton'
 
 export const ResponsePage = ({ params }: { params: { id: string; submissionId: string } }) => {
   const { id, submissionId } = params
   const { data: form, isLoading: isLoadingForm } = useGetFormById(id)
   const { data: fields, isLoading: isLoadingFields } = useGetFormFields(id)
   const { data: response, isLoading: isLoadingResponse } = useSingleResponse(submissionId)
-  const { mutate, isPending } = useDownloadResponseFiles()
   const isLoading = isLoadingForm || isLoadingFields || isLoadingResponse
 
   const fieldMap = new Map<string, FormField>()
@@ -155,14 +155,7 @@ export const ResponsePage = ({ params }: { params: { id: string; submissionId: s
                               {file.filePath.split('/').pop() || 'Download File'}
                             </span>
                           </div>
-                          <SubmitButton
-                            variant="outline"
-                            size="sm"
-                            onClick={() => mutate({ filePath: file.filePath, fileName: file.fileName })}
-                            disabled={isPending}
-                            isLoading={isPending}>
-                            Download
-                          </SubmitButton>
+                          <DownloadButton filePath={file.filePath} fileName={file.fileName} />
                         </div>
                       ))}
                     </div>
