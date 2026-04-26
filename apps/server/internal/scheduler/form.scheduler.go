@@ -58,3 +58,26 @@ func UpdateFormStatusUpdateSchedule(scheduleID string, scheduleTime time.Time, f
 	log.Printf("Form updated for schedule ID: %s, New Task ID: %s", scheduleID, info.ID)
 	return info, nil
 }
+
+func DeleteFormByIdScheduler(formID string, scheduleTime time.Time) (*asynq.TaskInfo, error) {
+	client := NewClient()
+	defer client.Close()
+	formPayload := scheduler_dto.InvitationSchedulerPayload{
+		FormID: formID,
+	}
+	payload, err := json.Marshal(formPayload)
+	if err != nil {
+		log.Printf("[form scheduler] error parsing json, %s", err.Error())
+		return nil, err
+	}
+	task := asynq.NewTask(constants.TaskTypeFormDelete, payload)
+
+	info, err := client.Enqueue(task, asynq.ProcessAt(scheduleTime), asynq.Queue(constants.QueueFormDelete), asynq.MaxRetry(0))
+	if err != nil {
+		log.Printf("Error scheduling form deletion for form %s: %v", formID, err)
+		return nil, err
+	}
+	log.Printf("Form deletion scheduled for form %s at %v, Task ID: %s", formID, scheduleTime, info.ID)
+	return info, nil
+	
+}

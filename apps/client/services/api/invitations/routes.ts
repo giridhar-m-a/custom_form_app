@@ -6,6 +6,8 @@ import { invitationsRoutes } from '@/lib/constants/apiRoutes/invitations.routes'
 import { errorHandler } from '@/lib/errorHandler'
 import { ApiResponse } from '@/types/api.types'
 import {
+  AnonymousInvitationPayload,
+  AnonymousInvitationResponse,
   BulkInvitationResponse,
   Invitation,
   InvitationFilter,
@@ -80,5 +82,19 @@ export const verifyInvitation = async ({
   } catch (e) {
     console.error(e)
     return errorHandler<VerifyInvitationResponse>(e)
+  }
+}
+
+export const createAnonymousInvitation = async ({
+  data
+}: {
+  data: AnonymousInvitationPayload
+}): Promise<ApiResponse<AnonymousInvitationResponse>> => {
+  try {
+    const res = await POST<AnonymousInvitationResponse>(`${invitationsRoutes.anonymous}`, data)
+    return res
+  } catch (e) {
+    console.error(e)
+    return errorHandler<AnonymousInvitationResponse>(e)
   }
 }

@@ -12,6 +12,29 @@ import (
 	"github.com/google/uuid"
 )
 
+const createTempUser = `-- name: CreateTempUser :one
+INSERT INTO users (is_temp, user_full_name)
+VALUES (TRUE, $1)
+RETURNING user_id, user_full_name, user_email, user_google_id, user_created_at, user_updated_at, user_password, is_temp, is_deleted
+`
+
+func (q *Queries) CreateTempUser(ctx context.Context, userFullName string) (User, error) {
+	row := q.db.QueryRowContext(ctx, createTempUser, userFullName)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.UserFullName,
+		&i.UserEmail,
+		&i.UserGoogleID,
+		&i.UserCreatedAt,
+		&i.UserUpdatedAt,
+		&i.UserPassword,
+		&i.IsTemp,
+		&i.IsDeleted,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (user_full_name, user_email, user_google_id, user_password)
 VALUES ($1, $2, $3, $4)
@@ -20,7 +43,7 @@ RETURNING user_id, user_full_name, user_email, user_google_id, user_created_at, 
 
 type CreateUserParams struct {
 	UserFullName string         `json:"user_full_name"`
-	UserEmail    string         `json:"user_email"`
+	UserEmail    sql.NullString `json:"user_email"`
 	UserGoogleID sql.NullString `json:"user_google_id"`
 	UserPassword sql.NullString `json:"user_password"`
 }
@@ -28,7 +51,7 @@ type CreateUserParams struct {
 type CreateUserRow struct {
 	UserID        uuid.UUID      `json:"user_id"`
 	UserFullName  string         `json:"user_full_name"`
-	UserEmail     string         `json:"user_email"`
+	UserEmail     sql.NullString `json:"user_email"`
 	UserGoogleID  sql.NullString `json:"user_google_id"`
 	UserCreatedAt sql.NullTime   `json:"user_created_at"`
 	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
@@ -126,20 +149,20 @@ SELECT
 FROM users u
 LEFT JOIN user_images i
     ON u.user_id = i.user_id
-WHERE u.user_email = $1
+WHERE u.user_email = $1 AND u.is_deleted = FALSE AND u.is_temp = FALSE
 `
 
 type GetUserByEmailRow struct {
 	UserID        uuid.UUID      `json:"user_id"`
 	UserFullName  string         `json:"user_full_name"`
-	UserEmail     string         `json:"user_email"`
+	UserEmail     sql.NullString `json:"user_email"`
 	UserCreatedAt sql.NullTime   `json:"user_created_at"`
 	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
 	UserPassword  sql.NullString `json:"user_password"`
 	FileName      sql.NullString `json:"file_name"`
 }
 
-func (q *Queries) GetUserByEmail(ctx context.Context, userEmail string) (GetUserByEmailRow, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, userEmail sql.NullString) (GetUserByEmailRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserByEmail, userEmail)
 	var i GetUserByEmailRow
 	err := row.Scan(
@@ -165,13 +188,13 @@ SELECT
 FROM users u
 LEFT JOIN user_images i
     ON u.user_id = i.user_id
-WHERE u.user_google_id = $1
+WHERE u.user_google_id = $1 AND u.is_deleted = FALSE AND u.is_temp = FALSE
 `
 
 type GetUserByGoogleIdRow struct {
 	UserID        uuid.UUID      `json:"user_id"`
 	UserFullName  string         `json:"user_full_name"`
-	UserEmail     string         `json:"user_email"`
+	UserEmail     sql.NullString `json:"user_email"`
 	UserCreatedAt sql.NullTime   `json:"user_created_at"`
 	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
 	FileName      sql.NullString `json:"file_name"`
@@ -198,20 +221,24 @@ SELECT
     u.user_email,
     u.user_created_at,
     u.user_updated_at,
-    i.file_name
-FROM users u
+    i.file_name,
+    u.is_temp,
+    u.is_deleted
+FROM users u 
 LEFT JOIN user_images i
     ON u.user_id = i.user_id
-WHERE u.user_id = $1
+WHERE u.user_id = $1 AND u.is_deleted = FALSE
 `
 
 type GetUserByIDRow struct {
 	UserID        uuid.UUID      `json:"user_id"`
 	UserFullName  string         `json:"user_full_name"`
-	UserEmail     string         `json:"user_email"`
+	UserEmail     sql.NullString `json:"user_email"`
 	UserCreatedAt sql.NullTime   `json:"user_created_at"`
 	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
 	FileName      sql.NullString `json:"file_name"`
+	IsTemp        sql.NullBool   `json:"is_temp"`
+	IsDeleted     sql.NullBool   `json:"is_deleted"`
 }
 
 func (q *Queries) GetUserByID(ctx context.Context, userID uuid.UUID) (GetUserByIDRow, error) {
@@ -224,6 +251,8 @@ func (q *Queries) GetUserByID(ctx context.Context, userID uuid.UUID) (GetUserByI
 		&i.UserCreatedAt,
 		&i.UserUpdatedAt,
 		&i.FileName,
+		&i.IsTemp,
+		&i.IsDeleted,
 	)
 	return i, err
 }
@@ -232,7 +261,7 @@ const getUserPassword = `-- name: GetUserPassword :one
 SELECT
     u.user_password
 FROM users u
-WHERE u.user_id = $1
+WHERE u.user_id = $1 AND u.is_deleted = FALSE AND u.is_temp = FALSE
 `
 
 func (q *Queries) GetUserPassword(ctx context.Context, userID uuid.UUID) (sql.NullString, error) {
@@ -245,7 +274,7 @@ func (q *Queries) GetUserPassword(ctx context.Context, userID uuid.UUID) (sql.Nu
 const getUserProfilePic = `-- name: GetUserProfilePic :one
 SELECT file_id, file_name, file_size, file_type, file_uploaded_at, user_id
 FROM user_images
-WHERE user_id = $1
+WHERE user_id = $1 AND is_deleted = FALSE AND is_temp = FALSE
 `
 
 func (q *Queries) GetUserProfilePic(ctx context.Context, userID uuid.UUID) (UserImage, error) {
@@ -262,6 +291,17 @@ func (q *Queries) GetUserProfilePic(ctx context.Context, userID uuid.UUID) (User
 	return i, err
 }
 
+const softDeleteUser = `-- name: SoftDeleteUser :exec
+UPDATE users
+SET is_deleted = TRUE
+WHERE user_id = $1
+`
+
+func (q *Queries) SoftDeleteUser(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, softDeleteUser, userID)
+	return err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET
@@ -269,7 +309,7 @@ SET
   user_email = COALESCE($2, user_email),
   user_password = COALESCE($3, user_password),
   user_google_id = COALESCE($4, user_google_id)
-WHERE user_id = $5
+WHERE user_id = $5 AND is_deleted = FALSE AND is_temp = FALSE
 RETURNING user_id, user_full_name, user_email, user_created_at, user_updated_at
 `
 
@@ -282,11 +322,11 @@ type UpdateUserParams struct {
 }
 
 type UpdateUserRow struct {
-	UserID        uuid.UUID    `json:"user_id"`
-	UserFullName  string       `json:"user_full_name"`
-	UserEmail     string       `json:"user_email"`
-	UserCreatedAt sql.NullTime `json:"user_created_at"`
-	UserUpdatedAt sql.NullTime `json:"user_updated_at"`
+	UserID        uuid.UUID      `json:"user_id"`
+	UserFullName  string         `json:"user_full_name"`
+	UserEmail     sql.NullString `json:"user_email"`
+	UserCreatedAt sql.NullTime   `json:"user_created_at"`
+	UserUpdatedAt sql.NullTime   `json:"user_updated_at"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {

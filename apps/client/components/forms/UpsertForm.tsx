@@ -13,6 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '../ui/input'
 import { Switch } from '../ui/switch'
 import { Textarea } from '../ui/textarea'
+import { useSelector } from 'react-redux'
+import { getIsTemp } from '@/store/slices/me.slice'
 
 interface UpsertFormProps {
   formId?: string
@@ -21,6 +23,7 @@ interface UpsertFormProps {
 }
 
 export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
+  const isTemp = useSelector(getIsTemp)
   const form = useForm({
     resolver: zodResolver(CreateFormSchema),
     defaultValues: {
@@ -119,10 +122,14 @@ export const UpsertForm = ({ formId, data, onOpenChange }: UpsertFormProps) => {
                   <FormLabel>Form Access</FormLabel>
                   <FormControl>
                     <CommonSelect
-                      options={[
-                        { label: 'Public', value: 'public' },
-                        { label: 'Restricted', value: 'restricted' }
-                      ]}
+                      options={
+                        isTemp
+                          ? [{ label: 'Public', value: 'public' }]
+                          : [
+                              { label: 'Public', value: 'public' },
+                              { label: 'Restricted', value: 'restricted' }
+                            ]
+                      }
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Select form access"

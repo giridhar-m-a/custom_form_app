@@ -47,7 +47,7 @@ func (s *googleAuthService) Authenticate(ctx context.Context, code string) (sqlc
 		UserGoogleId: id,
 	}
 
-	if err == nil && existingMailUser.UserID.String() != "" && existingMailUser.UserEmail == userInfo["email"].(string) {
+	if err == nil && existingMailUser.UserID.String() != "" && existingMailUser.UserEmail.String == userInfo["email"].(string) {
 		updatedUser, err := s.service.UpdateUser(ctx, existingUser.UserID.String(), dto)
 		if err != nil {
 			log.Printf("GoogleAuthService: update user error: %v", err)

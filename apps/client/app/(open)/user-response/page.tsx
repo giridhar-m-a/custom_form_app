@@ -17,8 +17,8 @@ export default async function ResponsePage({ searchParams }: ResponsePageProps) 
   const verify = await verifyInvitation({ token })
 
   return (
-    <main className="flex items-center justify-center w-screen h-screen">
-      <Card className="w-full max-w-6xl">
+    <main className="p-24">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>{form.data?.title}</CardTitle>
           <CardDescription>Fill the form to submit your response</CardDescription>

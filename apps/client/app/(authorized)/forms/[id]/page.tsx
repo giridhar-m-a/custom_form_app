@@ -70,7 +70,7 @@ const FormDataPage: React.FC<FormDataPageProps> = async ({ params }) => {
           <ResponseTable formId={id} />
         </div>
         <div className="rounded-2xl border basis-1/4 bg-background w-full p-6 mt-8 ">
-          <InvitationTable formId={id} status={formData?.status || 'draft'} />
+          <InvitationTable formId={id} status={formData?.status || 'draft'} access={formData?.access || 'restricted'} />
         </div>
       </div>
     </div>
