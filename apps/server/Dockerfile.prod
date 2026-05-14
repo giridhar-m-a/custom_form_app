@@ -40,6 +40,6 @@ ENV APP_PORT=${APP_PORT}
 EXPOSE ${APP_PORT}
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
-  CMD wget -qO- http://localhost:${APP_PORT}/health || exit 1
+  CMD wget -qO- ${BACKEND_URL}/api/v1/health || exit 1
 
 CMD ["sh", "-c", "until migrate -path ./migrations -database \"$DB_URL\" up; do echo 'Waiting for DB...'; sleep 3; done && ./server"]
