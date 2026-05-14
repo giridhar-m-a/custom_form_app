@@ -7,14 +7,18 @@ RUN apk add --no-cache git bash make
 RUN go install github.com/swaggo/swag/cmd/swag@latest && \
     go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
+ENV PATH=$PATH:/go/bin
+
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-RUN swag init -g /apps/server/cmd/server/main.go -o /apps/server/docs/ --parseDependency --parseInternal
+RUN find . -name "main.go"
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /apps/server /apps/server/cmd/server/main.go
+RUN swag init -g cmd/server/main.go -o docs/ --parseDependency --parseInternal
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o server ./cmd/server/main.go
 
 
 FROM alpine:latest
@@ -30,7 +34,7 @@ COPY --from=builder /app/server .
 COPY --from=builder /app/internal/db/migrations ./migrations
 COPY --from=builder /app/docs ./docs
 
-ARG APP_PORT=8000
+ARG APP_PORT=8080
 ENV APP_PORT=${APP_PORT}
 
 EXPOSE ${APP_PORT}
@@ -38,4 +42,4 @@ EXPOSE ${APP_PORT}
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD wget -qO- http://localhost:${APP_PORT}/health || exit 1
 
-CMD ["sh", "-c", "until migrate -path ./migrations -database \"$DB_URL\" up; do echo 'Waiting for DB...'; sleep 3; done && ./server"]
+CMD ["sh", "-c", "until migrate -path ./migrations -database \"$DATABASE_URL\" up; do echo 'Waiting for DB...'; sleep 3; done && ./server"]
