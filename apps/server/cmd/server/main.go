@@ -30,7 +30,6 @@ import (
 // @contact.name API Support
 // @contact.url http://giridhar.dev/
 // @contact.email m.a.giridhar08@gmail.com
-// @host be.custom-form-app.home
 // @BasePath /api/v1
 // @schemes https http
 // @securityDefinitions.apikey BearerAuth
@@ -45,7 +44,6 @@ func main() {
 	allowedOrigins := []string{
 		frontendUrl,
 		backendUrl,
-		"https://cf-api.giridhar.dev",
 	}
 
 	// Initialize database
