@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 
-WORKDIR /app
+WORKDIR /app/apps/server
 
 RUN apk add --no-cache git bash make
 
@@ -9,10 +9,10 @@ RUN go install github.com/swaggo/swag/cmd/swag@latest && \
 
 ENV PATH=$PATH:/go/bin
 
-COPY go.mod go.sum ./
+COPY apps/server/go.mod apps/server/go.sum ./
 RUN go mod download
 
-COPY . .
+COPY apps/server/ .
 
 RUN find . -name "main.go"
 
@@ -30,9 +30,9 @@ RUN apk add --no-cache ca-certificates bash curl && \
     | tar -xz -C /usr/local/bin && \
     chmod +x /usr/local/bin/migrate
 
-COPY --from=builder /app/server .
-COPY --from=builder /app/internal/db/migrations ./migrations
-COPY --from=builder /app/docs ./docs
+COPY --from=builder /app/apps/server/server .
+COPY --from=builder /app/apps/server/internal/db/migrations ./migrations
+COPY --from=builder /app/apps/server/docs ./docs
 
 ARG APP_PORT=8080
 ENV APP_PORT=${APP_PORT}
