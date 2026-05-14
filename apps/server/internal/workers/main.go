@@ -17,6 +17,7 @@ func Start(concurrency int) {
 			Addr:     cache.Client.Options().Addr,
 			Password: cache.Client.Options().Password,
 			DB:       cache.Client.Options().DB,
+			Username: cache.Client.Options().Username,
 		},
 		asynq.Config{
 			Concurrency: concurrency,
