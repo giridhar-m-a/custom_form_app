@@ -24,7 +24,8 @@ func InitMinio() {
 	accessKey := utils.GetEnv("MINIO_USER", "")
 	secretKey := utils.GetEnv("MINIO_PASSWORD", "")
 	useSSL := utils.GetEnvAsBool("MINIO_USE_SSL", false)
-	client, err := minio.New("minio.custom-form-app.home", &minio.Options{
+	domain:=utils.GetEnv("MINIO_DOMAIN","")
+	client, err := minio.New(domain, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
 	})
@@ -82,7 +83,7 @@ func GetMinioSignedURL(bucketName, objectName string, expiry time.Duration, vers
 		log.Printf("MinIO client not initialized")
 		return nil, errors.New("MinIO client not initialized")
 	}
-	minioClientDomain := utils.GetEnv("MINIO_FRONTEND_DOMAIN", "minio.custom-form-app.home")
+	minioClientDomain := utils.GetEnv("MINIO_DOMAIN", "minio.custom-form-app.home")
 	reqParams := make(url.Values) // additional query params if needed
 	if versionID != "" {
 		reqParams.Set("versionId", versionID)
