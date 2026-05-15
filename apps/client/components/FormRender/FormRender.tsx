@@ -80,9 +80,6 @@ export const FormRender = ({ fields, formId, respondentId, onSubmit, token }: Fo
     }
   })
 
-  console.log('form errors: ', errors)
-  console.log('form watch: ', watch())
-
   return (
     <div>
       <ScrollArea className="h-[calc(100vh-20rem)]">
@@ -91,9 +88,11 @@ export const FormRender = ({ fields, formId, respondentId, onSubmit, token }: Fo
             {fields.map((field, index) => (
               <FormInputWrapper key={field.fieldId} formField={field} control={control as any} index={index} />
             ))}
-            <SubmitButton type="submit" className="w-full" isLoading={isPending}>
-              Submit
-            </SubmitButton>
+            {fields.length > 0 && (
+              <SubmitButton type="submit" className="w-full" isLoading={isPending}>
+                Submit
+              </SubmitButton>
+            )}
           </form>
         </Form>
       </ScrollArea>

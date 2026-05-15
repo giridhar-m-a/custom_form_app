@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
@@ -92,6 +93,7 @@ func (s *userService) UpdateUser(ctx context.Context, user string, data dto.User
 }
 
 func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, data dto.FileUploadPayload) (sqlc.UpdateUserProfilePicRow, error) {
+	slog.Info("Updating User Profile Pic")
 	bucket := utils.GetEnv("MINIO_BUCKET_NAME", "custom-form-app")
 	file := data.File
 	fileType := data.FileInfo.Header.Get("Content-Type")
@@ -115,14 +117,18 @@ func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, dat
 	profile, err := s.repo.GetProfilePic(ctx, userUUID)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			slog.Info("No profile pic found, creating new one")
 			_, errUpload := MinioUploadFile(bucket, path, file, size, fileType)
 			if errUpload != nil {
+				slog.Error("Error uploading profile pic for updating: ","Error", errUpload.Error())
 				return sqlc.UpdateUserProfilePicRow{}, errUpload
 			}
 			newProfile, errCreate := s.CreateUserProfilePic(ctx, userUUID, path, size, fileType)
 			if errCreate != nil {
+				slog.Error("Error creating profile pic: ", "Error", errCreate.Error())
 				return sqlc.UpdateUserProfilePicRow{}, errCreate
 			}
+			slog.Info("Profile pic created successfully", "FileID", newProfile.FileID, "FileName", newProfile.FileName, "FileSize", newProfile.FileSize, "FileType", newProfile.FileType)
 			return sqlc.UpdateUserProfilePicRow{
 				FileID:   newProfile.FileID,
 				FileName: newProfile.FileName,
@@ -131,17 +137,19 @@ func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, dat
 				UserID:   newProfile.UserID,
 			}, nil
 		} else {
+			slog.Error("Error getting profile pic: ", "Error", err.Error())
 			return sqlc.UpdateUserProfilePicRow{}, err
 		}
 	}
 
 	err = MinioDeleteFile(bucket, profile.FileName)
 	if err != nil {
-		fmt.Printf("error deleting profile pic: %v", err)
+		slog.Error("Error deleting profile pic: ", "Error", err.Error())
 	}
 
 	_, err = MinioUploadFile(bucket, path, file, size, fileType)
 	if err != nil {
+		slog.Error("Error uploading profile pic: ", "Error", err.Error())
 		return sqlc.UpdateUserProfilePicRow{}, err
 	}
 
@@ -154,6 +162,7 @@ func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, dat
 	})
 
 	if err != nil {
+		slog.Error("Error updating profile pic: ", "Error", err.Error())
 		return sqlc.UpdateUserProfilePicRow{}, err
 	}
 

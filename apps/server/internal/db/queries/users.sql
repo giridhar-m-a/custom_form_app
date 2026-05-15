@@ -89,7 +89,7 @@ RETURNING file_id, file_name, file_size, file_type, user_id;
 -- name: GetUserProfilePic :one
 SELECT *
 FROM user_images
-WHERE user_id = $1 AND is_deleted = FALSE AND is_temp = FALSE;
+WHERE user_id = $1;
 
 -- name: CreateTempUser :one
 INSERT INTO users (is_temp, user_full_name)

@@ -274,7 +274,7 @@ func (q *Queries) GetUserPassword(ctx context.Context, userID uuid.UUID) (sql.Nu
 const getUserProfilePic = `-- name: GetUserProfilePic :one
 SELECT file_id, file_name, file_size, file_type, file_uploaded_at, user_id
 FROM user_images
-WHERE user_id = $1 AND is_deleted = FALSE AND is_temp = FALSE
+WHERE user_id = $1
 `
 
 func (q *Queries) GetUserProfilePic(ctx context.Context, userID uuid.UUID) (UserImage, error) {
