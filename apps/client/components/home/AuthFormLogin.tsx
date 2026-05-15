@@ -69,7 +69,7 @@ const AuthFormLogin = () => {
           Continue with Google
         </Button>
 
-        <div className="relative my-4">
+        <div className="relative hidden my-4">
           <Separator />
           <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs font-semibold text-gray-400 uppercase">
             or
