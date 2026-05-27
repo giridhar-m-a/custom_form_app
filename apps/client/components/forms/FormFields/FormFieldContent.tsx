@@ -281,7 +281,7 @@ export const FormFieldContent = ({ formId, initialFields = [], formTitle, mode =
               </SubmitButton>
             </div>
           </div>
-          <ScrollArea className="h-[calc(100vh-30rem)] p-4">
+          <ScrollArea className="max-h-[65vh] min-h-[300px] p-4">
             <form onSubmit={handleSubmit(onFormSubmit as any)} className="space-y-6">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={formFields.map(field => field.tempId)} strategy={verticalListSortingStrategy}>

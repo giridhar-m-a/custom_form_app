@@ -58,7 +58,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Header />
           </div>
         </header>
-        <div className="m-14 rounded-lg p-8 min-h-[calc(100vh-11rem)] max-h-[calc(100vh-11rem)] bg-accent">
+        <div className="flex-1 m-4 md:m-8 lg:m-14 rounded-lg p-4 md:p-8 bg-accent overflow-y-auto min-h-0">
           {children}
         </div>
       </SidebarInset>

@@ -114,8 +114,6 @@ export const InvitationTable = ({ formId, status, access }: InvitationTableProps
         totalRecords={pagination.totalRecords}
         handlePageChange={page => setParams({ ...params, page })}
         handlePageSizeChange={size => setParams({ ...params, limit: size })}
-        maxHeight="calc(100vh - 65vh)"
-        minHeight="calc(100vh - 65vh)"
         headerTemplate={
           <div className="flex items-center justify-evenly gap-4">
             <Search

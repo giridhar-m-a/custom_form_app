@@ -91,7 +91,7 @@ export function DataTable<TData, TValue>({
         <>
           <div
             className="relative overflow-auto"
-            style={{ maxHeight: maxHeight || 'calc(100vh - 50vh)', minHeight: minHeight || 'calc(100vh - 50vh)' }}>
+            style={{ maxHeight: maxHeight || '60vh', minHeight: minHeight || '250px' }}>
             {!isGrid && (
               <Table>
                 <TableHeader className="sticky top-0 z-10 bg-accent border-background border-2">
@@ -173,7 +173,7 @@ export function DataTable<TData, TValue>({
           {footerTemplate && footerTemplate}
         </>
       ) : (
-        <div className="flex items-center justify-center min-h-[calc(100vh-60vh)] h-full w-full">
+        <div className="flex items-center justify-center min-h-[250px] h-full w-full">
           <CustomLoader />
         </div>
       )}

@@ -17,7 +17,7 @@ export default async function ResponsePage({ searchParams }: ResponsePageProps) 
   const verify = await verifyInvitation({ token })
 
   return (
-    <main className="p-24">
+    <main className="py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>{form.data?.title}</CardTitle>

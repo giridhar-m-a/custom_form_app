@@ -1,24 +1,22 @@
 'use client'
 
-import { SubmitButton } from '@/components/common/SubmitButton'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { useGetFormById, useGetFormFields } from '@/hooks/queryHooks/useFormApp'
-import { useDownloadResponseFiles, useSingleResponse } from '@/hooks/queryHooks/useResponses'
+import { useSingleResponse } from '@/hooks/queryHooks/useResponses'
 import { FormField } from '@/types/form.types'
+import { format, isValid, parseISO } from 'date-fns'
 import {
+  CalendarClock,
+  CheckCircle2,
   Download,
+  ExternalLink,
   FileText,
   LayoutList,
   Loader,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
   Star,
-  CalendarClock
+  XCircle
 } from 'lucide-react'
-import { format, isValid, parseISO } from 'date-fns'
 import { DownloadButton } from './DownloadButton'
 
 export const ResponsePage = ({ params }: { params: { id: string; submissionId: string } }) => {
@@ -52,8 +50,7 @@ export const ResponsePage = ({ params }: { params: { id: string; submissionId: s
           Submission ID: <span className="font-mono text-sm px-2 py-1 bg-muted rounded-md">{submissionId}</span>
         </p>
       </div>
-      <ScrollArea className="h-[calc(100vh-25rem)]">
-        <div className="space-y-6">
+      <div className="space-y-6">
           {response?.data?.responses?.map(responseItem => {
             const field = fieldMap.get(responseItem.formFieldId)
             if (!field) return null
@@ -203,7 +200,6 @@ export const ResponsePage = ({ params }: { params: { id: string; submissionId: s
             </div>
           )}
         </div>
-      </ScrollArea>
     </div>
   )
 }

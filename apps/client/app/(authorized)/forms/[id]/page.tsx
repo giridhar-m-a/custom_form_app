@@ -65,11 +65,11 @@ const FormDataPage: React.FC<FormDataPageProps> = async ({ params }) => {
           </Link>
         </div>
       </div>
-      <div className="flex gap-4">
-        <div className="basis-3/4 rounded-2xl border bg-background w-full p-6 mt-8 ">
+      <div className="flex flex-col lg:flex-row gap-4 mt-8">
+        <div className="lg:basis-3/4 rounded-2xl border bg-background w-full p-6">
           <ResponseTable formId={id} />
         </div>
-        <div className="rounded-2xl border basis-1/4 bg-background w-full p-6 mt-8 ">
+        <div className="lg:basis-1/4 rounded-2xl border bg-background w-full p-6">
           <InvitationTable formId={id} status={formData?.status || 'draft'} access={formData?.access || 'restricted'} />
         </div>
       </div>
