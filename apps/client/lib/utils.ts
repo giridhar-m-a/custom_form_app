@@ -10,7 +10,7 @@ const minioServer = process.env.NEXT_PUBLIC_MINIO_URL
 export const getFileUrl = (path?: string) => {
   // const minioServer = process.env.MINIO_SERVER || 'minio.custom-form-app.home'
   // return path ? `${minioServer}/custom-form-app/${path}` : ''
-  return path ? `${minioServer}/${path}` : ''
+  return path ? `${minioServer}/custom-form-app/${path}` : ''
 }
 
 export const validateFile = ({
