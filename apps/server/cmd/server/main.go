@@ -39,7 +39,7 @@ import (
 func main() {
 	// Get configuration from environment
 	port := utils.GetEnv("APP_PORT", "8080")
-	frontendUrl := utils.GetEnv("FRONTEND_URL", "http://localhost:3000")
+	frontendUrl := utils.GetEnv("FRONTEND_URL", "https://custom-form-app-phi.vercel.app")
 	backendUrl := utils.GetEnv("BACKEND_URL", "http://localhost:8000")
 	allowedOrigins := []string{
 		frontendUrl,
@@ -79,7 +79,7 @@ func main() {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "refreshToken"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
