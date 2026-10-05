@@ -10,12 +10,16 @@ import {
 import { usePathname } from 'next/navigation'
 import { ThemeSwitch } from '../theme/ThemeSwitch'
 import { Fragment } from 'react'
+import { useGetFormById } from '@/hooks/queryHooks/useFormApp'
 
 const Header = () => {
   const pathname = usePathname()
   const path = useMemo(() => {
     return pathname.split('/').filter(item => item !== '')
   }, [pathname])
+  const formId = path[0] === 'forms' && path[1] && path[1] !== 'new' && path[1] !== 'edit' ? path[1] : null
+  const { data: formResponse } = useGetFormById(formId || '', { enabled: Boolean(formId) })
+  const pageLabel = formResponse?.data?.title || path[path.length - 1]?.replaceAll('-', ' ')
   return (
     <div className="flex items-center gap-2 justify-between w-full">
       <Breadcrumb>
@@ -37,7 +41,7 @@ const Header = () => {
               {i === path.length - 1 && (
                 <BreadcrumbItem>
                   <BreadcrumbPage className="text-xl font-semibold capitalize">
-                    {item.replaceAll('-', ' ')}
+                    {formId && i === path.length - 1 ? pageLabel : item.replaceAll('-', ' ')}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               )}
