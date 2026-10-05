@@ -1,3 +1,4 @@
+"use server"
 import { CreateFormSchemaType, FormFieldCreateSchemaType, FormFieldSchemaType } from '@/app/schemas/form.schemas'
 import { DELETE, GET, PATCH, POST } from '@/lib/api.config'
 import { formsRoutes } from '@/lib/constants/apiRoutes/forms.routes'
