@@ -74,7 +74,7 @@ export const InvitationTable = ({ formId, status, access }: InvitationTableProps
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1>Invitations</h1>
-        <div className="flex items-center gap-2 justify-end">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 justify-end">
           {(isTemp || access === 'public') && <AnonymousInvitation formId={formId} />}
           {!isTemp && (
             <>
@@ -115,13 +115,15 @@ export const InvitationTable = ({ formId, status, access }: InvitationTableProps
         handlePageChange={page => setParams({ ...params, page })}
         handlePageSizeChange={size => setParams({ ...params, limit: size })}
         headerTemplate={
-          <div className="flex items-center justify-evenly gap-4">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
             <Search
+              className="min-w-[140px] flex-1"
               placeholder="Search"
               value={params.search}
               onChange={e => setParams({ ...params, search: e.target.value, page: 1 })}
             />
             <CommonSelect
+              className="w-[140px]"
               options={statusOptions}
               placeholder="Status"
               value={params.status || ''}

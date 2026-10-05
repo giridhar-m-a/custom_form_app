@@ -216,7 +216,7 @@ export default function FileUpload({
   const Icon: LucideIcon = file ? getFileIcon(file.name) : FileText
 
   return (
-    <div className="w-full bg-zinc-950 flex items-center justify-center p-6">
+    <div className="flex w-full min-w-0 items-center justify-center rounded-xl bg-zinc-950 p-3 sm:p-4">
       <Card className="w-full bg-zinc-900 border-zinc-800 shadow-2xl">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">

@@ -81,10 +81,10 @@ export const FormRender = ({ fields, formId, respondentId, onSubmit, token }: Fo
   })
 
   return (
-    <div>
-      <ScrollArea className="max-h-[70vh] h-auto">
+    <div className="w-full min-w-0">
+      <ScrollArea className="h-auto max-h-[70vh] w-full min-w-0">
         <Form {...form}>
-          <form className="space-y-4 px-4" onSubmit={handleFormSubmit} noValidate>
+          <form className="w-full min-w-0 space-y-4" onSubmit={handleFormSubmit} noValidate>
             {fields.map((field, index) => (
               <FormInputWrapper key={field.fieldId} formField={field} control={control as any} index={index} />
             ))}

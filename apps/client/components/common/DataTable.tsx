@@ -78,13 +78,13 @@ export function DataTable<TData, TValue>({
   return (
     <div className="overflow-hidden rounded-md border bg-background w-full">
       {(gridContentTemplate || headerTemplate) && (
-        <div className="p-6 flex items-center">
+        <div className="flex min-w-0 items-center p-3 sm:p-4">
           {gridContentTemplate && (
             <div className="basis-[4%]">
               <Button onClick={() => setGrid(!isGrid)}>{!isGrid ? <Grid2X2 /> : <List />}</Button>
             </div>
           )}
-          <div className="basis-[96%]">{headerTemplate}</div>
+          <div className="w-full min-w-0 flex-1">{headerTemplate}</div>
         </div>
       )}
       {!isLoading ? (

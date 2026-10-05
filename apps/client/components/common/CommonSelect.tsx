@@ -5,6 +5,7 @@ export interface CommonSelectProps {
   placeholder: string
   value?: string
   onChange: (value: string) => void
+  className?: string
 }
 
 export interface Option {
@@ -12,10 +13,10 @@ export interface Option {
   label: string
 }
 
-export function CommonSelect({ options, placeholder, value, onChange }: CommonSelectProps) {
+export function CommonSelect({ options, placeholder, value, onChange, className }: CommonSelectProps) {
   return (
     <Select onValueChange={onChange} value={value}>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className={className || 'w-[180px]'}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

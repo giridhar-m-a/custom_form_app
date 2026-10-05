@@ -42,7 +42,7 @@ const FormDataPage = () => {
           </Link>
         </div>
       </div>
-      <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+      <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="min-w-0 rounded-2xl border bg-background p-4 md:p-6">
           <ResponseTable formId={id} />
         </div>

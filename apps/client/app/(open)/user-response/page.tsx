@@ -17,13 +17,13 @@ export default async function ResponsePage({ searchParams }: ResponsePageProps) 
   const verify = await verifyInvitation({ token })
 
   return (
-    <main className="py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
-      <Card className="w-full">
+    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <Card className="w-full min-w-0 overflow-hidden">
         <CardHeader>
           <CardTitle>{form.data?.title}</CardTitle>
           <CardDescription>Fill the form to submit your response</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0 px-4 sm:px-6">
           <FormRender
             fields={fields.data || []}
             formId={form.data?.id || ''}
