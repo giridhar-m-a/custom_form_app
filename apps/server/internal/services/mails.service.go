@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/resend/resend-go/v3"
 )
@@ -24,9 +25,10 @@ func (ms *mailService) SendEmail(params resend.SendEmailRequest) (*resend.SendEm
 
 	sent, err := ms.client.Emails.Send(&params)
 	if err != nil {
+		log.Printf("[Mail Service] Error sending email: %v\n", err)
 		return nil, err
 	}
-	fmt.Printf("sent id: %+v\n", sent.Id)
+	fmt.Printf("[Mail Service] email sent id: %+v\n", sent.Id)
 
 	return sent, nil
 }
@@ -35,9 +37,10 @@ func (ms *mailService) SendBulk(ctx context.Context, params []*resend.SendEmailR
 
 	sent, err := ms.client.Batch.SendWithContext(ctx, params)
 	if err != nil {
+		log.Printf("[Mail Service] Error sending bulk emails: %v\n", err)
 		return nil, err
 	}
-	fmt.Printf("sent ids: %+v\n", sent.Data)
+	fmt.Printf("[Mail Service] bulk emails sent ids: %+v\n", sent.Data)
 
 	return sent.Data, nil
 }

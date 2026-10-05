@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/gin-gonic/gin"
+	"github.com/giridhar-m-a/custom_form_app/internal/cache"
 	"github.com/giridhar-m-a/custom_form_app/internal/db"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
@@ -50,6 +52,16 @@ func (h *usersHandler) GetMe(ctx *gin.Context) {
 		utils.HandleError(ctx, errors.New("user ID not found in context"))
 		return
 	}
+	var response dto.ApiResponse[dto.User]
+	key := "user:userID:" + userID.(string)
+	cachedUser, err := cache.Get(ctx, key)
+	if err == nil && cachedUser != "" {
+		if err := json.Unmarshal([]byte(cachedUser), &response); err == nil {
+			// ✅ Cache hit, return immediately
+			ctx.JSON(200, response)
+			return
+		}
+	}
 	user, err := h.userService.GetUserDetailsById(ctx, userID.(string))
 	if err != nil {
 		utils.HandleError(ctx, err)
@@ -60,24 +72,29 @@ func (h *usersHandler) GetMe(ctx *gin.Context) {
 
 	if user.FileName.Valid {
 		// signed, err := services.GetMinioSignedURL(h.bucket, user.FileName.String, time.Hour*24, "")
-		if err == nil {
-			profilepic = user.FileName.String
-		}
+		// if err == nil {
+		profilepic = user.FileName.String
+		// }
 
 	}
 
-	ctx.JSON(200, dto.ApiResponse[dto.User]{
+	response = dto.ApiResponse[dto.User]{
 		Status:  200,
 		Message: "User retrieved successfully",
 		Data: dto.User{
 			UserID:         user.UserID.String(),
-			UserEmail:      user.UserEmail,
+			UserEmail:      user.UserEmail.String,
 			UserFullName:   user.UserFullName,
 			UserCreatedAt:  user.UserCreatedAt.Time,
 			UserUpdatedAt:  user.UserUpdatedAt.Time,
 			UserProfilePic: profilepic,
+			IsTemp: user.IsTemp.Bool,
 		},
-	})
+	}
+
+	userJSON, _ := json.Marshal(response)
+	_ = cache.Set(ctx, key, string(userJSON))
+	ctx.JSON(200, response)
 }
 
 // @Summary      Update user details
@@ -120,7 +137,7 @@ func (h *usersHandler) UpdateUser(ctx *gin.Context) {
 		Message: "User retrieved successfully",
 		Data: dto.User{
 			UserID:        user.UserID.String(),
-			UserEmail:     user.UserEmail,
+			UserEmail:     user.UserEmail.String,
 			UserFullName:  user.UserFullName,
 			UserCreatedAt: user.UserCreatedAt.Time,
 			UserUpdatedAt: user.UserUpdatedAt.Time,
@@ -207,8 +224,8 @@ func (h *usersHandler) UpdatePassword(ctx *gin.Context) {
 		Message: "User password updated successfully",
 		Data: dto.User{
 			UserID:        user.UserID.String(),
-			UserEmail:     user.UserEmail,
-			UserFullName:  user.UserEmail,
+			UserEmail:     user.UserEmail.String,
+			UserFullName:  user.UserFullName,
 			UserCreatedAt: user.UserCreatedAt.Time,
 			UserUpdatedAt: user.UserUpdatedAt.Time,
 		},
@@ -235,7 +252,7 @@ func (h *usersHandler) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := h.userService.DeleteUser(ctx, userID.(string))
+	err := h.userService.SoftDeleteUser(ctx, userID.(string))
 	if err != nil {
 		utils.HandleError(ctx, err)
 		return
@@ -290,7 +307,6 @@ func (h *usersHandler) DeleteUserProfilePic(ctx *gin.Context) {
 // @type http
 // @scheme bearer
 func (h *usersHandler) UpdateProfilePic(ctx *gin.Context) {
-
 	// Parse the multipart form, with a max memory of 10MB
 	if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil {
 		utils.HandleError(ctx, err)
@@ -310,6 +326,7 @@ func (h *usersHandler) UpdateProfilePic(ctx *gin.Context) {
 		utils.HandleError(ctx, errors.New("user ID not found in context"))
 		return
 	}
+	key := "user:userID:" + userID.(string)
 	profile, err := h.userService.UpdateUserProfilePic(ctx, userID.(string), dto.FileUploadPayload{File: file, FileInfo: header})
 	if err != nil {
 		utils.HandleError(ctx, err)
@@ -326,4 +343,5 @@ func (h *usersHandler) UpdateProfilePic(ctx *gin.Context) {
 		Message: "Profile picture updated successfully",
 		Data:    userResponse,
 	})
+	cache.Del(ctx, key)
 }

@@ -17,7 +17,7 @@ export const WarningModalContent = ({
   isLoading
 }: WarningModalContentProps) => {
   return (
-    <div>
+    <div className="space-y-4">
       <p>{message}</p>
       <div className="flex items-center justify-end gap-2">
         {handleCancel && (

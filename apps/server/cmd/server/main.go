@@ -16,6 +16,8 @@ import (
 	"github.com/giridhar-m-a/custom_form_app/internal/db"
 	"github.com/giridhar-m-a/custom_form_app/internal/services"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
+	"github.com/giridhar-m-a/custom_form_app/internal/webhook"
+	"github.com/giridhar-m-a/custom_form_app/internal/workers"
 
 	_ "github.com/giridhar-m-a/custom_form_app/docs"
 	swaggerFiles "github.com/swaggo/files"
@@ -28,7 +30,6 @@ import (
 // @contact.name API Support
 // @contact.url http://giridhar.dev/
 // @contact.email m.a.giridhar08@gmail.com
-// @host be.custom-form-app.home
 // @BasePath /api/v1
 // @schemes https http
 // @securityDefinitions.apikey BearerAuth
@@ -71,6 +72,8 @@ func main() {
 
 	// Create Gin router
 	r := gin.Default()
+
+	webhook.RegisterWebhookRoutes(r)
 
 	// Configure CORS
 	r.Use(cors.New(cors.Config{
@@ -115,6 +118,10 @@ func main() {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
+
+	// Initialize scheduler
+	log.Println("Initializing scheduler...")
+	workers.Start(1)
 
 	// Wait for interrupt signal to gracefully shutdown the server
 	quit := make(chan os.Signal, 1)

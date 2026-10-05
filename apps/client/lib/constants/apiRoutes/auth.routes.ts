@@ -10,5 +10,6 @@ export const AUTH_ROUTES = {
   verify: `${base}/verify`,
   refreshToken: `${base}/refresh-token`,
   resetRequest: `${base}/request-password-reset`,
-  resetPassword: `${base}/reset-password`
+  resetPassword: `${base}/reset-password`,
+  tempUser: `${base}/temp-user-auth`
 }

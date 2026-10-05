@@ -27,6 +27,15 @@ export const loginWithCredentials = async (data: SignInSchemaType) => {
   }
 }
 
+export const createTempUser = async (name: string) => {
+  try {
+    const response = await POST<AuthResponse>(AUTH_ROUTES.tempUser, { name: name })
+    return response
+  } catch (e) {
+    return errorHandler<AuthResponse>(e)
+  }
+}
+
 export const loginWithGoogle = async (code: string) => {
   try {
     const response = await GET<AuthResponse>(`${AUTH_ROUTES.login.google}?code=${code}`)

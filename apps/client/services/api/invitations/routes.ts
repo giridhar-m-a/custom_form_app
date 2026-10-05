@@ -5,7 +5,14 @@ import { DELETE, GET, POST, POST_FORM_DATA } from '@/lib/api.config'
 import { invitationsRoutes } from '@/lib/constants/apiRoutes/invitations.routes'
 import { errorHandler } from '@/lib/errorHandler'
 import { ApiResponse } from '@/types/api.types'
-import { BulkInvitationResponse, Invitation, InvitationFilter } from '@/types/invitations.types'
+import {
+  AnonymousInvitationPayload,
+  AnonymousInvitationResponse,
+  BulkInvitationResponse,
+  Invitation,
+  InvitationFilter,
+  VerifyInvitationResponse
+} from '@/types/invitations.types'
 
 interface GetInvitationsByFormIdParams {
   formId: string
@@ -17,7 +24,10 @@ export const getInvitationsByFormId = async ({
   params
 }: GetInvitationsByFormIdParams): Promise<ApiResponse<Invitation[]>> => {
   try {
-    const res = await GET<Invitation[]>(`${invitationsRoutes.base}`, { params: { ...params, formId } })
+    const exclude = params.exclude?.length ? params.exclude : []
+    const res = await GET<Invitation[]>(`${invitationsRoutes.base}`, {
+      params: { ...params, formId, exclude }
+    })
     return res
   } catch (e) {
     console.error(e)
@@ -58,5 +68,33 @@ export const deleteInvitation = async ({ invitationId }: { invitationId: string 
   } catch (e) {
     console.error(e)
     return errorHandler<undefined>(e)
+  }
+}
+
+export const verifyInvitation = async ({
+  token
+}: {
+  token: string
+}): Promise<ApiResponse<VerifyInvitationResponse>> => {
+  try {
+    const res = await POST<VerifyInvitationResponse>(`${invitationsRoutes.verify}`, { token })
+    return res
+  } catch (e) {
+    console.error(e)
+    return errorHandler<VerifyInvitationResponse>(e)
+  }
+}
+
+export const createAnonymousInvitation = async ({
+  data
+}: {
+  data: AnonymousInvitationPayload
+}): Promise<ApiResponse<AnonymousInvitationResponse>> => {
+  try {
+    const res = await POST<AnonymousInvitationResponse>(`${invitationsRoutes.anonymous}`, data)
+    return res
+  } catch (e) {
+    console.error(e)
+    return errorHandler<AnonymousInvitationResponse>(e)
   }
 }

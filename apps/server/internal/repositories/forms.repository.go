@@ -16,6 +16,7 @@ type FormsRepository interface {
 	GetFormsList(params sqlc.ListFormsParams, ctx context.Context) ([]sqlc.ListFormsRow, error)
 	DeleteForm(id string, ctx context.Context) (sqlc.DeleteFormRow, error)
 	FormRepoWithTx(tx *sql.Tx) FormsRepository
+	SoftDeleteForm(id uuid.UUID, ctx context.Context) error
 }
 
 type formsRepository struct {
@@ -60,4 +61,8 @@ func (r *formsRepository) FormRepoWithTx(tx *sql.Tx) FormsRepository {
 	return &formsRepository{
 		q: r.q.WithTx(tx),
 	}
+}
+
+func (r *formsRepository) SoftDeleteForm(id uuid.UUID, ctx context.Context) error {
+	return r.q.SoftDeleteForm(ctx, id)
 }

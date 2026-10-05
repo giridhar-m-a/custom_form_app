@@ -1,6 +1,9 @@
 package dto
 
-import "github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
+import (
+	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
+	"github.com/google/uuid"
+)
 
 type CreateInvitationDTO struct {
 	FormID string `json:"form_id"`
@@ -21,9 +24,9 @@ type UpdateInvitationDTO struct {
 }
 
 type InvitationListQueryDto struct {
-	FormId  string                `form:"formId"`
-	Exclude sqlc.InvitationStatus `form:"exclude"`
-	Status  sqlc.InvitationStatus `form:"status"`
+	FormId  string                  `form:"formId"`
+	Exclude []sqlc.InvitationStatus `form:"exclude"`
+	Status  sqlc.InvitationStatus   `form:"status"`
 	Query
 }
 
@@ -49,4 +52,31 @@ type InvitationListResponse struct {
 	Message    string                  `json:"message" example:"Invitations retrieved successfully"`
 	Data       []InvitationResponseDto `json:"data"`
 	Pagination PaginationResponse      `json:"pagination"`
+}
+
+type UpdateInvitationsResendParams struct {
+	ResendID     uuid.UUID `json:"resend_id"`
+	InvitationID uuid.UUID `json:"invitation_id"`
+}
+
+type InvitationEmailParams struct {
+	PlatformName   string
+	UserName       string
+	Title          string
+	InvitationURL  string
+	Year           int
+	CompanyAddress string
+}
+
+type VerifyInvitationParams struct {
+	Token string `json:"token"`
+}
+
+type GenerateAnonymousInvitationTokenParams struct {
+	FormID string `json:"formId"`
+}
+
+type GenerateAnonymousInvitationTokenResponse struct {
+	Token     string `json:"token"`
+	ExpiresIn string `json:"expiresIn"`
 }

@@ -10,6 +10,7 @@ type User struct {
 	UserCreatedAt  time.Time `json:"createdAt"`
 	UserUpdatedAt  time.Time `json:"updatedAt"`
 	UserProfilePic string    `json:"profilePic"`
+	IsTemp         bool      `json:"isTemp"`
 }
 
 type UserProfilePicResponse struct {

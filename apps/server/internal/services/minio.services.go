@@ -3,9 +3,11 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
@@ -22,7 +24,8 @@ func InitMinio() {
 	accessKey := utils.GetEnv("MINIO_USER", "")
 	secretKey := utils.GetEnv("MINIO_PASSWORD", "")
 	useSSL := utils.GetEnvAsBool("MINIO_USE_SSL", false)
-	client, err := minio.New("minio.custom-form-app.home", &minio.Options{
+	domain:=utils.GetEnv("MINIO_DOMAIN","")
+	client, err := minio.New(domain, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
 	})
@@ -80,7 +83,7 @@ func GetMinioSignedURL(bucketName, objectName string, expiry time.Duration, vers
 		log.Printf("MinIO client not initialized")
 		return nil, errors.New("MinIO client not initialized")
 	}
-	minioClientDomain := utils.GetEnv("MINIO_FRONTEND_DOMAIN", "minio.custom-form-app.home")
+	minioClientDomain := utils.GetEnv("MINIO_DOMAIN", "minio.custom-form-app.home")
 	reqParams := make(url.Values) // additional query params if needed
 	if versionID != "" {
 		reqParams.Set("versionId", versionID)
@@ -98,4 +101,41 @@ func GetMinioSignedURL(bucketName, objectName string, expiry time.Duration, vers
 	}
 
 	return presignedURL, nil
+}
+
+func DeleteFolderBulk(bucketName, folderPrefix string, ctx context.Context) error {
+	if MinioClient == nil {
+		log.Printf("MinIO client not initialized")
+		return errors.New("MinIO client not initialized")
+	}
+	if !strings.HasSuffix(folderPrefix, "/") {
+		folderPrefix += "/"
+	}
+
+	objectsCh := MinioClient.ListObjects(ctx, bucketName, minio.ListObjectsOptions{
+		Prefix:    folderPrefix,
+		Recursive: true,
+	})
+
+	removeObjectsCh := make(chan minio.ObjectInfo)
+	go func() {
+		defer close(removeObjectsCh)
+		for obj := range objectsCh {
+			if obj.Err != nil {
+				log.Printf("[MinIO] Error listing object: %v", obj.Err)
+				continue
+			}
+			log.Printf("[MinIO] Queuing for deletion: %s", obj.Key) // 👈 log key before sending
+			removeObjectsCh <- obj
+		}
+	}()
+
+	for removeErr := range MinioClient.RemoveObjects(ctx, bucketName, removeObjectsCh, minio.RemoveObjectsOptions{}) {
+		if removeErr.Err != nil {
+			return fmt.Errorf("bulk delete error on object %s: %w", removeErr.ObjectName, removeErr.Err) // 👈 ObjectName available here
+		}
+	}
+
+	log.Printf("[MinIO] Successfully deleted all objects under prefix: %s", folderPrefix)
+	return nil
 }

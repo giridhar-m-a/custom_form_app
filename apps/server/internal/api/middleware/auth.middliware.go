@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,8 +12,10 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		jwtSvc := services.NewJWTService()
 		authHeader := c.GetHeader("Authorization")
+
 		userID, err := jwtSvc.ValidateToken(authHeader)
 		if err != nil {
+			log.Printf("[Middleware] Authentication failed: %v", err)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.Error(), "status": http.StatusUnauthorized})
 			return
 		}

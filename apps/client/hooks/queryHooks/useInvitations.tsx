@@ -1,6 +1,7 @@
 import { InvitationType } from '@/app/schemas/invitation.schemas'
 import { GET_INVITATIONS_BY_FORM_ID } from '@/lib/constants/queryKeys/invitations.keys'
 import {
+  createAnonymousInvitation,
   createBulkInvitation,
   createInvitation,
   deleteInvitation,
@@ -23,9 +24,13 @@ export const useCreateInvitation = () => {
   return useMutation({
     mutationKey: ['createInvitation'],
     mutationFn: ({ data }: { data: InvitationType }) => createInvitation({ data }),
-    onSuccess: ({ message }) => {
-      toast.success(message)
-      queryClient.invalidateQueries({ queryKey: ['invitations'] })
+    onSuccess: ({ message, status }) => {
+      if (status == 200 || status == 201) {
+        toast.success(message)
+        queryClient.invalidateQueries({ queryKey: ['invitations'] })
+      } else {
+        throw new Error(message)
+      }
     },
     onError: ({ message }) => {
       toast.error(message)
@@ -61,6 +66,25 @@ export const useDeleteInvitation = () => {
     onSuccess: ({ message }) => {
       toast.success(message)
       queryClient.invalidateQueries({ queryKey: ['invitations'] })
+    },
+    onError: ({ message }) => {
+      toast.error(message)
+    }
+  })
+}
+
+export const useCreateAnonymousInvitation = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ['createAnonymousInvitation'],
+    mutationFn: ({ data }: { data: { formId: string } }) => createAnonymousInvitation({ data }),
+    onSuccess: ({ message, status }) => {
+      if (status == 200 || status == 201) {
+        toast.success(message)
+        queryClient.invalidateQueries({ queryKey: ['invitations'] })
+      } else {
+        throw new Error(message)
+      }
     },
     onError: ({ message }) => {
       toast.error(message)

@@ -7,7 +7,8 @@ const initialState: User = {
   profilePic: '',
   createdAt: '',
   updatedAt: '',
-  id: ''
+  id: '',
+  isTemp: false
 }
 
 export const meSlice = createSlice({
@@ -22,16 +23,18 @@ export const meSlice = createSlice({
       state.fullName = action.payload.fullName
       state.email = action.payload.email
       state.profilePic = action.payload.profilePic
+      state.isTemp = action.payload.isTemp
     },
     setMyName: (state, action: PayloadAction<string>) => {
       state.fullName = action.payload
     }
   },
   selectors: {
-    getMe: state => state
+    getMe: state => state,
+    getIsTemp: state => state.isTemp
   }
 })
 
 export const { setMe, setMyName } = meSlice.actions
-export const { getMe } = meSlice.selectors
+export const { getMe, getIsTemp } = meSlice.selectors
 export default meSlice.reducer

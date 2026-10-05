@@ -21,6 +21,8 @@ type FormsHandler interface {
 	DeleteForm(ctx *gin.Context)
 	GetFormFields(ctx *gin.Context)
 	UpdateFormFields(ctx *gin.Context)
+	GetFormForResponse(ctx *gin.Context)
+	GetFormFieldsForResponse(ctx *gin.Context)
 }
 
 type formHandler struct {
@@ -201,20 +203,26 @@ func (r *formHandler) GetForms(ctx *gin.Context) {
 
 	var formResponse []dto.FormResponse
 	for _, form := range forms.Forms {
+		var invitationScheduleGap *int32
+		if form.InvitationScheduleGap.Valid {
+			invitationScheduleGap = &form.InvitationScheduleGap.Int32
+		}
+
 		formResponse = append(formResponse, dto.FormResponse{
-			ID:                  form.FormID.String(),
-			Title:               form.FormTitle,
-			CreatedAt:           utils.NullTimeToString(form.FormCreatedAt),
-			UpdatedAt:           utils.NullTimeToString(form.FormUpdatedAt),
-			Description:         utils.NullStringToString(form.FormDescription),
-			CreatedBy:           utils.NullUUIDToString(form.CreatedBy),
-			Status:              string(form.FormStatus.FormStatus),
-			Access:              string(form.FormAccess.FormAccess),
-			SchedulingID:        utils.NullUUIDToString(form.SchedulingID),
-			ScheduledTime:       utils.NullTimeToString(form.ScheduledTime),
-			ClosingTime:         utils.NullTimeToString(form.ClosingTime),
-			IsScheduleCompleted: utils.NullBoolToBool(form.IsScheduleCompleted, false),
-			IsScheduled:         utils.NullBoolToBool(form.IsScheduled, false),
+			ID:                    form.FormID.String(),
+			Title:                 form.FormTitle,
+			CreatedAt:             utils.NullTimeToString(form.FormCreatedAt),
+			UpdatedAt:             utils.NullTimeToString(form.FormUpdatedAt),
+			Description:           utils.NullStringToString(form.FormDescription),
+			CreatedBy:             utils.NullUUIDToString(form.CreatedBy),
+			Status:                string(form.FormStatus.FormStatus),
+			Access:                string(form.FormAccess.FormAccess),
+			SchedulingID:          utils.NullUUIDToString(form.SchedulingID),
+			ScheduledTime:         utils.NullTimeToString(form.ScheduledTime),
+			ClosingTime:           utils.NullTimeToString(form.ClosingTime),
+			IsScheduleCompleted:   utils.NullBoolToBool(form.IsScheduleCompleted, false),
+			IsScheduled:           utils.NullBoolToBool(form.IsScheduled, false),
+			InvitationScheduleGap: invitationScheduleGap,
 		})
 	}
 
@@ -254,11 +262,30 @@ func (r *formHandler) GetSingleForm(ctx *gin.Context) {
 		utils.HandleError(ctx, err)
 		return
 	}
+	var invitationScheduleGap *int32
+	if form.InvitationScheduleGap.Valid {
+		invitationScheduleGap = &form.InvitationScheduleGap.Int32
+	}
 
 	ctx.JSON(200, gin.H{
 		"status":  200,
 		"message": "Form retrieved successfully",
-		"data":    form,
+		"data": dto.FormResponse{
+			ID:                    form.FormID.String(),
+			Title:                 form.FormTitle,
+			Description:           utils.NullStringToString(form.FormDescription),
+			CreatedBy:             utils.NullUUIDToString(form.CreatedBy),
+			Status:                string(form.FormStatus.FormStatus),
+			CreatedAt:             utils.NullTimeToString(form.FormCreatedAt),
+			UpdatedAt:             utils.NullTimeToString(form.FormUpdatedAt),
+			Access:                string(form.FormAccess.FormAccess),
+			SchedulingID:          utils.NullUUIDToString(form.SchedulingID),
+			ScheduledTime:         utils.NullTimeToString(form.ScheduledTime),
+			ClosingTime:           utils.NullTimeToString(form.ClosingTime),
+			IsScheduleCompleted:   utils.NullBoolToBool(form.IsScheduleCompleted, false),
+			IsScheduled:           utils.NullBoolToBool(form.IsScheduled, false),
+			InvitationScheduleGap: invitationScheduleGap,
+		},
 	})
 }
 
@@ -321,7 +348,7 @@ func (r *formHandler) UpdateForm(ctx *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        formID  path      string  true  "Form ID"
-// @Success      200     {object}  object{status=string,message=string,data=dto.FormResponse}  "Form deleted successfully"
+// @Success      200     {object}  object{status=string,message=string}  "Form deleted successfully"
 // @Failure      400     {object}  object{status=string,message=string}  "Invalid request payload"
 // @Failure      401     {object}  object{status=string,message=string}  "Unauthorized"
 // @Failure      500     {object}  object{status=string,message=string}  "Internal server error"
@@ -333,7 +360,7 @@ func (r *formHandler) DeleteForm(ctx *gin.Context) {
 		utils.HandleError(ctx, errors.New("form id is required"))
 		return
 	}
-	deletedForm, err := r.formService.DeleteForm(ctx, formID)
+	err := r.formService.SoftDeleteForm(formID, ctx)
 	if err != nil {
 		utils.HandleError(ctx, err)
 		return
@@ -342,16 +369,6 @@ func (r *formHandler) DeleteForm(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"status":  200,
 		"message": "Form deleted successfully",
-		"data": dto.FormResponse{
-			ID:          deletedForm.FormID.String(),
-			Title:       deletedForm.FormTitle,
-			Description: deletedForm.FormDescription.String,
-			CreatedBy:   deletedForm.CreatedBy.UUID.String(),
-			Status:      string(deletedForm.FormStatus.FormStatus),
-			CreatedAt:   deletedForm.FormCreatedAt.Time.String(),
-			UpdatedAt:   deletedForm.FormUpdatedAt.Time.String(),
-			Access:      string(deletedForm.FormAccess.FormAccess),
-		},
 	})
 }
 
@@ -374,6 +391,85 @@ func (r *formHandler) GetFormFields(ctx *gin.Context) {
 		return
 	}
 	formFields, err := r.formService.GetFormFieldsByFormId(ctx, formID)
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	serializedFields := []dto.FormFieldResponseDto{}
+	for _, field := range formFields {
+		serializedFields = append(serializedFields, serializers.MapCreatedFormFieldToResponse(field))
+	}
+
+	ctx.JSON(200, gin.H{
+		"status":  200,
+		"message": "Form fields retrieved successfully",
+		"data":    serializedFields,
+	})
+}
+
+// @Summary      Get form by ID for response
+// @Description  Gets a single form for response submission
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Success      200     {object}  object{status=string,message=string,data=dto.FormResponse}  "Form retrieved successfully"
+// @Failure      400     {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401     {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500     {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms/response [get]
+// @Security     BearerAuth
+func (r *formHandler) GetFormForResponse(ctx *gin.Context) {
+	formID, exists := ctx.Get("formID")
+	if !exists {
+		utils.HandleError(ctx, errors.New("form id is required"))
+		return
+	}
+	form, err := r.formService.GetSingleForm(ctx, formID.(string))
+	if err != nil {
+		utils.HandleError(ctx, err)
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"status":  200,
+		"message": "Form retrieved successfully",
+		"data": dto.FormResponse{
+			ID:                  form.FormID.String(),
+			Title:               form.FormTitle,
+			Description:         utils.NullStringToString(form.FormDescription),
+			CreatedBy:           utils.NullUUIDToString(form.CreatedBy),
+			Status:              string(form.FormStatus.FormStatus),
+			CreatedAt:           utils.NullTimeToString(form.FormCreatedAt),
+			UpdatedAt:           utils.NullTimeToString(form.FormUpdatedAt),
+			Access:              string(form.FormAccess.FormAccess),
+			SchedulingID:        utils.NullUUIDToString(form.SchedulingID),
+			ScheduledTime:       utils.NullTimeToString(form.ScheduledTime),
+			ClosingTime:         utils.NullTimeToString(form.ClosingTime),
+			IsScheduleCompleted: utils.NullBoolToBool(form.IsScheduleCompleted, false),
+			IsScheduled:         utils.NullBoolToBool(form.IsScheduled, false),
+		},
+	})
+}
+
+// @Summary      Get form fields for response
+// @Description  Gets form fields for the response submission
+// @Tags         Forms
+// @Accept       json
+// @Produce      json
+// @Success      200     {object}  object{status=string,message=string,data=[]dto.FormFieldResponseDto}  "Form fields retrieved successfully"
+// @Failure      400     {object}  object{status=string,message=string}  "Invalid request payload"
+// @Failure      401     {object}  object{status=string,message=string}  "Unauthorized"
+// @Failure      500     {object}  object{status=string,message=string}  "Internal server error"
+// @Router       /forms/fields/response [get]
+// @Security     BearerAuth
+func (r *formHandler) GetFormFieldsForResponse(ctx *gin.Context) {
+	formID, exists := ctx.Get("formID")
+	if !exists {
+		utils.HandleError(ctx, errors.New("form id is required"))
+		return
+	}
+	formFields, err := r.formService.GetFormFieldsByFormId(ctx, formID.(string))
 	if err != nil {
 		utils.HandleError(ctx, err)
 		return

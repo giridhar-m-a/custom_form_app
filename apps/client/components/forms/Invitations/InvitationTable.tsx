@@ -1,25 +1,31 @@
 'use client'
 
-import { DataTable } from '@/components/common/DataTable'
-import { useInvitations } from '@/hooks/queryHooks/useInvitations'
-import { Invitation, InvitationFilter, InvitationStatus } from '@/types/invitations.types'
-import { useMemo, useState } from 'react'
-import { InvitationsColumn } from './invitations.config'
-import { Pagination } from '@/types/api.types'
-import { Search } from '@/components/common/Search'
 import { CommonSelect } from '@/components/common/CommonSelect'
-import { Button } from '@/components/ui/button'
-import { RxReset } from 'react-icons/rx'
+import { DataTable } from '@/components/common/DataTable'
 import { Modal } from '@/components/common/Modal'
-import { InvitationForm } from './InvitationForm'
+import { Search } from '@/components/common/Search'
+import { Button } from '@/components/ui/button'
+import { useInvitations } from '@/hooks/queryHooks/useInvitations'
+import { Pagination } from '@/types/api.types'
+import { access, status } from '@/types/form.types'
+import { InvitationFilter, InvitationStatus } from '@/types/invitations.types'
 import { Mail } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { RxReset } from 'react-icons/rx'
 import BulkInvitationForm from './BulkInvitationForm'
+import { InvitationForm } from './InvitationForm'
+import { InvitationsColumn } from './invitations.config'
+import { useSelector } from 'react-redux'
+import { getIsTemp } from '@/store/slices/me.slice'
+import { AnonymousInvitation } from './AnonymousInvitation'
 
 interface InvitationTableProps {
   formId: string
+  status: status
+  access: access
 }
 
-export const InvitationTable = ({ formId }: InvitationTableProps) => {
+export const InvitationTable = ({ formId, status, access }: InvitationTableProps) => {
   const [params, setParams] = useState<InvitationFilter>({
     page: 1,
     limit: 15,
@@ -28,6 +34,7 @@ export const InvitationTable = ({ formId }: InvitationTableProps) => {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [bulkInviteOpen, setBulkInviteOpen] = useState(false)
   const { data, isFetching } = useInvitations({ formId, params })
+  const isTemp = useSelector(getIsTemp)
 
   const pagination = useMemo<Pagination>(
     () => ({
@@ -44,9 +51,14 @@ export const InvitationTable = ({ formId }: InvitationTableProps) => {
   )
 
   const statusOptions: { value: InvitationStatus; label: string }[] = [
-    { value: 'invited', label: 'Invited' },
     { value: 'pending', label: 'Pending' },
+    { value: 'delivered', label: 'Delivered' },
     { value: 'submitted', label: 'Submitted' },
+    { value: 'bounced', label: 'Bounced' },
+    { value: 'clicked', label: 'Clicked' },
+    { value: 'complained', label: 'Complained' },
+    { value: 'delayed', label: 'Delayed' },
+    { value: 'opened', label: 'Opened' },
     { value: 'failed', label: 'Failed' }
   ]
 
@@ -63,26 +75,33 @@ export const InvitationTable = ({ formId }: InvitationTableProps) => {
       <div className="flex items-center justify-between">
         <h1>Invitations</h1>
         <div className="flex items-center gap-2 justify-end">
-          <Modal
-            description="Invite new users to fill the form"
-            title="Invite Users"
-            open={inviteOpen}
-            onOpenChange={setInviteOpen}
-            trigger={
-              <Button variant={'outline'} size={'icon'}>
-                <Mail />
-              </Button>
-            }>
-            <InvitationForm formId={formId} setInviteOpen={setInviteOpen} />
-          </Modal>
-          <Modal
-            description="Invite new users to fill the form"
-            title="Invite Users"
-            open={bulkInviteOpen}
-            onOpenChange={setBulkInviteOpen}
-            trigger={<Button variant={'outline'}>Bulk Invite</Button>}>
-            <BulkInvitationForm formId={formId} setInviteOpen={setBulkInviteOpen} />
-          </Modal>
+          {(isTemp || access === 'public') && <AnonymousInvitation formId={formId} />}
+          {!isTemp && (
+            <>
+              <Modal
+                description="Invite new users to fill the form"
+                title="Invite Users"
+                open={inviteOpen}
+                onOpenChange={setInviteOpen}
+                trigger={
+                  <Button variant={'outline'} size={'icon'}>
+                    <Mail />
+                  </Button>
+                }>
+                <InvitationForm formId={formId} setInviteOpen={setInviteOpen} />
+              </Modal>
+              {status !== 'closed' && (
+                <Modal
+                  description="Invite new users to fill the form"
+                  title="Invite Users"
+                  open={bulkInviteOpen}
+                  onOpenChange={setBulkInviteOpen}
+                  trigger={<Button variant={'outline'}>Bulk Invite</Button>}>
+                  <BulkInvitationForm formId={formId} setInviteOpen={setBulkInviteOpen} />
+                </Modal>
+              )}
+            </>
+          )}
         </div>
       </div>
       <DataTable
@@ -95,8 +114,6 @@ export const InvitationTable = ({ formId }: InvitationTableProps) => {
         totalRecords={pagination.totalRecords}
         handlePageChange={page => setParams({ ...params, page })}
         handlePageSizeChange={size => setParams({ ...params, limit: size })}
-        maxHeight="calc(100vh - 65vh)"
-        minHeight="calc(100vh - 65vh)"
         headerTemplate={
           <div className="flex items-center justify-evenly gap-4">
             <Search

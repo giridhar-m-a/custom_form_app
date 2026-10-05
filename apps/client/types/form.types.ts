@@ -58,6 +58,10 @@ export interface FormType {
   status: status
   title: string
   updatedAt: string
+  closingTime?: Date
+  scheduledTime?: Date
+  isScheduled: boolean
+  invitationScheduleGap?: number
 }
 
 export interface FormFilter {

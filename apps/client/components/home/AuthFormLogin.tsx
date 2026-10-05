@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import AuthFormSignUp from './AuthFormSignUp'
 import { useGoogleLogin } from '@react-oauth/google'
 import AuthFormReset from './AuthFormReset'
+import TempUser from './TempUser'
 
 const AuthFormLogin = () => {
   const [isSignUp, setIsSignUp] = useState<'login' | 'signup' | 'forget'>('login')
@@ -56,7 +57,7 @@ const AuthFormLogin = () => {
       <CardContent>
         <Button
           onClick={handleGoogleLogin}
-          className="w-full mb-6 text-gray-700 hover:text-gray-700! border! border-gray-300! bg-white! hover:bg-gray-50! transition-all"
+          className="w-full hidden mb-6 text-gray-700 hover:text-gray-700! border! border-gray-300! bg-white! hover:bg-gray-50! transition-all"
           variant="outline"
           size="lg"
           disabled={isGoogleLoading || isFormLoading}>
@@ -68,7 +69,7 @@ const AuthFormLogin = () => {
           Continue with Google
         </Button>
 
-        <div className="relative my-4">
+        <div className="relative hidden my-4">
           <Separator />
           <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs font-semibold text-gray-400 uppercase">
             or
@@ -153,6 +154,7 @@ const AuthFormLogin = () => {
         )}
         {isSignUp === 'signup' && <AuthFormSignUp />}
         {isSignUp === 'forget' && <AuthFormReset />}
+        <TempUser />
         <p className="mt-4 text-center text-sm text-gray-500">
           {isSignUp === 'login' || isSignUp === 'forget' ? 'Already have an account? ' : "Don't have an account? "}
           <button

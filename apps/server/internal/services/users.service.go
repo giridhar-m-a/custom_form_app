@@ -4,15 +4,15 @@ package services
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
-	"github.com/giridhar-m-a/custom_form_app/internal/cache"
 	"github.com/giridhar-m-a/custom_form_app/internal/db/sqlc"
 	"github.com/giridhar-m-a/custom_form_app/internal/dto"
 	"github.com/giridhar-m-a/custom_form_app/internal/repositories"
+	"github.com/giridhar-m-a/custom_form_app/internal/scheduler"
 	"github.com/giridhar-m-a/custom_form_app/internal/utils"
 	"github.com/google/uuid"
 )
@@ -28,6 +28,8 @@ type UserService interface {
 	DeleteUser(ctx context.Context, user string) error
 	DeleteUserProfilePic(ctx context.Context, user string) error
 	GetUserPassword(ctx context.Context, userID string) (string, error)
+	CreateTempUser(ctx context.Context, name string) (sqlc.User, error)
+	SoftDeleteUser(ctx context.Context, user string) error
 }
 
 type userService struct {
@@ -46,7 +48,7 @@ func (s *userService) CreateUser(ctx context.Context, data map[string]any) (sqlc
 
 	newUser, err := s.repo.Create(ctx, sqlc.CreateUserParams{
 		UserFullName: data["name"].(string),
-		UserEmail:    data["email"].(string),
+		UserEmail:    utils.ConvertStringToNullString(data["email"].(string)),
 		UserGoogleID: utils.ConvertStringToNullString(data["id"].(string)),
 		UserPassword: utils.ConvertStringToNullString(password),
 	})
@@ -66,27 +68,12 @@ func (s *userService) GetUserDetailsByEmail(ctx context.Context, email string) (
 }
 
 func (s *userService) GetUserDetailsByGoogleId(ctx context.Context, googleID string) (sqlc.GetUserByGoogleIdRow, error) {
-	key := "user:google_id:" + googleID
-
-	// 1. Try cache
-	cachedUser, err := cache.Get(ctx, key)
-	if err == nil && cachedUser != "" {
-		var user sqlc.GetUserByGoogleIdRow
-		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
-			// ✅ Cache hit, return immediately
-			return user, nil
-		}
-	}
 
 	// 2. Fallback to DB
 	user, err := s.repo.GetByGoogleID(ctx, googleID)
 	if err != nil {
 		return sqlc.GetUserByGoogleIdRow{}, err
 	}
-
-	// 3. Save to cache (async or ignore error if you like)
-	userJSON, _ := json.Marshal(user)
-	_ = cache.Set(ctx, key, string(userJSON))
 
 	return user, nil
 }
@@ -106,6 +93,7 @@ func (s *userService) UpdateUser(ctx context.Context, user string, data dto.User
 }
 
 func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, data dto.FileUploadPayload) (sqlc.UpdateUserProfilePicRow, error) {
+	slog.Info("Updating User Profile Pic")
 	bucket := utils.GetEnv("MINIO_BUCKET_NAME", "custom-form-app")
 	file := data.File
 	fileType := data.FileInfo.Header.Get("Content-Type")
@@ -120,7 +108,7 @@ func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, dat
 		return sqlc.UpdateUserProfilePicRow{}, errors.New("invalid image")
 	}
 
-	path := fmt.Sprintf("%s/profile/%s", user, name)
+	path := fmt.Sprintf("users/%s/profile/%s", user, name)
 	userUUID, err := utils.ConvertStringToUUID(user)
 	if err != nil {
 		return sqlc.UpdateUserProfilePicRow{}, err
@@ -129,14 +117,18 @@ func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, dat
 	profile, err := s.repo.GetProfilePic(ctx, userUUID)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			slog.Info("No profile pic found, creating new one")
 			_, errUpload := MinioUploadFile(bucket, path, file, size, fileType)
 			if errUpload != nil {
+				slog.Error("Error uploading profile pic for updating: ","Error", errUpload.Error())
 				return sqlc.UpdateUserProfilePicRow{}, errUpload
 			}
 			newProfile, errCreate := s.CreateUserProfilePic(ctx, userUUID, path, size, fileType)
 			if errCreate != nil {
+				slog.Error("Error creating profile pic: ", "Error", errCreate.Error())
 				return sqlc.UpdateUserProfilePicRow{}, errCreate
 			}
+			slog.Info("Profile pic created successfully", "FileID", newProfile.FileID, "FileName", newProfile.FileName, "FileSize", newProfile.FileSize, "FileType", newProfile.FileType)
 			return sqlc.UpdateUserProfilePicRow{
 				FileID:   newProfile.FileID,
 				FileName: newProfile.FileName,
@@ -145,17 +137,19 @@ func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, dat
 				UserID:   newProfile.UserID,
 			}, nil
 		} else {
+			slog.Error("Error getting profile pic: ", "Error", err.Error())
 			return sqlc.UpdateUserProfilePicRow{}, err
 		}
 	}
 
 	err = MinioDeleteFile(bucket, profile.FileName)
 	if err != nil {
-		fmt.Printf("error deleting profile pic: %v", err)
+		slog.Error("Error deleting profile pic: ", "Error", err.Error())
 	}
 
 	_, err = MinioUploadFile(bucket, path, file, size, fileType)
 	if err != nil {
+		slog.Error("Error uploading profile pic: ", "Error", err.Error())
 		return sqlc.UpdateUserProfilePicRow{}, err
 	}
 
@@ -168,6 +162,7 @@ func (s *userService) UpdateUserProfilePic(ctx context.Context, user string, dat
 	})
 
 	if err != nil {
+		slog.Error("Error updating profile pic: ", "Error", err.Error())
 		return sqlc.UpdateUserProfilePicRow{}, err
 	}
 
@@ -238,4 +233,24 @@ func (s *userService) GetUserPassword(ctx context.Context, userID string) (strin
 
 	return userPassword.String, nil
 
+}
+
+func (s *userService) CreateTempUser(ctx context.Context, name string) (sqlc.User, error) {
+	user, err := s.repo.CreateTempUser(ctx, name)
+	if err == nil {
+		scheduler.ScheduleDeleteUser(user.UserID.String(), time.Now().Add(time.Hour*24))
+	}
+	return user, err
+}
+
+func (s *userService) SoftDeleteUser(ctx context.Context, user string) error {
+	userUUID, err := utils.ConvertStringToUUID(user)
+	if err != nil {
+		return err
+	}
+	err= s.repo.SoftDeleteUser(ctx, userUUID)
+	if err == nil {
+		scheduler.ScheduleDeleteUser(user, time.Now())
+	}
+	return err
 }

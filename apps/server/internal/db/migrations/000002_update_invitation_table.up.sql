@@ -32,16 +32,3 @@ CREATE TABLE response_options (
 -- 6. Create indexes on response_options table
 CREATE INDEX IF NOT EXISTS idx_response_options_response_id ON response_options(response_id);
 CREATE INDEX IF NOT EXISTS idx_response_options_form_option_id ON response_options(form_option_id);
-
--- 7. Insert data into response_options table
-INSERT INTO response_options (response_id, form_option_id)
-SELECT response_id, form_option_id
-FROM form_responses
-WHERE form_option_id IS NOT NULL;
-
--- 8. Drop idx_form_responses_option_id index
-DROP INDEX IF EXISTS idx_form_responses_option_id;
-
--- 9. Drop form_option_id column from form_responses table
-ALTER TABLE form_responses
-DROP COLUMN form_option_id;

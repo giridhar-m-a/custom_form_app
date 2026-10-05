@@ -139,23 +139,32 @@ CREATE INDEX IF NOT EXISTS idx_invitations_invited_by ON invitations(invited_by)
 CREATE INDEX IF NOT EXISTS idx_invitations_status ON invitations(status);
 
 -----------------------------
--- Table: form_responses
+-- Table: form_submissions
 -----------------------------
-CREATE TABLE IF NOT EXISTS form_responses (
-    response_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE IF NOT EXISTS form_submissions (
+    submission_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     form_id UUID NOT NULL REFERENCES forms(form_id) ON DELETE CASCADE,
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    respondent_id UUID REFERENCES invitations(invitation_id) ON DELETE SET NULL,
-    form_option_id UUID REFERENCES form_field_options(option_id) ON DELETE SET NULL,
-    form_field_id UUID NOT NULL REFERENCES form_fields(field_id) ON DELETE CASCADE,
-    response_text TEXT
+    respondent_id UUID REFERENCES invitations(invitation_id) ON DELETE SET NULL
 );
 
 -- Indexes
-CREATE INDEX IF NOT EXISTS idx_form_responses_form_id ON form_responses(form_id);
-CREATE INDEX IF NOT EXISTS idx_form_responses_respondent_id ON form_responses(respondent_id);
-CREATE INDEX IF NOT EXISTS idx_form_responses_field_id ON form_responses(form_field_id);
-CREATE INDEX IF NOT EXISTS idx_form_responses_option_id ON form_responses(form_option_id);
+CREATE INDEX IF NOT EXISTS idx_form_submissions_form_id ON form_submissions(form_id);
+CREATE INDEX IF NOT EXISTS idx_form_submissions_respondent_id ON form_submissions(respondent_id);
+
+-----------------------------
+-- Table: form_responses
+-----------------------------
+CREATE TABLE IF NOT EXISTS form_responses (
+    response_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    submission_id uuid NOT NULL,
+    form_field_id uuid NOT NULL,
+    response_text text
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_form_responses_submission_id ON form_responses(submission_id);
+CREATE INDEX IF NOT EXISTS idx_form_responses_form_field_id ON form_responses(form_field_id);
 
 -----------------------------
 -- Table: form_response_files

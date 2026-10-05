@@ -11,9 +11,12 @@ func RegisterRoutes(r *gin.Engine) {
 	api.Use(middleware.UnknownFieldsMiddleware())
 	controller.RegisterHealth(api)
 	controller.Auth(api)
-	api.Use(middleware.AuthMiddleware())
-	controller.FileUploadController(api)
-	controller.RegisterFormsController(api)
-	controller.Users(api)
+	controller.RegisterResponseRoutes(api)
 	controller.RegisterInvitationsRoutes(api)
+	controller.RegisterFormsController(api)
+	controller.FileUploadController(api)
+	api.Use(middleware.AuthMiddleware())
+
+	controller.Users(api)
+	controller.GetDashboardData(api)
 }

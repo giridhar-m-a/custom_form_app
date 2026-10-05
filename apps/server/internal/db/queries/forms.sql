@@ -6,7 +6,11 @@ INSERT INTO forms (
   form_access,
   scheduled_time,
   closing_time,
-  is_scheduled
+  is_scheduled,
+  invitation_schedule_id,
+  invitation_schedule_gap,
+  scheduling_id,
+  form_status
 )
 VALUES (
   sqlc.arg('form_title'),
@@ -15,22 +19,14 @@ VALUES (
   sqlc.narg('form_access'),
   sqlc.narg('scheduled_time'),
   sqlc.narg('closing_time'),
-  sqlc.narg('is_scheduled')
+  sqlc.narg('is_scheduled'),
+  sqlc.narg('invitation_schedule_id'),
+  sqlc.narg('invitation_schedule_gap'),
+  sqlc.narg('scheduling_id'),
+  sqlc.narg('form_status')
 )
-RETURNING
-  form_id,
-  form_title,
-  form_description,
-  form_status,
-  form_access,
-  form_created_at,
-  form_updated_at,
-  created_by,
-  scheduling_id,
-  scheduled_time,
-  closing_time,
-  is_schedule_completed,
-  is_scheduled;
+RETURNING *;
+
 
 
 -- name: UpdateForm :one
@@ -44,29 +40,18 @@ SET
   scheduled_time = COALESCE(sqlc.narg('scheduled_time'), scheduled_time),
   closing_time = COALESCE(sqlc.narg('closing_time'), closing_time),
   is_schedule_completed = COALESCE(sqlc.narg('is_schedule_completed'), is_schedule_completed),
-  is_scheduled = COALESCE(sqlc.narg('is_scheduled'), is_scheduled)
+  is_scheduled = COALESCE(sqlc.narg('is_scheduled'), is_scheduled),
+  invitation_schedule_id = COALESCE(sqlc.narg('invitation_schedule_id'), invitation_schedule_id),
+  invitation_schedule_gap = COALESCE(sqlc.narg('invitation_schedule_gap'), invitation_schedule_gap)
 WHERE form_id = sqlc.arg('form_id')
-RETURNING
-  form_id,
-  form_title,
-  form_description,
-  form_status,
-  form_access,
-  form_created_at,
-  form_updated_at,
-  created_by,
-  scheduling_id,
-  scheduled_time,
-  closing_time,
-  is_schedule_completed,
-  is_scheduled;
+RETURNING *;
 
 
 
 -- name: GetFormByID :one
 SELECT *
 FROM forms
-WHERE form_id = $1;
+WHERE form_id = $1 AND is_deleted = FALSE;
 
 -- name: ListForms :many
 SELECT
@@ -74,7 +59,8 @@ SELECT
     COUNT(*) OVER() as total_count
 FROM forms
 WHERE
-    created_by = sqlc.arg('created_by')
+    is_deleted = FALSE
+    AND created_by = sqlc.arg('created_by')
     AND (
         sqlc.narg('search')::text IS NULL
         OR form_title ILIKE '%' || sqlc.narg('search')::text || '%'
@@ -192,3 +178,8 @@ SELECT COALESCE(
 FROM form_field_options fo
 JOIN form_fields ff ON ff.field_id = fo.field_id
 WHERE ff.form_id = $1;
+
+-- name: SoftDeleteForm :exec
+UPDATE forms
+SET is_deleted = TRUE
+WHERE form_id = sqlc.arg('form_id');

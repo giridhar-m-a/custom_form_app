@@ -172,7 +172,7 @@ func (a *authService) RequestResetPassword(
 
 	emailParams := resend.SendEmailRequest{
 		From:    sender,
-		To:      []string{user.UserEmail},
+		To:      []string{user.UserEmail.String},
 		Subject: "Password Reset Request",
 		Html:    template,
 		Tags: []resend.Tag{
