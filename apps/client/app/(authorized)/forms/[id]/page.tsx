@@ -7,7 +7,7 @@ import { UpsertForm } from '@/components/forms/UpsertForm'
 import { Button } from '@/components/ui/button'
 import { FormStatusBadge } from '@/components/forms/forms.config'
 import { useGetFormById } from '@/hooks/queryHooks/useFormApp'
-import { Pencil, PiNotePencil } from 'lucide-react'
+import { Pencil, SquarePen } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
@@ -34,7 +34,7 @@ const FormDataPage = () => {
           <Modal
             title="Edit Form"
             description="Edit the form to get started."
-            trigger={<Button><PiNotePencil /> Edit Form</Button>}>
+            trigger={<Button><SquarePen /> Edit Form</Button>}>
             <UpsertForm formId={id} data={formData} />
           </Modal>
           <Link href={`/forms/edit/${id}`}>
