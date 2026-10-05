@@ -1,11 +1,8 @@
-'use server'
-
 import { CreateFormSchemaType, FormFieldCreateSchemaType, FormFieldSchemaType } from '@/app/schemas/form.schemas'
 import { DELETE, GET, PATCH, POST } from '@/lib/api.config'
 import { formsRoutes } from '@/lib/constants/apiRoutes/forms.routes'
 import { errorHandler } from '@/lib/errorHandler'
 import { FormField, FormFilter, FormType, FormUpdateType } from '@/types/form.types'
-import { revalidatePath } from 'next/cache'
 
 export const getForms = async ({ query }: { query?: FormFilter }) => {
   try {
@@ -40,7 +37,6 @@ export const createForm = async (data: CreateFormSchemaType) => {
 export const updateForm = async ({ id, data }: { id: string; data: FormUpdateType }) => {
   try {
     const res = await PATCH<FormType>(`${formsRoutes.base}/${id}`, data)
-    revalidatePath('/', 'layout')
     return res
   } catch (e) {
     console.error(e)

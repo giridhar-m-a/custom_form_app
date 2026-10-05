@@ -1,5 +1,3 @@
-'use server'
-
 import { ApiResponse } from '@/types/api.types'
 import { DashboardData } from '@/types/dashboard.types'
 
