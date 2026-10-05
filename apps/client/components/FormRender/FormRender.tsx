@@ -4,7 +4,6 @@ import { FormField as FormFieldType } from '@/types/form.types'
 import { FormInputWrapper } from './FormInputwrapper'
 import { useForm } from 'react-hook-form'
 import { Form } from '../ui/form'
-import { ScrollArea } from '../ui/scroll-area'
 import { useMemo } from 'react'
 import { FormSubmission } from '@/app/schemas/response.schemas'
 import { useCreateResponse } from '@/hooks/queryHooks/useResponses'
@@ -82,20 +81,18 @@ export const FormRender = ({ fields, formId, respondentId, onSubmit, token }: Fo
 
   return (
     <div className="w-full min-w-0">
-      <ScrollArea className="h-auto max-h-[70vh] w-full min-w-0">
-        <Form {...form}>
-          <form className="w-full min-w-0 space-y-4" onSubmit={handleFormSubmit} noValidate>
-            {fields.map((field, index) => (
-              <FormInputWrapper key={field.fieldId} formField={field} control={control as any} index={index} />
-            ))}
-            {fields.length > 0 && (
-              <SubmitButton type="submit" className="w-full" isLoading={isPending}>
-                Submit
-              </SubmitButton>
-            )}
-          </form>
-        </Form>
-      </ScrollArea>
+      <Form {...form}>
+        <form className="w-full min-w-0 space-y-4" onSubmit={handleFormSubmit} noValidate>
+          {fields.map((field, index) => (
+            <FormInputWrapper key={field.fieldId} formField={field} control={control as any} index={index} />
+          ))}
+          {fields.length > 0 && (
+            <SubmitButton type="submit" className="w-full" isLoading={isPending}>
+              Submit
+            </SubmitButton>
+          )}
+        </form>
+      </Form>
     </div>
   )
 }
