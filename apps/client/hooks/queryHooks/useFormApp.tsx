@@ -71,10 +71,11 @@ export const useGetForms = (params?: FormFilter) => {
   })
 }
 
-export const useGetFormById = (id: string) => {
+export const useGetFormById = (id: string, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: formsKeys.detail(id),
-    queryFn: () => getFormById({ id })
+    queryFn: () => getFormById({ id }),
+    enabled: options?.enabled ?? Boolean(id)
   })
 }
 

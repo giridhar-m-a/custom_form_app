@@ -21,8 +21,8 @@ const FormDataPage = () => {
   if (!formData) return <>not found</>
 
   return (
-    <div>
-      <div className="flex justify-between items-center">
+    <div className="min-w-0">
+      <div className="flex flex-col gap-4 xl:flex-row xl:justify-between xl:items-center">
         <div>
           <h1 className="text-2xl font-bold">
             {formData.title}{' '}
@@ -30,7 +30,7 @@ const FormDataPage = () => {
           </h1>
           <p className="text-gray-500">{formData.description}</p>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-wrap gap-3">
           <Modal
             title="Edit Form"
             description="Edit the form to get started."
@@ -42,11 +42,11 @@ const FormDataPage = () => {
           </Link>
         </div>
       </div>
-      <div className="flex flex-col lg:flex-row gap-4 mt-8">
-        <div className="lg:basis-3/4 rounded-2xl border bg-background w-full p-6">
+      <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+        <div className="min-w-0 rounded-2xl border bg-background p-4 md:p-6">
           <ResponseTable formId={id} />
         </div>
-        <div className="lg:basis-1/4 rounded-2xl border bg-background w-full p-6">
+        <div className="min-w-0 rounded-2xl border bg-background p-4 md:p-6">
           <InvitationTable formId={id} status={formData.status || 'draft'} access={formData.access || 'restricted'} />
         </div>
       </div>
